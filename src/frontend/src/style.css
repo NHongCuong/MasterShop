@@ -1,0 +1,111 @@
+@import url('bootstrap');
+@import 'admin-lte/plugins/fontawesome-free/css/all.min.css';
+@import 'admin-lte/dist/css/adminlte.css';
+*{
+  --height-top-menu:60px;
+  --height-modal-header:70px;
+  --height-toolbar-codeblock:26px;
+  --menu_post_content-margin: 30px;
+  
+  --color-grey:#dadada;
+  --color-main: #ffe9ed;
+  --color-dark:#2f2f2f;
+  --color-dark-toggle:#2f2f2f;
+  --bg-dark:#2f2f2f;
+  --bg-light:#ffff;
+  --bg-silver-toggle:#e3e3eb;
+  --bg-light-toggle:#ffff;
+  --color-hongdam:#e1679a;
+  --color-xanhduongnhat:rgb(180, 220, 255);
+  
+}
+body{
+    transition: background 1.5s ease;
+}
+[data-bs-theme=light] * {
+  
+--custom-bg:var(
+  
+--color-main);
+  
+--custom-bg-top-menu:#f7f7f7;
+}
+[data-bs-theme=dark] *,[data-bs-theme=dark] *{
+
+  --custom-bg: var(--bs-body-bg);
+  --custom-bg-top-menu:var(--bs-body-bg);
+  --color-hongdam:#4c4c4c;
+  --color-xanhduongnhat:#202020;
+  --color-dark-toggle:#fff;
+  --bg-light-toggle:var(--color-dark);
+  --bg-silver-toggle:#4c4c4c;
+  --bs-dark-rgb:#fff;
+
+}
+[data-bs-theme=dark] .bg-white,[data-bs-theme=dark] .bg-light,[data-bs-theme=dark] .modal div,[data-bs-theme=dark] .modal input
+,[data-bs-theme=dark] .btn-light {
+background-color: var(--bg-dark) !important;
+border-color: #ffffff;
+}
+[data-bs-theme=dark] .post-container *:not(pre *),
+[data-bs-theme=dark] .modal h1,[data-bs-theme=dark] .modal h2,[data-bs-theme=dark] .modal h3,[data-bs-theme=dark] .modal h4,[data-bs-theme=dark] .modal h5,[data-bs-theme=dark] .modal h6,
+[data-bs-theme=dark] .modal span{
+background-color: unset !important;
+color:#fff!important;
+}
+[data-bs-theme=dark] .post-container pre[class^="language-"]{
+  background-color: #4c4c4c !important;
+}
+/*Button có background xám chữ đen */
+[data-bs-theme=dark] .btn-dark{
+background-color: var(--color-grey) !important;
+color: var(--color-dark) !important;
+}
+[data-bs-theme=dark] .highlight {
+  color: var(--color-dark) !important;
+}
+[data-bs-theme=dark] label, [data-bs-theme=dark] p, [data-bs-theme=dark] a, [data-bs-theme=dark] font, [data-bs-theme=dark] li
+, [data-bs-theme=dark] .modal div{
+color: var(--color-main) !important;
+}
+.highlight {
+  background-color: yellow;
+}
+.highlight-xanhduong {
+background-color: #b8f7f7;
+}
+.toolbar-codeblock{
+  background: #688eff;height: var(--height-toolbar-codeblock);
+}
+.btn-ellipsis{
+  color:var(--color-dark-toggle);
+}
+.btn-ellipsis::after {
+  content: none!important;
+}
+div{
+  image-rendering: pixelated;
+}
+img{
+image-rendering: -moz-crisp-edges;         /* Firefox */
+image-rendering:   -o-crisp-edges;         /* Opera */
+image-rendering: -webkit-optimize-contrast;/* Webkit (non-standard naming) */
+image-rendering: crisp-edges;
+-ms-interpolation-mode: nearest-neighbor;  /* IE (non-standard property) */
+}
+textarea, input{
+  color:var(--color-dark-toggle);
+}
+body{
+  margin: 0;
+  background: var(--custom-bg);
+}
+table{
+  width: 100%;
+}
+p{
+  overflow-wrap: break-word;
+}
+input.ff-FontAwesome {
+  font-family: 'Helvetica', FontAwesome, sans-serif;
+}
