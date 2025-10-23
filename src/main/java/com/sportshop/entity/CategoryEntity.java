@@ -17,11 +17,11 @@ public class CategoryEntity {
 	private String name;
 	@Column(name = "Icon")
 	private String icon;
-	
+
 	@OneToMany(mappedBy="category")
 	@JsonIgnore
 	private List<ProductEntity> products;
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -46,6 +46,6 @@ public class CategoryEntity {
 	public void setProducts(List<ProductEntity> products) {
 		this.products = products;
 	}
-	
-	
+
+
 }

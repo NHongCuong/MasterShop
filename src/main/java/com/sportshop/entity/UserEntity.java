@@ -1,13 +1,9 @@
 package com.sportshop.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -40,9 +36,22 @@ public class UserEntity {
 	@ManyToOne
 	@JoinColumn(name="ID_UStatus")
 	public UserStatusEntity userStatus;
-	
-	
-	
+
+    @OneToMany(mappedBy="userSC")
+    @JsonIgnore
+    private List<ShopcartEntity> users;
+
+    @OneToMany(mappedBy = "userbillSH")
+    @JsonIgnore
+    private List<BillStatusHistoryEntity> userbillstatusHistory;
+
+    public List<ShopcartEntity> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<ShopcartEntity> users) {
+        this.users = users;
+    }
 	
 	public Long getId() {
 		return id;

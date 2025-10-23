@@ -26,7 +26,7 @@ public class SupplierEntity {
 	private String email;
 	@Column(name = "Website_S")
 	private String website;
-	
+
 	@OneToMany(mappedBy="supplier")
 	@JsonIgnore
 	private List<ProductEntity> products;
@@ -86,8 +86,8 @@ public class SupplierEntity {
 	public void setProducts(List<ProductEntity> products) {
 		this.products = products;
 	}
-	
-	
-	
-	
+
+
+
+
 }

@@ -1,6 +1,9 @@
 package com.sportshop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 
@@ -26,6 +29,15 @@ public class ProductEntity {
 	@ManyToOne
 	@JoinColumn(name = "ID_S")
 	private SupplierEntity supplier;
+
+    @OneToMany(mappedBy = "orderDetail")
+    @JsonIgnore
+    private List<CartDetailEntity> products;
+
+    @OneToMany(mappedBy = "demensions")
+    @JsonIgnore
+    private List<DimensionsEntity> productDemensions;
+
 	public Long getId() {
 		return id;
 	}
