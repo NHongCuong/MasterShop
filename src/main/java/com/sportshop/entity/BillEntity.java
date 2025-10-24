@@ -40,7 +40,7 @@ public class BillEntity {
     private Long vatAmount;
 
     @Column(name="TotalMoneyCheckout")
-    private float totalMoneyCheckout;
+    private Float totalMoneyCheckout;
 
     @Column(name="TotalMoneyaftersaleoff")
     private Long totalMoneyaftersaleoff;
