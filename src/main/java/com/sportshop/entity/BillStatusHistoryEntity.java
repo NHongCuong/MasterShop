@@ -10,7 +10,7 @@ public class BillStatusHistoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_BSH")
-    private Long id;
+    public Long id;
 
     // 🔗 Khóa ngoại đến bảng BILL
     @ManyToOne
@@ -28,7 +28,7 @@ public class BillStatusHistoryEntity {
     public UserEntity userbillSH;
 
     @Column(name="Date_BSH")
-    private LocalDateTime Date_BSH;
+    public LocalDateTime Date_BSH;
 
     public Long getId() {
         return id;

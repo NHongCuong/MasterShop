@@ -12,19 +12,19 @@ public class OderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_Order")
-    private Long id;
+    public Long id;
 
     @Column(name = "Customer_Name")
-    private String CustomerName;
+    public String CustomerName;
 
     @Column(name="Note_O")
-    private String NoteO;
+    public String NoteO;
 
     @Column(name="Phone")
-    private String Phone;
+    public String Phone;
 
     @Column(name="Address_O")
-    private String AddressO;
+    public String AddressO;
 
     @ManyToOne
     @JoinColumn(name="ID_MOP")

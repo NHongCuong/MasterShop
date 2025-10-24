@@ -12,7 +12,7 @@ public class CartDetailEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_CD")
-    private Long id;
+    public Long id;
 
     @ManyToOne
     @JoinColumn(name="ID_Product")
@@ -34,16 +34,16 @@ public class CartDetailEntity {
     public DimensionsEntity demensionsCartDetail;
 
     @Column(name="Amount_CD")
-    private Long AmountCD;
+    public Long AmountCD;
 
     @Column(name="created_at")
-    private Date created_at;
+    public Date created_at;
 
     @Column(name="updated_at")
-    private Date updated_at;
+    public Date updated_at;
 
     @Column(name="ID_Color")
-    private Long IDColor;
+    public Long IDColor;
 
     public Long getId() {
         return id;

@@ -12,11 +12,11 @@ public class CategoryEntity {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID_Category")
-	private Long id;
+    public Long id;
 	@Column(name = "Name_Category")
-	private String name;
+    public String name;
 	@Column(name = "Icon")
-	private String icon;
+    public String icon;
 
 	@OneToMany(mappedBy="category")
 	@JsonIgnore

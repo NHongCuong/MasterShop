@@ -13,7 +13,7 @@ public class BillEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_Bill")
-    private Long id;
+    public Long id;
 
     @ManyToOne
     @JoinColumn(name="ID_BS")
@@ -28,22 +28,22 @@ public class BillEntity {
     private List<BillStatusHistoryEntity> billstatushistory;
 
     @Column(name="CreateDate")
-    private Date createDate;
+    public Date createDate;
 
     @Column(name="TotalMoney")
-    private Long totalMoney;
+    public Long totalMoney;
 
     @Column(name="VAT_rate")
-    private Long vatRate;
+    public Long vatRate;
 
     @Column(name="VAT_amount")
-    private Long vatAmount;
+    public Long vatAmount;
 
     @Column(name="TotalMoneyCheckout")
-    private Float totalMoneyCheckout;
+    public Float totalMoneyCheckout;
 
     @Column(name="TotalMoneyaftersaleoff")
-    private Long totalMoneyaftersaleoff;
+    public Long totalMoneyaftersaleoff;
 
 
     public Long getId() {

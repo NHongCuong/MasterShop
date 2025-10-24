@@ -12,16 +12,16 @@ public class DimensionsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_D")
-    private Long Id;
+    public Long Id;
 
     @Column(name="Name_D")
-    private String nameD;
+    public String nameD;
 
     @Column(name="created_at")
-    private Date created_at;
+    public Date created_at;
 
     @Column(name="updated_at")
-    private Date updated_at;
+    public Date updated_at;
 
     @ManyToOne
     @JoinColumn(name="ID_Product")

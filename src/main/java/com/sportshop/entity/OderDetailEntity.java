@@ -9,7 +9,7 @@ public class OderDetailEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_Order")
-    private Long id;
+    public Long id;
 
     @ManyToOne
     @JoinColumn(name="ID_SC")

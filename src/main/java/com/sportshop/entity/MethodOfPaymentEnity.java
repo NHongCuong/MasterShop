@@ -12,10 +12,10 @@ public class MethodOfPaymentEnity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_MOP")
-    private Long id;
+    public Long id;
 
     @Column(name= "Name_MOP")
-    private String name_mop;
+    public String name_mop;
 
     @OneToMany(mappedBy = "methodofPayment")
     @JsonIgnore

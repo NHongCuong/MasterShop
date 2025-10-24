@@ -11,10 +11,10 @@ public class MaterialEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_Material")
-    private Long Id;
+    public Long Id;
 
     @Column(name="Name_Material")
-    private String NameMaterial;
+    public String NameMaterial;
 
     @OneToMany(mappedBy = "cartDetail")
     @JsonIgnore

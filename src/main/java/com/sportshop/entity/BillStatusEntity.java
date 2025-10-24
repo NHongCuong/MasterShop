@@ -11,10 +11,10 @@ public class BillStatusEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_BS")
-    private Long id;
+    public Long id;
 
     @Column(name="Name_BS")
-    private String nameBS;
+    public String nameBS;
 
     public Long getId() {
         return id;

@@ -13,15 +13,15 @@ public class CartStatusEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_CS")
-    private Long id;
+    public Long id;
 
     @Column(name = "Name_CS")
-    private String nameCS;
+    public String nameCS;
 
     @Column(name = "created_at")
-    private Date created_at;
+    public Date created_at;
     @Column
-    private Date updated_at;
+    public Date updated_at;
 
     @OneToMany(mappedBy="cartStatus")
     @JsonIgnore

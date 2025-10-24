@@ -13,7 +13,7 @@ public class ShopcartEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_SC")
-    private Long id;
+    public Long id;
 
 
     @ManyToOne

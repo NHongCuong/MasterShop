@@ -11,7 +11,7 @@ public class ShipMethodEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_SM")
-    private Long id;
+    public Long id;
 
     public Long getId() {
         return id;
