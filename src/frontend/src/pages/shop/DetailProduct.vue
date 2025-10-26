@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
-import { Product, MyImage } from '../../interfaces/app';
-import { computed, onMounted, reactive, ref } from 'vue';
+import {useRoute} from 'vue-router';
+import {User, Product, MyImage, ShopCart} from '../../interfaces/app';
+import {computed, onMounted, reactive, ref} from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
 import Galleria from 'primevue/Galleria';
 import Image from 'primevue/image';
+import {useToast} from "primevue/usetoast";
+import {MyApp} from "../../app/MyApp.ts";
+import Toast from "primevue/toast";
 
 
 const myProduct = ref<Product>();
@@ -13,171 +16,292 @@ const route = useRoute();
 const idProduct = route.params.id;
 const images = ref<MyImage[]>([]);
 const checkingAmount = ref(false);
+const CART_API = 'http://localhost:8081/cart';
+// const USER_API= 'http://localhost:8081/user';
+// const CARTSTATUS_API= 'http://localhost:8081/cartstatus';
+const userList = ref<User[]>([]);
+// const cartstatusList = ref<CartStatus[]>([])
+const shopcartList = ref<ShopCart[]>([])
+// const selectedShopCart = ref<any>(null)
+const selectedUser = ref<any>(null)
+const toast = useToast()
 const visibleCount = computed(() => {
-    return images.value.length > 3 ? 3 : images.value.length;
+  return images.value.length > 3 ? 3 : images.value.length;
 });
-interface FormState{
-    ID_Product: number,
-    ID_Color: number|null,
-    ID_Material: number|null,
-    ID_Dimensions: number|null,
-    Amount: number
+const isAuthenticated = ref(false);
+
+//const user = ref<User>();
+axios.get("http://localhost:8081/user").then(res => {
+  userList.value = res.data;
+});
+onMounted(() => {
+  MyApp.getIntance().authenticate(isAuthenticated, selectedUser);
+});
+
+interface FormState {
+  ID_Product: number,
+  ID_Color: number | null,
+  ID_Material: number | null,
+  ID_Dimensions: number | null,
+  Amount: number
 }
+
 const initForm = {
-    ID_Product: -1,
-    Amount: 1,
-    ID_Color: null,
-    ID_Material: null,
-    ID_Dimensions: null
+  ID_Product: -1,
+  Amount: 1,
+  ID_Color: null,
+  ID_Material: null,
+  ID_Dimensions: null
 }
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 
 const responsiveOptions = ref([
-    {
-        breakpoint: '991px',
-        numVisible: 4
-    },
-    {
-        breakpoint: '767px',
-        numVisible: 3
-    },
-    {
-        breakpoint: '575px',
-        numVisible: 1
-    }
+  {
+    breakpoint: '991px',
+    numVisible: 4
+  },
+  {
+    breakpoint: '767px',
+    numVisible: 3
+  },
+  {
+    breakpoint: '575px',
+    numVisible: 1
+  }
 ]);
-function loadProduct()
-{
-    axios.get("http://localhost:8081/product/" + idProduct).then(res=>{
-        myProduct.value = res.data;
-        if (myProduct.value?.avatar) {
-            images.value.push({
-                itemImageSrc: myProduct.value.avatar,
-                thumbnailImageSrc: myProduct.value.avatar,
-                alt: "Avatar Image"
-            });
-        }
-    });
-}
-const changeAmount = (event:Event) => {
-    let button = event.target as HTMLElement;
 
-    if(button.className.includes('btn-minuse'))
-        form.Amount = form.Amount > 1 ? form.Amount -1 : form.Amount;
-    else
-        form.Amount++;
+function loadProduct() {
+  axios.get("http://localhost:8081/product/" + idProduct).then(res => {
+    myProduct.value = res.data;
+    if (myProduct.value?.avatar) {
+      images.value.push({
+        itemImageSrc: myProduct.value.avatar,
+        thumbnailImageSrc: myProduct.value.avatar,
+        alt: "Avatar Image"
+      });
+    }
+  });
 }
-function BuyNow(){}
-function AddCart(){}
-onMounted(()=>{
-    loadProduct();
+
+//
+// const loadUsers = async () => {
+//   try {
+//     const res = await axios.get(`${USER_API}`)
+//     userList.value = res.data
+//   } catch (err) {
+//     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải user', life: 2000 })
+//   }
+// }
+// const loadStatusCart = async () => {
+//   try {
+//     const res = await axios.get(`${CARTSTATUS_API}/all`)
+//     cartstatusList.value = res.data
+//   } catch (err) {
+//     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải status cart', life: 2000 })
+//   }
+// }
+const loadShopCart = async () => {
+  try {
+    const res = await axios.get(`${CART_API}/all`)
+    shopcartList.value = res.data
+  } catch (err) {
+    toast.add({severity: 'error', summary: 'Lỗi', detail: 'Không thể tải shop cart', life: 2000})
+  }
+}
+
+const changeAmount = (event: Event) => {
+  let button = event.target as HTMLElement;
+
+  if (button.className.includes('btn-minuse'))
+    form.Amount = form.Amount > 1 ? form.Amount - 1 : form.Amount;
+  else
+    form.Amount++;
+}
+
+function BuyNow() {
+}
+
+async function AdddCart() {
+  try {
+    // ✅ Tạo dữ liệu giỏ hàng gửi lên backend
+    const newCart = {
+      userSC: {id: selectedUser.value.id},
+      cartStatus: {id: 3},
+    };
+
+    console.log("🛒 Dữ liệu gửi lên server:", newCart);
+
+    // 🚀 Gửi request
+    const res = await axios.post(`${CART_API}/add`, newCart);
+
+    // ✅ Một số API trả 200 thay vì 201, ta xử lý linh hoạt
+    if (res.status === 200 || res.status === 201) {
+      toast.add({
+        severity: "success",
+        summary: "Thành công",
+        detail: "Đã thêm sản phẩm vào giỏ hàng",
+        life: 2000,
+      });
+
+      // 🔄 Cập nhật danh sách giỏ hàng
+      await loadShopCart();
+    } else {
+      console.warn("⚠️ Mã phản hồi khác thường:", res.status);
+      toast.add({
+        severity: "warn",
+        summary: "Cảnh báo",
+        detail: "Phản hồi không mong đợi từ server",
+        life: 2500,
+      });
+    }
+  } catch (err: any) {
+    console.error("❌ Lỗi thêm giỏ hàng:", err);
+    toast.add({
+      severity: "error",
+      summary: "Lỗi",
+      detail: err.response?.data?.message || "Không thể thêm vào giỏ hàng",
+      life: 3000,
+    });
+  }
+}
+
+
+onMounted(() => {
+  loadProduct();
 })
 </script>
+
 <template>
-    <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
-        <div class="row w-100">
-            <div class="col-lg-5">
-                <div class="p-3">
-                        <Galleria v-if="myProduct" :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount" containerStyle="max-width: 640px">
-                            <template #item="slotProps">
-                                <Image :src="'http://localhost:8081' + slotProps.item.itemImageSrc" height="400"  :alt="slotProps.item.alt" :id="'product-avt'"  preview />
-                            </template>
-                            <template #thumbnail="slotProps">
-                                <img :src="'http://localhost:8081' + slotProps.item.thumbnailImageSrc" width="100" height="100" :alt="slotProps.item.alt" />
-                            </template>
-                        </Galleria>
-                        <div v-else>
-                            <Skeleton height="20rem" class="mb-2"></Skeleton>
-                            <Skeleton height="10rem" class="mb-2"></Skeleton>
-
-                        </div>
-
-
-                    <!-- <div class="row border">
-                        <div class="d-flex justify-content-center w3-animate-zoom">
-                            <img :src="myProduct?.Avatar" style="width: 100%;">
-                        </div>
-                        <div class="d-flex justify-content-around" style="width: 100%;">
-                            <img v-for="img in myProduct?.detail_product_image.slice(0,3)" width="100" class="border w3-animate-zoom" :src="img.Image">
-                        </div>
-
-                    </div>	 -->
-                </div>
-            </div>
-            <div class="col-lg-7 w3-animate-bottom">
-                <div class="pl-3 ml-3">
-                    <input value="<?=$data['Product']['ID_Product']?>" id="product_id" hidden>
-                    <h1 v-if="myProduct">{{ myProduct?.name }}</h1>
-                    <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
-                    <!-- <div v-if="myProduct && myProduct.detail_sale_of_product.length>0">
-                        <del class="text-primary h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></del>
-                        <p class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price_SaleOff) }}</strong></p>
-
-                    </div>
-                    <p v-else-if="myProduct" class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p> -->
-                    <p v-if="myProduct" class="text-danger h3"><strong>{{ Helper.ToMoney(myProduct!.price) }}</strong></p>
-                    <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
-
-                    <hr>
-                    <div v-if="myProduct">
-                        <div>
-                            <span><b>Color:</b></span>
-                            <!-- <span v-if="isNotHaveColor()">
-                                {{ ' Không xác định' }}
-                            </span>
-                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  /> -->
-                        </div>
-
-                        <div class="mt-4">
-                            <span><b>Material:</b></span>
-                            <!-- <span v-if="isNotHaveMaterial()">
-                                {{ ' Không xác định' }}
-                            </span>
-                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  /> -->
-                        </div>
-                        <div class="mt-4">
-                            <span><b>Dimensions:</b></span>
-                            <!-- <span v-if="isNotHaveSize()">
-                                {{ ' Không xác định' }}
-                            </span>
-                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  /> -->
-                        </div>
-
-                        <div class="row g-3 align-items-center mt-4">
-                            <div class="col-auto">
-                                <label for="inputPassword6" class="col-form-label">Amount</label>
-                            </div>
-                            <div class="col-auto">
-                                <div class="input-group" style="width:50%">
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-white btn-minuse" @click="changeAmount" type="button">-</button>
-                                    </span>
-                                    <input v-model="form.Amount" type="text" class="form-control no-padding add-color text-center height-25" maxlength="3">
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-red btn-pluss" @click="changeAmount" type="button">+</button>
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="row mt-3">
-                            <button class="btn btn-primary" @click="AddCart"><i class="fas fa-shopping-cart mr-2" ></i>Add to cart</button>
-
-                            <button @click="BuyNow" class="btn btn-success ml-3" :disabled="myProduct.amount <= 0" value="Buy now" type="submit" >Buy now</button>
-
-                        </div>
-                        <div class="row mt-3">
-                            <b class="mr-2">Stock:</b> <Badge v-if="checkingAmount" value="Checking..."></Badge>
-                                     <Badge v-else-if="myProduct.amount == -1" value="Chưa xác định"></Badge>
-                                     <Badge v-else :value="myProduct.amount"></Badge>
-                        </div>
-                    </div>
-                    <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
-
-                </div>
-
-            </div>
+  <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
+    <div class="row w-100">
+      <div class="col-lg-5">
+        <div class="p-3">
+          <Galleria v-if="myProduct" :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount"
+                    containerStyle="max-width: 640px">
+            <template #item="slotProps">
+              <Image :src="'http://localhost:8081' + slotProps.item.itemImageSrc" height="400" :alt="slotProps.item.alt"
+                     :id="'product-avt'" preview/>
+            </template>
+            <template  #thumbnail="slotProps">
+              <img  :src="'http://localhost:8081' + slotProps.item.thumbnailImageSrc" width="100" height="100"
+                    :alt="slotProps.item.alt"/>
+            </template>
+          </Galleria>
+          <div v-else>
+            <Skeleton height="20rem" class="mb-2"></Skeleton>
+            <Skeleton height="10rem" class="mb-2"></Skeleton>
+          </div>
         </div>
+      </div>
+      <div class="col-lg-7 w3-animate-bottom">
+        <div class="pl-3 ml-3">
+          <h1 v-if="myProduct">{{ myProduct?.name }}</h1>
+          <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
+          <p v-if="myProduct" class="text-danger h3"><strong>{{ Helper.ToMoney(myProduct!.price) }}</strong></p>
+          <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
+
+          <hr>
+          <div v-if="myProduct">
+            <div>
+              <span><b>Color:</b></span>
+              <!-- <span v-if="isNotHaveColor()">
+                  {{ ' Không xác định' }}
+              </span>
+              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  /> -->
+            </div>
+
+            <div class="mt-4">
+              <span><b>Material:</b></span>
+              <!--                             <span v-if="isNotHaveMaterial()">-->
+              <!--                                {{ ' Không xác định' }}-->
+              <!--                            </span>-->
+              <!--                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />-->
+            </div>
+            <div class="mt-4">
+              <span><b>Dimensions:</b></span>
+              <!-- <span v-if="isNotHaveSize()">
+                  {{ ' Không xác định' }}
+              </span>
+              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  /> -->
+            </div>
+            <div class="row g-3 align-items-center mt-4">
+              <div class="col-auto">
+                <label class="col-form-label">Amount</label>
+              </div>
+              <div class="col-auto">
+                <div class="input-group" style="width:50%;">
+                  <span class="input-group-btn">
+                    <button class="btn btn-white btn-minuse" @click="changeAmount" type="button">-</button>
+                  </span>
+                  <input v-model="form.Amount" type="text" class="form-control text-center" maxlength="3">
+                  <span class="input-group-btn">
+                    <button class="btn btn-red btn-pluss" @click="changeAmount" type="button">+</button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <button class="btn btn-primary" @click="AdddCart"><i class="fas fa-shopping-cart mr-2"></i>Add to cart
+              </button>
+              <button @click="BuyNow" class="btn btn-success ml-3" :disabled="myProduct.amount <= 0">Buy now</button>
+            </div>
+
+            <div class="row mt-3">
+              <b class="mr-2">Stock:</b>
+              <Badge v-if="checkingAmount" value="Checking..."></Badge>
+              <Badge v-else-if="myProduct.amount == -1" value="Chưa xác định"></Badge>
+              <Badge v-else :value="myProduct.amount"></Badge>
+            </div>
+          </div>
+          <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
+        </div>
+      </div>
     </div>
+  </div>
+  <Toast/>
 </template>
+<style scoped>
+:deep(.p-galleria-thumbnail-wrapper) {
+  background-color: #dc3545 !important;
+
+}
+
+:deep(.p-galleria-thumbnail-container) {
+  background-color: grey !important;
+
+}
+
+:deep(.p-galleria-thumbnail-item img) {
+  border-radius: 10px;
+  background-color: white;
+  border: 1px solid #ccc;
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+}
+
+:deep(.p-galleria) {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+:deep(.p-galleria-thumbnail-container) {
+  justify-content: center;
+}
+
+/* Nút điều hướng trái phải */
+:deep(.p-galleria-thumbnail-prev),
+:deep(.p-galleria-thumbnail-next) {
+  color: white !important;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+:deep(.p-galleria-thumbnail-prev:hover),
+:deep(.p-galleria-thumbnail-next:hover) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+</style>

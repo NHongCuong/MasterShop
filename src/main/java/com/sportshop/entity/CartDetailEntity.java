@@ -1,122 +1,73 @@
 package com.sportshop.entity;
 
-
 import javax.persistence.*;
 import java.util.Date;
 
-
 @Entity
-@Table(name="cart_detail")
+@Table(name = "cart_detail")
 public class CartDetailEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_CD")
-    public Long id;
+    @EmbeddedId
+    private CartDetailId id;
 
-    @ManyToOne
-    @JoinColumn(name="ID_Product")
-    public ProductEntity orderDetail;
+    @MapsId("idSC")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ID_SC")
+    private ShopcartEntity cartsDetail;
 
-    @ManyToOne
-    @JoinColumn(name="ID_Material")
-    public MaterialEntity cartDetail;
+    @MapsId("idProduct")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ID_Product")
+    private ProductEntity orderDetail;
 
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ManyToOne
-    @JoinColumn(name="ID_SC")
-    public ShopcartEntity cartsDetail;
+    // ⚠️ các quan hệ này có thể NULL
+    //@MapsId("idMaterial")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "ID_Material",nullable = true)
+    private MaterialEntity cartDetail;
 
+    //@MapsId("idD")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "ID_D",nullable = true)
+    private DimensionsEntity demensionsCartDetail;
 
-    @ManyToOne
-    @JoinColumn(name="ID_D")
-    public DimensionsEntity demensionsCartDetail;
+    @Column(name = "Amount_CD")
+    private Long amountCD;
 
-    @Column(name="Amount_CD")
-    public Long AmountCD;
+    @Column(name = "created_at")
+    private Date createdAt;
 
-    @Column(name="created_at")
-    public Date created_at;
+    @Column(name = "updated_at")
+    private Date updatedAt;
 
-    @Column(name="updated_at")
-    public Date updated_at;
+    @Column(name = "ID_Color")
+    private Long idColor;
 
-    @Column(name="ID_Color")
-    public Long IDColor;
+    // Getters & Setters (giữ nguyên như cũ)
+    public CartDetailId getId() { return id; }
+    public void setId(CartDetailId id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public ShopcartEntity getCartsDetail() { return cartsDetail; }
+    public void setCartsDetail(ShopcartEntity cartsDetail) { this.cartsDetail = cartsDetail; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public ProductEntity getOrderDetail() { return orderDetail; }
+    public void setOrderDetail(ProductEntity orderDetail) { this.orderDetail = orderDetail; }
 
-    public ProductEntity getOrderDetail() {
-        return orderDetail;
-    }
+    public MaterialEntity getCartDetail() { return cartDetail; }
+    public void setCartDetail(MaterialEntity cartDetail) { this.cartDetail = cartDetail; }
 
-    public void setOrderDetail(ProductEntity orderDetail) {
-        this.orderDetail = orderDetail;
-    }
+    public DimensionsEntity getDemensionsCartDetail() { return demensionsCartDetail; }
+    public void setDemensionsCartDetail(DimensionsEntity demensionsCartDetail) { this.demensionsCartDetail = demensionsCartDetail; }
 
-    public MaterialEntity getCartDetail() {
-        return cartDetail;
-    }
+    public Long getAmountCD() { return amountCD; }
+    public void setAmountCD(Long amountCD) { this.amountCD = amountCD; }
 
-    public void setCartDetail(MaterialEntity cartDetail) {
-        this.cartDetail = cartDetail;
-    }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public ShopcartEntity getCartsDetail() {
-        return cartsDetail;
-    }
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setCartsDetail(ShopcartEntity cartsDetail) {
-        this.cartsDetail = cartsDetail;
-    }
-
-    public DimensionsEntity getDemensionsCartDetail() {
-        return demensionsCartDetail;
-    }
-
-    public void setDemensionsCartDetail(DimensionsEntity demensionsCartDetail) {
-        this.demensionsCartDetail = demensionsCartDetail;
-    }
-
-    public Long getAmountCD() {
-        return AmountCD;
-    }
-
-    public void setAmountCD(Long amountCD) {
-        AmountCD = amountCD;
-    }
-
-    public Date getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
-    }
-
-    public Date getUpdated_at() {
-        return updated_at;
-    }
-
-    public void setUpdated_at(Date updated_at) {
-        this.updated_at = updated_at;
-    }
-
-    public Long getIDColor() {
-        return IDColor;
-    }
-
-    public void setIDColor(Long IDColor) {
-        this.IDColor = IDColor;
-    }
-
-
-
+    public Long getIdColor() { return idColor; }
+    public void setIdColor(Long idColor) { this.idColor = idColor; }
 }

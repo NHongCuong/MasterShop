@@ -1,11 +1,20 @@
-export interface UserStatus{
+export interface UserStatus {
     id: number;
     name: string;
 }
-export interface UserType{
+
+export interface UserType {
     id: number;
     name: string;
 }
+
+export interface CartStatus {
+    id: number;
+    nameCS: string;
+    created_at: Date;
+    updated_at: Date;
+}
+
 export interface User {
     id: number;
     nameUser: string;
@@ -20,12 +29,13 @@ export interface User {
     userType: UserType;
 }
 
-export interface Category{
+export interface Category {
     "id": number,
     "name": string,
     "icon": string,
 }
-export interface Supplier{
+
+export interface Supplier {
     "id": number,
     "name": string,
     "address": string,
@@ -34,7 +44,8 @@ export interface Supplier{
     "website": string,
 
 }
-export interface Product{
+
+export interface Product {
     "id": number,
     "name": string,
     "description": string,
@@ -45,17 +56,26 @@ export interface Product{
     "category": Category,
 
 }
+
 export interface MyImage {
     itemImageSrc: string;
     thumbnailImageSrc: string;
     alt: string;
 }
+
 export interface bill {
     ID_Bill: string;
     UserID: number;
     Total: number;
     Status: string;
 }
+
+export interface ShopCart {
+    ID_SC: number;
+    ID_CS: number;
+    ID_User: number;
+}
+
 export interface ProductItem {
     "id": number,
     "name": string,

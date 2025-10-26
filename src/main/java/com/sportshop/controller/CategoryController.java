@@ -1,7 +1,5 @@
 package com.sportshop.controller;
 
-import java.util.List;
-
 import com.sportshop.entity.CategoryEntity;
 import com.sportshop.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,7 @@ public class CategoryController {
 //		return categortService.getAll();
 //	}
     @GetMapping("/all")
-    public ResponseEntity<?> getAllProducts() {
+    public ResponseEntity<?> getAllCategorys() {
         try {
             return new ResponseEntity<>(categoryRepo.findAll(), HttpStatus.OK);
         } catch (Exception e) {
@@ -35,7 +33,7 @@ public class CategoryController {
     }
     // Lấy danh muc theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryEntity> getProductById(@PathVariable("id") Long id) {
+    public ResponseEntity<CategoryEntity> getCategoryById(@PathVariable("id") Long id) {
         CategoryEntity category = categoryRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
         if (category == null) {
             return ResponseEntity.notFound().build();

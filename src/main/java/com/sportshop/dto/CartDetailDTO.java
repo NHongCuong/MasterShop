@@ -1,0 +1,55 @@
+package com.sportshop.dto;
+
+import java.util.Date;
+
+public class CartDetailDTO {
+
+    private Long idSC;
+    private Long idProduct;
+    private Long idMaterial;
+    private Long idD;
+
+    private Long amountCD;
+    private Long idColor;
+    private Date createdAt;
+    private Date updatedAt;
+
+    // Thông tin mở rộng hiển thị cho frontend
+    private String productName;
+    private String materialName;
+    private String dimensionName;
+
+    // Getters & Setters
+    public Long getIdSC() { return idSC; }
+    public void setIdSC(Long idSC) { this.idSC = idSC; }
+
+    public Long getIdProduct() { return idProduct; }
+    public void setIdProduct(Long idProduct) { this.idProduct = idProduct; }
+
+    public Long getIdMaterial() { return idMaterial; }
+    public void setIdMaterial(Long idMaterial) { this.idMaterial = idMaterial; }
+
+    public Long getIdD() { return idD; }
+    public void setIdD(Long idD) { this.idD = idD; }
+
+    public Long getAmountCD() { return amountCD; }
+    public void setAmountCD(Long amountCD) { this.amountCD = amountCD; }
+
+    public Long getIdColor() { return idColor; }
+    public void setIdColor(Long idColor) { this.idColor = idColor; }
+
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
+
+    public String getMaterialName() { return materialName; }
+    public void setMaterialName(String materialName) { this.materialName = materialName; }
+
+    public String getDimensionName() { return dimensionName; }
+    public void setDimensionName(String dimensionName) { this.dimensionName = dimensionName; }
+}
