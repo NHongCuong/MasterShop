@@ -71,4 +71,12 @@ public class DimensionsEntity {
         this.demensions = demensions;
     }
 
+    public List<CartDetailEntity> getDemensionsCartDetail() {
+        return demensionsCartDetail;
+    }
+
+    public void setDemensionsCartDetail(List<CartDetailEntity> demensionsCartDetail) {
+        this.demensionsCartDetail = demensionsCartDetail;
+    }
+
 }

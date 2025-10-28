@@ -219,10 +219,10 @@ onMounted(() => {
             </div>
             <div class="mt-4">
               <span><b>Dimensions:</b></span>
-              <!-- <span v-if="isNotHaveSize()">
-                  {{ ' Không xác định' }}
-              </span>
-              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  /> -->
+<!--               <span v-if="isNotHaveSize()">-->
+<!--                  {{ ' Không xác định' }}-->
+<!--              </span>-->
+<!--              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />-->
             </div>
             <div class="row g-3 align-items-center mt-4">
               <div class="col-auto">

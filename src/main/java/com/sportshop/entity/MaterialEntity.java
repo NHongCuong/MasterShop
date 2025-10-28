@@ -19,6 +19,7 @@ public class MaterialEntity {
     @OneToMany(mappedBy = "materialcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> material;
+
     public Long getId() {
         return Id;
     }
