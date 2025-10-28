@@ -30,7 +30,7 @@ public class ProductEntity {
 	@JoinColumn(name = "ID_S")
 	private SupplierEntity supplier;
 
-    @OneToMany(mappedBy = "orderDetail")
+    @OneToMany(mappedBy = "productcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> products;
 

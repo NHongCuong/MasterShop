@@ -194,9 +194,14 @@ public class UserController {
 	@PostMapping("/authenticate")
 	public ResponseEntity<AuthResponse> authenticate(Authentication authentication) throws Exception
 	{
-		String email = authentication.getName(); // 'example@yahoo.com'
-		UserDTO userInfo = userService.loadUserByEmail(email);
-		return ResponseEntity.ok(new AuthResponse(200, "Authenticated",userInfo));
+        try{
+            String email = authentication.getName(); // 'example@yahoo.com'
+            UserDTO userInfo = userService.loadUserByEmail(email);
+            return ResponseEntity.ok(new AuthResponse(200, "Authenticated",userInfo));
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+
 	}
 	@PutMapping("/signup")
 	public ResponseEntity<AuthResponse> signup(@RequestBody UserDTO userDTO) {

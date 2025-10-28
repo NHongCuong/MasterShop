@@ -22,14 +22,14 @@ public class CartDetailConverter {
             ShopcartEntity sc = new ShopcartEntity();
             sc.setId(dto.getIdSC());
 
-            entity.setCartsDetail(sc);
+            entity.setShopCartDetail(sc);
         }
 
         if (dto.getIdProduct() != null) {
             ProductEntity product = new ProductEntity();
             product.setId(dto.getIdProduct());
             product.setName(dto.getProductName());
-            entity.setOrderDetail(product);
+            entity.setProductCartDetail(product);
         }
 
         // --- Các liên kết tùy chọn ---
@@ -37,7 +37,7 @@ public class CartDetailConverter {
             MaterialEntity material = new MaterialEntity();
             material.setId(dto.getIdMaterial());
             material.setNameMaterial(dto.getMaterialName());
-            entity.setCartDetail(material);
+            entity.setMaterialCartDetail(material);
         }
 
         if (dto.getIdD() != null) {
@@ -66,20 +66,20 @@ public class CartDetailConverter {
         if (entity.getId() != null) {
             dto.setIdSC(entity.getId().getIdSC());
             dto.setIdProduct(entity.getId().getIdProduct());
-            dto.setProductName(entity.getOrderDetail().getName());
+            dto.setProductName(entity.getProductCartDetail().getName());
 
         }
 
         // --- Lấy thông tin các entity liên kết (có thể null) ---
         dto.setIdMaterial(
-                entity.getCartDetail() != null ? entity.getCartDetail().getId() : null
+                entity.getMaterialCartDetail() != null ? entity.getMaterialCartDetail().getId() : null
 
         );
 
         dto.setIdD(
                 entity.getDemensionsCartDetail() != null ? entity.getDemensionsCartDetail().getId() : null
         );
-        dto.setMaterialName(entity.getCartDetail() != null ? entity.getCartDetail().getNameMaterial() : null);
+        dto.setMaterialName(entity.getMaterialCartDetail() != null ? entity.getMaterialCartDetail().getNameMaterial() : null);
         dto.setDimensionName(entity.getDemensionsCartDetail() != null ? entity.getDemensionsCartDetail().getNameD() : null);
         dto.setIdColor(entity.getIdColor());
 

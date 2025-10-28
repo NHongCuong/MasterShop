@@ -25,7 +25,7 @@ public class ShopcartEntity {
     @JoinColumn(name="ID_CS")
     public  CartStatusEntity cartStatus;
 
-    @OneToMany(mappedBy = "cartsDetail")
+    @OneToMany(mappedBy = "shopcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> cartDetail;
 

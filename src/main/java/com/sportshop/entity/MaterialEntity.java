@@ -16,7 +16,7 @@ public class MaterialEntity {
     @Column(name="Name_Material")
     public String NameMaterial;
 
-    @OneToMany(mappedBy = "cartDetail")
+    @OneToMany(mappedBy = "materialcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> material;
     public Long getId() {

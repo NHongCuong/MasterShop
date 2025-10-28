@@ -13,18 +13,18 @@ public class CartDetailEntity {
     @MapsId("idSC")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ID_SC")
-    private ShopcartEntity cartsDetail;
+    private ShopcartEntity shopcartdetail;
 
     @MapsId("idProduct")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ID_Product")
-    private ProductEntity orderDetail;
+    private ProductEntity productcartdetail;
 
     // ⚠️ các quan hệ này có thể NULL
     //@MapsId("idMaterial")
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "ID_Material",nullable = true)
-    private MaterialEntity cartDetail;
+    private MaterialEntity materialcartdetail;
 
     //@MapsId("idD")
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
@@ -47,14 +47,14 @@ public class CartDetailEntity {
     public CartDetailId getId() { return id; }
     public void setId(CartDetailId id) { this.id = id; }
 
-    public ShopcartEntity getCartsDetail() { return cartsDetail; }
-    public void setCartsDetail(ShopcartEntity cartsDetail) { this.cartsDetail = cartsDetail; }
+    public ShopcartEntity getShopCartDetail() { return shopcartdetail; }
+    public void setShopCartDetail(ShopcartEntity shopcartdetail) { this.shopcartdetail = shopcartdetail; }
 
-    public ProductEntity getOrderDetail() { return orderDetail; }
-    public void setOrderDetail(ProductEntity orderDetail) { this.orderDetail = orderDetail; }
+    public ProductEntity getProductCartDetail() { return productcartdetail; }
+    public void setProductCartDetail(ProductEntity productcartdetail) { this.productcartdetail = productcartdetail; }
 
-    public MaterialEntity getCartDetail() { return cartDetail; }
-    public void setCartDetail(MaterialEntity cartDetail) { this.cartDetail = cartDetail; }
+    public MaterialEntity getMaterialCartDetail() { return materialcartdetail; }
+    public void setMaterialCartDetail(MaterialEntity cartDetail) { this.materialcartdetail = materialcartdetail; }
 
     public DimensionsEntity getDemensionsCartDetail() { return demensionsCartDetail; }
     public void setDemensionsCartDetail(DimensionsEntity demensionsCartDetail) { this.demensionsCartDetail = demensionsCartDetail; }

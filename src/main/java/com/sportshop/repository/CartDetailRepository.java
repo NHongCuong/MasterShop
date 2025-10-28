@@ -20,9 +20,9 @@ public interface CartDetailRepository extends JpaRepository<CartDetailEntity, Ca
 //    })
 //    List<CartDetailEntity> findAll();
     @Query("SELECT cd FROM CartDetailEntity cd " +
-            "LEFT JOIN FETCH cd.cartsDetail " +
-            "LEFT JOIN FETCH cd.orderDetail " +
-            "LEFT JOIN FETCH cd.cartDetail " +
+            "LEFT JOIN FETCH cd.shopcartdetail " +
+            "LEFT JOIN FETCH cd.productcartdetail " +
+            "LEFT JOIN FETCH cd.materialcartdetail " +
             "LEFT JOIN FETCH cd.demensionsCartDetail ")
     List<CartDetailEntity> findAllIncludeNulls();
 
