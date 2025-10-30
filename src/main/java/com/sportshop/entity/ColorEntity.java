@@ -1,6 +1,8 @@
 package com.sportshop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name="color")
@@ -12,6 +14,10 @@ public class ColorEntity {
 
     @Column(name="Name_Color")
     public String NameColor;
+
+    @OneToMany(mappedBy = "detailColor")
+    @JsonIgnore
+    private List<DetailProductColorEntity> detailproductcolor;
 
     public Long getId() {
         return Id;
@@ -27,6 +33,13 @@ public class ColorEntity {
 
     public void setNameColor(String nameColor) {
         NameColor = nameColor;
+    }
+    public List<DetailProductColorEntity> getDetailproductcolor() {
+        return detailproductcolor;
+    }
+
+    public void setDetailproductcolor(List<DetailProductColorEntity> detailproductcolor) {
+        this.detailproductcolor = detailproductcolor;
     }
 
 }

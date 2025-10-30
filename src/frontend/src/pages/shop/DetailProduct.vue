@@ -9,7 +9,8 @@ import Image from 'primevue/image';
 import {useToast} from "primevue/usetoast";
 import {MyApp} from "../../app/MyApp.ts";
 import Toast from "primevue/toast";
-
+//import SelectButton from "primevue/selectbutton";   // ✅ dùng để chọn màu / kích thước
+import Dropdown from "primevue/dropdown";
 
 const myProduct = ref<Product>();
 const route = useRoute();
@@ -17,23 +18,22 @@ const idProduct = route.params.id;
 const images = ref<MyImage[]>([]);
 const checkingAmount = ref(false);
 const CART_API = 'http://localhost:8081/cart';
-// const USER_API= 'http://localhost:8081/user';
-// const CARTSTATUS_API= 'http://localhost:8081/cartstatus';
-const userList = ref<User[]>([]);
-// const cartstatusList = ref<CartStatus[]>([])
-const shopcartList = ref<ShopCart[]>([])
-// const selectedShopCart = ref<any>(null)
-const selectedUser = ref<any>(null)
+const USER_API = 'http://localhost:8081/user';
 const toast = useToast()
-const visibleCount = computed(() => {
-  return images.value.length > 3 ? 3 : images.value.length;
-});
+const visibleCount = computed(() => (images.value.length > 3 ? 3 : images.value.length));
 const isAuthenticated = ref(false);
+const selectedUser = ref<any>(null);
 
-//const user = ref<User>();
-axios.get("http://localhost:8081/user").then(res => {
-  userList.value = res.data;
-});
+const userList = ref<User[]>([]);
+const shopcartList = ref<ShopCart[]>([]);
+
+// ✅ Các danh sách thuộc tính sản phẩm
+const colorList = ref<any[]>([]);
+const materialList = ref<any[]>([]);
+const dimensionList = ref<any[]>([]);
+
+axios.get(USER_API).then(res => (userList.value = res.data));
+
 onMounted(() => {
   MyApp.getIntance().authenticate(isAuthenticated, selectedUser);
 });
@@ -52,26 +52,18 @@ const initForm = {
   ID_Color: null,
   ID_Material: null,
   ID_Dimensions: null
-}
+};
 let form = reactive<FormState>(JSON.parse(JSON.stringify(initForm)));
 
 const responsiveOptions = ref([
-  {
-    breakpoint: '991px',
-    numVisible: 4
-  },
-  {
-    breakpoint: '767px',
-    numVisible: 3
-  },
-  {
-    breakpoint: '575px',
-    numVisible: 1
-  }
+  { breakpoint: '991px', numVisible: 4 },
+  { breakpoint: '767px', numVisible: 3 },
+  { breakpoint: '575px', numVisible: 1 }
 ]);
 
+// ✅ Load thông tin sản phẩm
 function loadProduct() {
-  axios.get("http://localhost:8081/product/" + idProduct).then(res => {
+  axios.get(`http://localhost:8081/product/${idProduct}`).then(res => {
     myProduct.value = res.data;
     if (myProduct.value?.avatar) {
       images.value.push({
@@ -83,58 +75,72 @@ function loadProduct() {
   });
 }
 
-//
-// const loadUsers = async () => {
-//   try {
-//     const res = await axios.get(`${USER_API}`)
-//     userList.value = res.data
-//   } catch (err) {
-//     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải user', life: 2000 })
-//   }
-// }
-// const loadStatusCart = async () => {
-//   try {
-//     const res = await axios.get(`${CARTSTATUS_API}/all`)
-//     cartstatusList.value = res.data
-//   } catch (err) {
-//     toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải status cart', life: 2000 })
-//   }
-// }
-const loadShopCart = async () => {
+// ✅ Load danh sách màu theo sản phẩm
+async function loadColors() {
   try {
-    const res = await axios.get(`${CART_API}/all`)
-    shopcartList.value = res.data
+    const res = await axios.get(`http://localhost:8081/detailcolor/all/${idProduct}`);
+    colorList.value = res.data.map((c: any) => ({
+      label: c.nameColor || c.name || `Color ${c.idColor}`,
+      value: c.idColor
+    }));
   } catch (err) {
-    toast.add({severity: 'error', summary: 'Lỗi', detail: 'Không thể tải shop cart', life: 2000})
+    console.error("❌ Lỗi tải màu:", err);
   }
 }
 
+// ✅ Load danh sách chất liệu
+async function loadMaterials() {
+  try {
+    const res = await axios.get(`http://localhost:8081/detailmaterial/all/${idProduct}`);
+    materialList.value = res.data.map((m: any) => ({
+      label: m.nameMaterial || m.name || `Material ${m.idMaterial}`,
+      value: m.idMaterial
+    }));
+  } catch (err) {
+    console.error("❌ Lỗi tải chất liệu:", err);
+  }
+}
+
+// ✅ Load danh sách kích thước
+async function loadDimensions() {
+  try {
+    const res = await axios.get(`http://localhost:8081/dimensions/all/${idProduct}`);
+    dimensionList.value = res.data.map((d: any) => ({
+      label: d.nameD || d.name || `Size ${d.idD}`,
+      value: d.idD
+    }));
+  } catch (err) {
+    console.error("❌ Lỗi tải kích thước:", err);
+  }
+}
+
+// ✅ Load tất cả giỏ hàng
+const loadShopCart = async () => {
+  try {
+    const res = await axios.get(`${CART_API}/all`);
+    shopcartList.value = res.data;
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải shop cart', life: 2000 });
+  }
+};
+
+// ✅ Tăng giảm số lượng
 const changeAmount = (event: Event) => {
   let button = event.target as HTMLElement;
-
   if (button.className.includes('btn-minuse'))
     form.Amount = form.Amount > 1 ? form.Amount - 1 : form.Amount;
   else
     form.Amount++;
-}
+};
 
-function BuyNow() {
-}
-
+// ✅ Thêm vào giỏ hàng
 async function AdddCart() {
   try {
-    // ✅ Tạo dữ liệu giỏ hàng gửi lên backend
     const newCart = {
-      userSC: {id: selectedUser.value.id},
-      cartStatus: {id: 3},
+      userSC: { id: selectedUser.value.id },
+      cartStatus: { id: 3 },
     };
-
-    console.log("🛒 Dữ liệu gửi lên server:", newCart);
-
-    // 🚀 Gửi request
     const res = await axios.post(`${CART_API}/add`, newCart);
-
-    // ✅ Một số API trả 200 thay vì 201, ta xử lý linh hoạt
     if (res.status === 200 || res.status === 201) {
       toast.add({
         severity: "success",
@@ -142,11 +148,8 @@ async function AdddCart() {
         detail: "Đã thêm sản phẩm vào giỏ hàng",
         life: 2000,
       });
-
-      // 🔄 Cập nhật danh sách giỏ hàng
       await loadShopCart();
     } else {
-      console.warn("⚠️ Mã phản hồi khác thường:", res.status);
       toast.add({
         severity: "warn",
         summary: "Cảnh báo",
@@ -155,7 +158,6 @@ async function AdddCart() {
       });
     }
   } catch (err: any) {
-    console.error("❌ Lỗi thêm giỏ hàng:", err);
     toast.add({
       severity: "error",
       summary: "Lỗi",
@@ -164,13 +166,16 @@ async function AdddCart() {
     });
   }
 }
-
-
+function BuyNow() {
+}
+// ✅ Khi mở trang
 onMounted(() => {
   loadProduct();
-})
+  loadColors();
+  loadMaterials();
+  loadDimensions();
+});
 </script>
-
 <template>
   <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
     <div class="row w-100">
@@ -202,27 +207,40 @@ onMounted(() => {
 
           <hr>
           <div v-if="myProduct">
-            <div>
+            <div class="mt-3">
               <span><b>Color:</b></span>
-              <!-- <span v-if="isNotHaveColor()">
-                  {{ ' Không xác định' }}
-              </span>
-              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Color" optionValue="ID_Color" class="mt-3" :options="myProduct?.detail_product_color" optionLabel="color.Name_Color"  /> -->
+              <Dropdown
+                  v-model="form.ID_Color"
+                  :options="colorList"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Chọn màu"
+                  class="mt-2 w-50"
+              />
             </div>
 
             <div class="mt-4">
               <span><b>Material:</b></span>
-              <!--                             <span v-if="isNotHaveMaterial()">-->
-              <!--                                {{ ' Không xác định' }}-->
-              <!--                            </span>-->
-              <!--                            <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Material" optionValue="ID_Material" class="mt-3" :options="myProduct?.detail_product_material" optionLabel="material.Name_Material"  />-->
+              <Dropdown
+                  v-model="form.ID_Material"
+                  :options="materialList"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Chọn chất liệu"
+                  class="mt-2 w-50"
+              />
             </div>
+
             <div class="mt-4">
               <span><b>Dimensions:</b></span>
-<!--               <span v-if="isNotHaveSize()">-->
-<!--                  {{ ' Không xác định' }}-->
-<!--              </span>-->
-<!--              <SelectButton  v-else @change="CheckAmount()" v-model="form.ID_Dimensions" optionValue="ID_D" class="mt-3" :options="myProduct?.dimensions" optionLabel="Name_D"  />-->
+              <Dropdown
+                  v-model="form.ID_Dimensions"
+                  :options="dimensionList"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Chọn kích thước"
+                  class="mt-2 w-50"
+              />
             </div>
             <div class="row g-3 align-items-center mt-4">
               <div class="col-auto">

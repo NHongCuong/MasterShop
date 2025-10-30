@@ -1,12 +1,8 @@
 package com.sportshop.service.impl;
 
-import com.sportshop.converter.DimensionsConverter;
 import com.sportshop.converter.MaterialConverter;
-import com.sportshop.dto.DimensionsDTO;
 import com.sportshop.dto.MaterialDTO;
-import com.sportshop.entity.DimensionsEntity;
 import com.sportshop.entity.MaterialEntity;
-import com.sportshop.repository.DimensionsRepository;
 import com.sportshop.repository.MaterialRepository;
 import com.sportshop.service.IMaterialService;
 import org.springframework.beans.factory.annotation.Autowired;

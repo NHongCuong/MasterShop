@@ -54,6 +54,9 @@ export interface Product {
     "amount": number,
     "supplier": Supplier,
     "category": Category,
+    defaultColorId?: number | null;
+    defaultMaterialId?: number | null;
+    defaultDimensionId?: number | null;
 
 }
 
@@ -84,4 +87,20 @@ export interface ProductItem {
     "avatar": string,
     "amount": number,
     "category": Category
+}
+export interface DetailProductColor{
+    "idColor": number;
+    "idProduct":number
+
+}
+export interface DetailProductMaterial{
+    "idMaterial":number;
+    "idProduct":number
+}
+export interface Dimensions{
+    "idDimension":number;
+    "name":String;
+    "idProduct":number;
+    "createdAt":Date;
+    "updatedAt":Date
 }

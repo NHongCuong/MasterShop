@@ -3,7 +3,6 @@ package com.sportshop.dto;
 import com.sportshop.entity.BillEntity;
 import com.sportshop.entity.BillStatusEntity;
 import com.sportshop.entity.UserEntity;
-
 import java.time.LocalDateTime;
 
 public class BillStatusHistoryDTO {

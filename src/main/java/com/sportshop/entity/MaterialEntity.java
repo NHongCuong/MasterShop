@@ -1,7 +1,6 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.util.List;
 
@@ -19,6 +18,10 @@ public class MaterialEntity {
     @OneToMany(mappedBy = "materialcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> material;
+
+    @OneToMany(mappedBy = "detailMaterial")
+    @JsonIgnore
+    private List<DetailProductMaterialEntity> detailproductmaterial;
 
     public Long getId() {
         return Id;
@@ -42,6 +45,15 @@ public class MaterialEntity {
 
     public void setMaterial(List<CartDetailEntity> material) {
         this.material = material;
+    }
+
+
+    public List<DetailProductMaterialEntity> getDetailproductmaterial() {
+        return detailproductmaterial;
+    }
+
+    public void setDetailproductmaterial(List<DetailProductMaterialEntity> detailproductmaterial) {
+        this.detailproductmaterial = detailproductmaterial;
     }
 
 

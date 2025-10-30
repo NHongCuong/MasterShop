@@ -3,7 +3,6 @@ package com.sportshop.controller;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

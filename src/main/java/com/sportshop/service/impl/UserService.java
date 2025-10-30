@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.sportshop.converter.UserConverter;
 import com.sportshop.dto.UserDTO;
 import com.sportshop.entity.UserEntity;

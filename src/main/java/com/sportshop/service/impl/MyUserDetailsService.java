@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import com.sportshop.entity.UserEntity;
 import com.sportshop.repository.UserRepository;
 import com.sportshop.security.MyUserDetails;

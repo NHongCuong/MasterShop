@@ -1,7 +1,5 @@
 package com.sportshop.dto;
 
-import org.springframework.stereotype.Component;
-
 import java.util.Date;
 
 public class CartStatusDTO {

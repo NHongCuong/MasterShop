@@ -1,11 +1,7 @@
 package com.sportshop.controller;
 
-import com.sportshop.dto.ShopcartDTO;
-import com.sportshop.entity.CategoryEntity;
 import com.sportshop.entity.ShopcartEntity;
-import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.ShopcartRepository;
-import com.sportshop.service.ICategoryService;
 import com.sportshop.service.IShopcartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

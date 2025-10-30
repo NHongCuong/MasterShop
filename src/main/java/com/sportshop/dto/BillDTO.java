@@ -2,7 +2,6 @@ package com.sportshop.dto;
 
 import com.sportshop.entity.BillStatusEntity;
 import com.sportshop.entity.OderEntity;
-
 import java.util.Date;
 
 public class BillDTO {

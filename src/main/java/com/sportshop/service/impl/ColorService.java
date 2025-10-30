@@ -2,9 +2,7 @@ package com.sportshop.service.impl;
 
 import com.sportshop.converter.ColorConverter;
 import com.sportshop.dto.ColorDTO;
-import com.sportshop.dto.DimensionsDTO;
 import com.sportshop.entity.ColorEntity;
-import com.sportshop.entity.DimensionsEntity;
 import com.sportshop.repository.ColorRepository;
 import com.sportshop.service.IColorService;
 import org.springframework.beans.factory.annotation.Autowired;

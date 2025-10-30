@@ -5,7 +5,6 @@ import com.sportshop.entity.ProductEntity;
 import com.sportshop.entity.SupplierEntity;
 import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.ProductRepository;
-
 import com.sportshop.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

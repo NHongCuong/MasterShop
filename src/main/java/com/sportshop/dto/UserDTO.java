@@ -1,8 +1,5 @@
 package com.sportshop.dto;
 
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.sportshop.entity.UserStatusEntity;

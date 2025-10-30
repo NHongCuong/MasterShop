@@ -1,6 +1,5 @@
 package com.sportshop.converter;
 
-
 import com.sportshop.dto.SupplierDTO;
 import com.sportshop.entity.SupplierEntity;
 import org.springframework.stereotype.Component;

@@ -5,7 +5,6 @@ import com.sportshop.converter.SupplierConverter;
 import com.sportshop.dto.SupplierDTO;
 import com.sportshop.entity.SupplierEntity;
 import com.sportshop.repository.SupplierRepository;
-import com.sportshop.service.ICategoryService;
 import com.sportshop.service.ISupplierService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

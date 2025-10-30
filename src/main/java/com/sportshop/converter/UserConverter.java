@@ -1,10 +1,8 @@
 package com.sportshop.converter;
 
 import org.springframework.stereotype.Component;
-
 import com.sportshop.dto.UserDTO;
 import com.sportshop.entity.UserEntity;
-import com.sportshop.entity.UserTypeEntity;
 
 @Component
 public class UserConverter {

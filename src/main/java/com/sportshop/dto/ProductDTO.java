@@ -1,10 +1,5 @@
 package com.sportshop.dto;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
 import com.sportshop.entity.CategoryEntity;
 import com.sportshop.entity.SupplierEntity;
 

@@ -1,8 +1,6 @@
 package com.sportshop.controller;
 
 import com.sportshop.repository.UserStatusRepository;
-import com.sportshop.repository.UserTypeRepository;
-import com.sportshop.service.ICategoryService;
 import com.sportshop.service.IUserStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

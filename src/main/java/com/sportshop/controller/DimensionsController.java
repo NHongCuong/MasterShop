@@ -1,10 +1,7 @@
 package com.sportshop.controller;
 
-import com.sportshop.entity.CartStatusEntity;
 import com.sportshop.entity.DimensionsEntity;
-import com.sportshop.repository.CartStatusRepository;
 import com.sportshop.repository.DimensionsRepository;
-import com.sportshop.service.ICartStatusService;
 import com.sportshop.service.IDimensionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -2,9 +2,7 @@ package com.sportshop.service.impl;
 
 
 import com.sportshop.converter.DimensionsConverter;
-import com.sportshop.dto.CategoryDTO;
 import com.sportshop.dto.DimensionsDTO;
-import com.sportshop.entity.CategoryEntity;
 import com.sportshop.entity.DimensionsEntity;
 import com.sportshop.repository.DimensionsRepository;
 import com.sportshop.service.IDimensionsService;

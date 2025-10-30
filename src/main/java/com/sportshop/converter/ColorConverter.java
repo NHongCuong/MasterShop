@@ -1,9 +1,7 @@
 package com.sportshop.converter;
 
 import com.sportshop.dto.ColorDTO;
-import com.sportshop.dto.DimensionsDTO;
 import com.sportshop.entity.ColorEntity;
-import com.sportshop.entity.DimensionsEntity;
 import org.springframework.stereotype.Component;
 
 @Component
