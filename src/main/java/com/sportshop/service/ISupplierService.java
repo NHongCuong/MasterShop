@@ -1,8 +1,7 @@
 package com.sportshop.service;
 
-import com.sportshop.dto.CategoryDTO;
-import com.sportshop.dto.SupplierDTO;
 
+import com.sportshop.dto.SupplierDTO;
 import java.util.List;
 
 public interface ISupplierService {

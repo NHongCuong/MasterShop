@@ -5,17 +5,21 @@ import com.sportshop.entity.ProductEntity;
 import com.sportshop.entity.SupplierEntity;
 import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.ProductRepository;
-
 import com.sportshop.repository.SupplierRepository;
+import com.sportshop.service.impl.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/product")
 @CrossOrigin
 public class ProductController {
+    @Autowired
+    ProductService productService;
 
     @Autowired
     private ProductRepository productRepo;
@@ -30,7 +34,7 @@ public class ProductController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllProducts() {
         try {
-            return new ResponseEntity<>(productRepo.findAll(), HttpStatus.OK);
+            return new ResponseEntity<>(productService.getAllProduct(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi lấy danh sách: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -38,11 +42,8 @@ public class ProductController {
     // Lấy sản phẩm theo ID
     @GetMapping("/{id}")
     public ResponseEntity<ProductEntity> getProductById(@PathVariable("id") Long id) {
-        ProductEntity product = productRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
-        if (product == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(product);
+        ProductEntity productEntity = productService.getByID(id);
+        return new ResponseEntity<>(productEntity, HttpStatus.OK);
     }
 
     // 🟢 API thêm sản phẩm
@@ -80,7 +81,7 @@ public class ProductController {
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductEntity product) {
         try {
-            ProductEntity existing = productRepo.findOne(id);
+            ProductEntity existing = productService.getByID(id);
             if (existing == null) {
                 return new ResponseEntity<>("Không tìm thấy sản phẩm ID " + id, HttpStatus.NOT_FOUND);
             }
@@ -101,7 +102,7 @@ public class ProductController {
                 existing.setSupplier(sup);
             }
 
-            ProductEntity updated = productRepo.save(existing);
+            ProductEntity updated = productService.save(existing);
             return new ResponseEntity<>(updated, HttpStatus.OK);
 
         } catch (Exception e) {

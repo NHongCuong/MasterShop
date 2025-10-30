@@ -1,7 +1,6 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
@@ -69,6 +68,14 @@ public class DimensionsEntity {
 
     public void setDemensions(ProductEntity demensions) {
         this.demensions = demensions;
+    }
+
+    public List<CartDetailEntity> getDemensionsCartDetail() {
+        return demensionsCartDetail;
+    }
+
+    public void setDemensionsCartDetail(List<CartDetailEntity> demensionsCartDetail) {
+        this.demensionsCartDetail = demensionsCartDetail;
     }
 
 }

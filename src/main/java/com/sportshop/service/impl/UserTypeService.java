@@ -1,12 +1,8 @@
 package com.sportshop.service.impl;
 
-import com.sportshop.converter.CategoryConverter;
 import com.sportshop.converter.UserTypeConverter;
-import com.sportshop.dto.CategoryDTO;
 import com.sportshop.dto.UserTypeDTO;
-import com.sportshop.entity.CategoryEntity;
 import com.sportshop.entity.UserTypeEntity;
-import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.UserTypeRepository;
 import com.sportshop.service.IUserTypeService;
 import org.springframework.beans.factory.annotation.Autowired;

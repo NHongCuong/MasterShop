@@ -49,19 +49,19 @@ export default [
                 path: 'user',
                 name: 'user',
                 component: () => import('./pages/admin/user.vue'),
-                meta: {title: 'user'}
+                meta: {title: 'Users'}
             },
             {
                 path: 'product',
                 name: 'product',
                 component: () => import('./pages/admin/product.vue'),
-                meta: {title: 'product'}
+                meta: {title: 'Products'}
             },
             {
                 path: 'category',
                 name: 'category',
                 component: () => import('./pages/admin/category.vue'),
-                meta: { title: 'category' }
+                meta: { title: 'Category' }
             }
 
 
@@ -73,7 +73,13 @@ export default [
         name: 'contact',
         component: () => import('./pages/Contact.vue'),
         meta: { title: 'Contact' }
-    },  
+    },
+    {
+        path: '/cart',
+        name: 'cart',
+        component: () => import('./pages/cart.vue'),
+        meta: { title: 'Cart' }
+    },
     {
         path: '/auth/signin',
         name: 'signin',

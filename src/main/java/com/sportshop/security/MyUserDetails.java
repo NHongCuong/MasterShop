@@ -3,10 +3,10 @@ package com.sportshop.security;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 public class MyUserDetails implements UserDetails {
 	private String password;
 	private String username;

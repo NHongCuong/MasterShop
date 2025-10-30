@@ -279,7 +279,7 @@ CREATE TABLE `detail_product_image` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `detail_product_material`
+-- Table structure for table `aaterial`
 --
 
 CREATE TABLE `detail_product_material` (

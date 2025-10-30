@@ -1,7 +1,6 @@
 package com.sportshop.service;
 
 import java.util.List;
-
 import com.sportshop.dto.UserDTO;
 import com.sportshop.response.AuthResponse;
 

@@ -1,7 +1,6 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class ProductEntity {
 	@JoinColumn(name = "ID_S")
 	private SupplierEntity supplier;
 
-    @OneToMany(mappedBy = "orderDetail")
+    @OneToMany(mappedBy = "productcartdetail")
     @JsonIgnore
     private List<CartDetailEntity> products;
 
@@ -38,7 +37,16 @@ public class ProductEntity {
     @JsonIgnore
     private List<DimensionsEntity> productDemensions;
 
-	public Long getId() {
+    @OneToMany(mappedBy = "detailColorProduct")
+    @JsonIgnore
+    private List<DetailProductColorEntity> detailproductcolor;
+
+
+    @OneToMany(mappedBy = "detailMaterialProduct")
+    @JsonIgnore
+    private List<DetailProductMaterialEntity> detailproductmaterial;
+
+    public Long getId() {
 		return id;
 	}
 	public void setId(Long id) {
@@ -86,7 +94,37 @@ public class ProductEntity {
 	public void setSupplier(SupplierEntity supplier) {
 		this.supplier = supplier;
 	}
+    public List<CartDetailEntity> getProducts() {
+        return products;
+    }
 
+    public void setProducts(List<CartDetailEntity> products) {
+        this.products = products;
+    }
+
+    public List<DimensionsEntity> getProductDemensions() {
+        return productDemensions;
+    }
+
+    public void setProductDemensions(List<DimensionsEntity> productDemensions) {
+        this.productDemensions = productDemensions;
+    }
+
+    public List<DetailProductColorEntity> getDetailproductcolor() {
+        return detailproductcolor;
+    }
+
+    public void setDetailproductcolor(List<DetailProductColorEntity> detailproductcolor) {
+        this.detailproductcolor = detailproductcolor;
+    }
+
+    public List<DetailProductMaterialEntity> getDetailproductmaterial() {
+        return detailproductmaterial;
+    }
+
+    public void setDetailproductmaterial(List<DetailProductMaterialEntity> detailproductmaterial) {
+        this.detailproductmaterial = detailproductmaterial;
+    }
     public void setPublished(boolean b) {
     }
 

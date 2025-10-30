@@ -1,7 +1,5 @@
 package com.sportshop.controller;
 
-import com.sportshop.entity.CategoryEntity;
-import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.UserTypeRepository;
 import com.sportshop.service.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;

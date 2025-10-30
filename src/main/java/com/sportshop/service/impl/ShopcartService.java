@@ -1,12 +1,8 @@
 package com.sportshop.service.impl;
 
-import com.sportshop.converter.BillConverter;
 import com.sportshop.converter.ShopcartConverter;
-import com.sportshop.dto.BillDTO;
 import com.sportshop.dto.ShopcartDTO;
-import com.sportshop.entity.BillEntity;
 import com.sportshop.entity.ShopcartEntity;
-import com.sportshop.repository.BillRepository;
 import com.sportshop.repository.ShopcartRepository;
 import com.sportshop.service.IShopcartService;
 import org.springframework.beans.factory.annotation.Autowired;

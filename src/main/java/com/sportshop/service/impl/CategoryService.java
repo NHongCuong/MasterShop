@@ -2,12 +2,8 @@ package com.sportshop.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.sportshop.dto.ProductDTO;
-import com.sportshop.entity.ProductEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.sportshop.converter.CategoryConverter;
 import com.sportshop.dto.CategoryDTO;
 import com.sportshop.entity.CategoryEntity;

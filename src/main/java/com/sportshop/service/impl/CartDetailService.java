@@ -1,22 +1,17 @@
 package com.sportshop.service.impl;
 
-import com.sportshop.converter.BillConverter;
+
 import com.sportshop.converter.CartDetailConverter;
-import com.sportshop.dto.BillDTO;
 import com.sportshop.dto.CartDetailDTO;
-import com.sportshop.entity.BillEntity;
 import com.sportshop.entity.CartDetailEntity;
 import com.sportshop.entity.CartDetailId;
-import com.sportshop.repository.BillRepository;
 import com.sportshop.repository.CartDetailRepository;
 import com.sportshop.service.ICartDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 @Service
 public class CartDetailService implements ICartDetailService {
