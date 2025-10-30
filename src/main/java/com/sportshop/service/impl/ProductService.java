@@ -2,9 +2,12 @@ package com.sportshop.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+<<<<<<< HEAD
 import java.util.Optional;
 
 import org.hibernate.loader.plan.spi.Return;
+=======
+>>>>>>> f1710986fd81cb55e3a0509a9c18bd566e888d8a
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.sportshop.converter.ProductConverter;
