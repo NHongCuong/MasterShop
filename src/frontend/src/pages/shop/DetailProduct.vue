@@ -106,8 +106,8 @@ async function loadDimensions() {
   try {
     const res = await axios.get(`http://localhost:8081/dimensions/all/${idProduct}`);
     dimensionList.value = res.data.map((d: any) => ({
-      label: d.nameD || d.name || `Size ${d.idD}`,
-      value: d.idD
+      label: d.nameD || d.name || `Size ${d.id}`,
+      value: d.id
     }));
   } catch (err) {
     console.error("❌ Lỗi tải kích thước:", err);

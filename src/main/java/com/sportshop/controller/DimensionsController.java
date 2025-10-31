@@ -1,37 +1,45 @@
 package com.sportshop.controller;
 
-import com.sportshop.entity.DimensionsEntity;
-import com.sportshop.repository.DimensionsRepository;
-import com.sportshop.service.IDimensionsService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.sportshop.dto.DimensionsDTO;
+import com.sportshop.service.DimensionsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/dimensions")
 public class DimensionsController {
-    @Autowired
-    IDimensionsService demensionsService;
-    @Autowired
-    private DimensionsRepository dimensionsRepo;
+    private final DimensionsService service;
 
-    @GetMapping("/all")
-    public ResponseEntity<?> getAllDimensions() {
-        try {
-            return new ResponseEntity<>(dimensionsRepo.findAll(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Lỗi khi lấy danh sách: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public DimensionsController(DimensionsService service) {
+        this.service = service;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<DimensionsEntity> getDimensionsById(@PathVariable("id") Long id) {
-        DimensionsEntity dimensions = dimensionsRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
-        if (dimensions == null) {
-            return ResponseEntity.notFound().build();
+    /**
+     * ✅ API: GET /dimensions/all/{idProduct}
+     * Lấy danh sách kích thước theo idProduct
+     */
+    @GetMapping("/all/{idProduct}")
+    public ResponseEntity<List<DimensionsDTO>> getAllDimensionsByProduct(@PathVariable Long idProduct) {
+        List<DimensionsDTO> dtos = service.getAllDimensionsByProduct(idProduct);
+        if (dtos == null || dtos.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(dimensions);
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * ✅ API: GET /dimensions/all
+     * Lấy tất cả kích thước
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<DimensionsDTO>> getAllDimensions() {
+        List<DimensionsDTO> dtos = service.getAllDimensions();
+        if (dtos == null || dtos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(dtos);
     }
 }

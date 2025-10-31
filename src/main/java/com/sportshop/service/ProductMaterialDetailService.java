@@ -31,15 +31,15 @@ public class ProductMaterialDetailService {
         List<DetailProductMaterialEntity> entities = detailProductMaterialRepository.findByIdIdProduct(idProduct);
 
         for (DetailProductMaterialEntity entity : entities) {
-            String nameColor = null;
+            String nameMaterial = null;
             if (entity.getDetailMaterial() != null) {
-                nameColor = entity.getDetailMaterial().getNameMaterial();
+                nameMaterial = entity.getDetailMaterial().getNameMaterial();
             }
 
             DetailProductMaterialDTO dto = new DetailProductMaterialDTO(
                     entity.getId().getIdMaterial(),
                     entity.getId().getIdProduct(),
-                    nameColor
+                    nameMaterial
             );
             dtos.add(dto);
         }
