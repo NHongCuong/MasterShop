@@ -19,7 +19,7 @@ public class BillEntity {
 
     @ManyToOne
     @JoinColumn(name="ID_Oder")
-    public OderEntity orderbill;
+    public OrderEntity orderbill;
 
     @OneToMany(mappedBy = "bill")
     @JsonIgnore
@@ -60,11 +60,11 @@ public class BillEntity {
         this.bill = bill;
     }
 
-    public OderEntity getOrderbill() {
+    public OrderEntity getOrderbill() {
         return orderbill;
     }
 
-    public void setOrderbill(OderEntity orderbill) {
+    public void setOrderbill(OrderEntity orderbill) {
         this.orderbill = orderbill;
     }
 

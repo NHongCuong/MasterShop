@@ -1,41 +1,24 @@
-package com.sportshop.entity;
+package com.sportshop.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import javax.persistence.*;
-import java.util.List;
+import com.sportshop.entity.MethodOfPaymentEnity;
+import com.sportshop.entity.ShipMethodEntity;
 
-@Entity
 
-@Table(name = "order")
-public class OderEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_Order")
+public class OrderDTO {
+
     public Long id;
 
-    @Column(name = "Customer_Name")
     public String CustomerName;
 
-    @Column(name="Note_O")
     public String NoteO;
 
-    @Column(name="Phone")
     public String Phone;
 
-    @Column(name="Address_O")
     public String AddressO;
 
-    @ManyToOne
-    @JoinColumn(name="ID_MOP")
     public MethodOfPaymentEnity methodofPayment;
 
-    @ManyToOne
-    @JoinColumn(name="ID_SM")
     public ShipMethodEntity shipMethod;
-
-    @OneToMany(mappedBy = "orderbill")
-    @JsonIgnore
-    private List<BillEntity> osderbill;
 
     public Long getId() {
         return id;
@@ -44,7 +27,6 @@ public class OderEntity {
     public void setId(Long id) {
         this.id = id;
     }
-
 
     public String getCustomerName() {
         return CustomerName;
@@ -93,6 +75,4 @@ public class OderEntity {
     public void setShipMethod(ShipMethodEntity shipMethod) {
         this.shipMethod = shipMethod;
     }
-
-
 }

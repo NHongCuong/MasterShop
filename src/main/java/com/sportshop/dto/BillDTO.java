@@ -1,13 +1,13 @@
 package com.sportshop.dto;
 
 import com.sportshop.entity.BillStatusEntity;
-import com.sportshop.entity.OderEntity;
+import com.sportshop.entity.OrderEntity;
 import java.util.Date;
 
 public class BillDTO {
     public Long id;
     public BillStatusEntity bill;
-    public OderEntity orderbill;
+    public OrderEntity orderbill;
     public Date createDate;
     public Long totalMoney;
     public Long vatRate;
@@ -30,11 +30,11 @@ public class BillDTO {
         this.bill = bill;
     }
 
-    public OderEntity getOrderbill() {
+    public OrderEntity getOrderbill() {
         return orderbill;
     }
 
-    public void setOrderbill(OderEntity orderbill) {
+    public void setOrderbill(OrderEntity orderbill) {
         this.orderbill = orderbill;
     }
 

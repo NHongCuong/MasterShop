@@ -30,7 +30,7 @@ public class ShopcartEntity {
 
     @OneToMany(mappedBy = "shopcartOD")
     @JsonIgnore
-    private List<OderDetailEntity> orderdetailSC;
+    private List<OrderDetailEntity> orderdetailSC;
 
     public Long getId() {
         return id;
@@ -56,11 +56,11 @@ public class ShopcartEntity {
         this.cartStatus = cartStatus;
     }
 
-    public List<OderDetailEntity> getOrderdetailSC() {
+    public List<OrderDetailEntity> getOrderdetailSC() {
         return orderdetailSC;
     }
 
-    public void setOrderdetailSC(List<OderDetailEntity> orderdetailSC) {
+    public void setOrderdetailSC(List<OrderDetailEntity> orderdetailSC) {
         this.orderdetailSC = orderdetailSC;
     }
 

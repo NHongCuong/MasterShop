@@ -18,7 +18,7 @@ public class MethodOfPaymentEnity {
 
     @OneToMany(mappedBy = "methodofPayment")
     @JsonIgnore
-    private List<OderEntity> oders;
+    private List<OrderEntity> oders;
 
     public Long getId() {
         return id;
@@ -36,11 +36,11 @@ public class MethodOfPaymentEnity {
         this.name_mop = name_mop;
     }
 
-    public List<OderEntity> getOders() {
+    public List<OrderEntity> getOders() {
         return oders;
     }
 
-    public void setOders(List<OderEntity> oders) {
+    public void setOders(List<OrderEntity> oders) {
         this.oders = oders;
     }
 }

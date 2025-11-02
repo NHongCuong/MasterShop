@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ShopcartRepository extends JpaRepository<ShopcartEntity, Long > {
+    boolean existsById(Long idSC);
 }

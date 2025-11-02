@@ -9,9 +9,10 @@ import Image from 'primevue/image';
 import {useToast} from "primevue/usetoast";
 import {MyApp} from "../../app/MyApp.ts";
 import Toast from "primevue/toast";
-//import SelectButton from "primevue/selectbutton";   // ✅ dùng để chọn màu / kích thước
 import Dropdown from "primevue/dropdown";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const myProduct = ref<Product>();
 const route = useRoute();
 const idProduct = route.params.id;
@@ -27,7 +28,7 @@ const selectedUser = ref<any>(null);
 const userList = ref<User[]>([]);
 const shopcartList = ref<ShopCart[]>([]);
 
-// ✅ Các danh sách thuộc tính sản phẩm
+// ✅ Danh sách thuộc tính
 const colorList = ref<any[]>([]);
 const materialList = ref<any[]>([]);
 const dimensionList = ref<any[]>([]);
@@ -61,7 +62,7 @@ const responsiveOptions = ref([
   { breakpoint: '575px', numVisible: 1 }
 ]);
 
-// ✅ Load thông tin sản phẩm
+// ✅ Load Product
 function loadProduct() {
   axios.get(`http://localhost:8081/product/${idProduct}`).then(res => {
     myProduct.value = res.data;
@@ -75,46 +76,51 @@ function loadProduct() {
   });
 }
 
-// ✅ Load danh sách màu theo sản phẩm
+// ✅ Load Colors
 async function loadColors() {
   try {
     const res = await axios.get(`http://localhost:8081/detailcolor/all/${idProduct}`);
     colorList.value = res.data.map((c: any) => ({
       label: c.nameColor || c.name || `Color ${c.idColor}`,
-      value: c.idColor
+      value: Number(c.idColor)
     }));
   } catch (err) {
     console.error("❌ Lỗi tải màu:", err);
   }
 }
 
-// ✅ Load danh sách chất liệu
+// ✅ Load Materials
 async function loadMaterials() {
   try {
     const res = await axios.get(`http://localhost:8081/detailmaterial/all/${idProduct}`);
     materialList.value = res.data.map((m: any) => ({
-      label: m.nameMaterial || m.name || `Material ${m.idMaterial}`,
-      value: m.idMaterial
+      label: m.nameMaterial || `Material ${m.idMaterial}`,
+      value: Number(m.idMaterial)
     }));
+
+    // 🔹 Nếu API chưa có "Không xác định", đảm bảo thêm vào
+    if (!materialList.value.some(m => m.value === 0)) {
+      materialList.value.unshift({ label: 'Không xác định', value: 0 });
+    }
   } catch (err) {
     console.error("❌ Lỗi tải chất liệu:", err);
   }
 }
 
-// ✅ Load danh sách kích thước
+// ✅ Load Dimensions
 async function loadDimensions() {
   try {
     const res = await axios.get(`http://localhost:8081/dimensions/all/${idProduct}`);
     dimensionList.value = res.data.map((d: any) => ({
       label: d.nameD || d.name || `Size ${d.id}`,
-      value: d.id
+      value: Number(d.id)
     }));
   } catch (err) {
     console.error("❌ Lỗi tải kích thước:", err);
   }
 }
 
-// ✅ Load tất cả giỏ hàng
+// ✅ Load ShopCart
 const loadShopCart = async () => {
   try {
     const res = await axios.get(`${CART_API}/all`);
@@ -134,7 +140,7 @@ const changeAmount = (event: Event) => {
 };
 
 // ✅ Thêm vào giỏ hàng
-async function AdddCart() {
+async function AddCart() {
   try {
     const newCart = {
       userSC: { id: selectedUser.value.id },
@@ -166,9 +172,38 @@ async function AdddCart() {
     });
   }
 }
+
+// ✅ Mua ngay
 function BuyNow() {
+  // ⚠ Không check 0 vì 0 là “Không xác định”
+  // if (form.ID_Color == null || form.ID_Material == null || form.ID_Dimensions == null) {
+  //   toast.add({
+  //     severity: "warn",
+  //     summary: "Thiếu thông tin",
+  //     detail: "Vui lòng chọn đủ Màu, Chất liệu và Kích thước trước khi mua!",
+  //     life: 2500,
+  //   });
+  //   return;
+  // }
+
+  router.push({
+    name: "cart",
+    query: {
+      id: myProduct.value?.id,
+      color: form.ID_Color,
+      material: form.ID_Material,
+      dimension: form.ID_Dimensions,
+      amount: form.Amount,
+    },
+  });
 }
-// ✅ Khi mở trang
+
+// ✅ Đóng form, quay lại
+function Close() {
+  router.push({ name: "shophome" });
+}
+
+// ✅ Mount
 onMounted(() => {
   loadProduct();
   loadColors();
@@ -176,6 +211,7 @@ onMounted(() => {
   loadDimensions();
 });
 </script>
+
 <template>
   <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
     <div class="row w-100">
@@ -184,64 +220,45 @@ onMounted(() => {
           <Galleria v-if="myProduct" :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount"
                     containerStyle="max-width: 640px">
             <template #item="slotProps">
-              <Image :src="'http://localhost:8081' + slotProps.item.itemImageSrc" height="400" :alt="slotProps.item.alt"
-                     :id="'product-avt'" preview/>
+              <Image :src="'http://localhost:8081' + slotProps.item.itemImageSrc" height="400"
+                     :alt="slotProps.item.alt" preview/>
             </template>
-            <template  #thumbnail="slotProps">
-              <img  :src="'http://localhost:8081' + slotProps.item.thumbnailImageSrc" width="100" height="100"
-                    :alt="slotProps.item.alt"/>
+            <template #thumbnail="slotProps">
+              <img :src="'http://localhost:8081' + slotProps.item.thumbnailImageSrc" width="100" height="100"
+                   :alt="slotProps.item.alt"/>
             </template>
           </Galleria>
-          <div v-else>
-            <Skeleton height="20rem" class="mb-2"></Skeleton>
-            <Skeleton height="10rem" class="mb-2"></Skeleton>
-          </div>
         </div>
       </div>
+
       <div class="col-lg-7 w3-animate-bottom">
         <div class="pl-3 ml-3">
           <h1 v-if="myProduct">{{ myProduct?.name }}</h1>
-          <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
-          <p v-if="myProduct" class="text-danger h3"><strong>{{ Helper.ToMoney(myProduct!.price) }}</strong></p>
-          <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
+          <p v-if="myProduct" class="text-danger h3">
+            <strong>{{ Helper.formatMoney(myProduct!.price) }}</strong>
+          </p>
 
           <hr>
+
           <div v-if="myProduct">
             <div class="mt-3">
               <span><b>Color:</b></span>
-              <Dropdown
-                  v-model="form.ID_Color"
-                  :options="colorList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn màu"
-                  class="mt-2 w-50"
-              />
+              <Dropdown v-model="form.ID_Color" :options="colorList" optionLabel="label" optionValue="value"
+                        placeholder="Chọn màu" class="mt-2 w-50"/>
             </div>
 
             <div class="mt-4">
               <span><b>Material:</b></span>
-              <Dropdown
-                  v-model="form.ID_Material"
-                  :options="materialList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn chất liệu"
-                  class="mt-2 w-50"
-              />
+              <Dropdown v-model="form.ID_Material" :options="materialList" optionLabel="label" optionValue="value"
+                        placeholder="Chọn chất liệu" class="mt-2 w-50"/>
             </div>
 
             <div class="mt-4">
               <span><b>Dimensions:</b></span>
-              <Dropdown
-                  v-model="form.ID_Dimensions"
-                  :options="dimensionList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn kích thước"
-                  class="mt-2 w-50"
-              />
+              <Dropdown v-model="form.ID_Dimensions" :options="dimensionList" optionLabel="label" optionValue="value"
+                        placeholder="Chọn kích thước" class="mt-2 w-50"/>
             </div>
+
             <div class="row g-3 align-items-center mt-4">
               <div class="col-auto">
                 <label class="col-form-label">Amount</label>
@@ -260,9 +277,9 @@ onMounted(() => {
             </div>
 
             <div class="row mt-3">
-              <button class="btn btn-primary" @click="AdddCart"><i class="fas fa-shopping-cart mr-2"></i>Add to cart
-              </button>
+              <button class="btn btn-primary" @click="AddCart"><i class="fas fa-shopping-cart mr-2"></i>Add to cart</button>
               <button @click="BuyNow" class="btn btn-success ml-3" :disabled="myProduct.amount <= 0">Buy now</button>
+              <button @click="Close" class="btn btn-secondary ml-3">Close</button>
             </div>
 
             <div class="row mt-3">
@@ -272,13 +289,13 @@ onMounted(() => {
               <Badge v-else :value="myProduct.amount"></Badge>
             </div>
           </div>
-          <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
         </div>
       </div>
     </div>
   </div>
   <Toast/>
 </template>
+
 <style scoped>
 :deep(.p-galleria-thumbnail-wrapper) {
   background-color: #dc3545 !important;
