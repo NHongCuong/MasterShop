@@ -26,7 +26,7 @@ public class OrderEntity {
 
     @ManyToOne
     @JoinColumn(name="ID_MOP")
-    private MethodOfPaymentEnity methodofPayment;
+    private MethodOfPaymentEntity methodofPayment;
 
     @ManyToOne
     @JoinColumn(name="ID_SM")
@@ -56,8 +56,8 @@ public class OrderEntity {
     public String getAddressO() { return addressO; }
     public void setAddressO(String addressO) { this.addressO = addressO; }
 
-    public MethodOfPaymentEnity getMethodofPayment() { return methodofPayment; }
-    public void setMethodofPayment(MethodOfPaymentEnity methodofPayment) { this.methodofPayment = methodofPayment; }
+    public MethodOfPaymentEntity getMethodofPayment() { return methodofPayment; }
+    public void setMethodofPayment(MethodOfPaymentEntity methodofPayment) { this.methodofPayment = methodofPayment; }
 
     public ShipMethodEntity getShipMethod() { return shipMethod; }
     public void setShipMethod(ShipMethodEntity shipMethod) { this.shipMethod = shipMethod; }

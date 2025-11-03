@@ -1,6 +1,6 @@
 package com.sportshop.dto;
 
-import com.sportshop.entity.MethodOfPaymentEnity;
+import com.sportshop.entity.MethodOfPaymentEntity;
 import com.sportshop.entity.ShipMethodEntity;
 
 
@@ -16,7 +16,7 @@ public class OrderDTO {
 
     public String AddressO;
 
-    public MethodOfPaymentEnity methodofPayment;
+    public MethodOfPaymentEntity methodofPayment;
 
     public ShipMethodEntity shipMethod;
 
@@ -60,11 +60,11 @@ public class OrderDTO {
         AddressO = addressO;
     }
 
-    public MethodOfPaymentEnity getMethodofPayment() {
+    public MethodOfPaymentEntity getMethodofPayment() {
         return methodofPayment;
     }
 
-    public void setMethodofPayment(MethodOfPaymentEnity methodofPayment) {
+    public void setMethodofPayment(MethodOfPaymentEntity methodofPayment) {
         this.methodofPayment = methodofPayment;
     }
 
