@@ -1,8 +1,9 @@
 package com.sportshop.controller;
 
-import com.sportshop.entity.CategoryEntity;
-import com.sportshop.entity.OrderEntity;
+import com.sportshop.entity.*;
+import com.sportshop.repository.MethodOfPaymentRepository;
 import com.sportshop.repository.OrderRepository;
+import com.sportshop.repository.ShipMethodRepository;
 import com.sportshop.service.IOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,12 @@ public class OrderController {
     IOrderService orderService;
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private ShipMethodRepository shipMethodRepository;
+
+    @Autowired
+    private MethodOfPaymentRepository methodOfPaymentRepository;
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrder() {
@@ -39,6 +46,21 @@ public class OrderController {
     @PostMapping("/{add}")
     public ResponseEntity<?> addOrder(@RequestBody OrderEntity orderEntity){
         try{
+            if (orderEntity.getShipMethod() != null && orderEntity.getShipMethod().getId() != null) {
+                ShipMethodEntity shipmethod = shipMethodRepository.findOne(orderEntity.getShipMethod().getId());
+                orderEntity.setShipMethod(shipmethod);
+            } else {
+                // Nếu không có category, có thể gán null hoặc category mặc định
+                orderEntity.setShipMethod(null);
+            }
+
+            // Gán supplier (nếu có ID)
+            if (orderEntity.getMethodofPayment() != null && orderEntity.getMethodofPayment().getId() != null) {
+                MethodOfPaymentEntity methodOfPayment = methodOfPaymentRepository.findOne(orderEntity.getMethodofPayment().getId());
+                orderEntity.setMethodofPayment(methodOfPayment);
+            } else {
+                orderEntity.setMethodofPayment(null);
+            }
             OrderEntity order = orderRepository.save(orderEntity);
             return new ResponseEntity<>(order,HttpStatus.CREATED);
         } catch (Exception e) {

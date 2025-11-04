@@ -1,0 +1,22 @@
+{
+	"java.compile.nullAnalysis.mode": "automatic",
+	"files.associations": {
+		"*.vue": "vue"
+	},
+	"editor.semanticHighlighting.enabled": true,
+	"editor.bracketPairColorization.enabled": true,
+	"volar.takeOverMode.enabled": true,
+	"workbench.colorCustomizations": {
+		"editor.lineHighlightBackground": "#2a2a2a33",
+		"editor.lineHighlightBorder": "#2a2a2a66",
+		"editorGutter.addedBackground": "#34c759",
+		"editorGutter.modifiedBackground": "#00aaff",
+		"editorGutter.deletedBackground": "#ff453a",
+		"editorLineNumber.foreground": "#8a8a8a",
+		"editorLineNumber.activeForeground": "#ffffff"
+	},
+	"[vue]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.semanticHighlighting.enabled": true
+	}
+}

@@ -104,3 +104,20 @@ export interface Dimensions{
     "createdAt":Date;
     "updatedAt":Date
 }
+export interface ShipMethod{
+    "id":number;
+    "nameSM":String;
+}
+export interface MethodOfPayment{
+    "id":number;
+    "name_mop":String;
+}
+export interface Order {
+    "id": number,
+    "customerName": String,
+    "noteO": String,
+    "phone": String,
+    "addressO": String,
+    "shipMethod": ShipMethod,
+    "methodofPayment": MethodOfPayment,
+}

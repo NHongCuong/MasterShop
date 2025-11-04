@@ -18,7 +18,13 @@ export default [
                 name: 'detailproduct',
                 component: () => import('./pages/shop/DetailProduct.vue'),
                 meta: { title: 'Detail Product' }
-            }
+            },
+            {
+                path: '/cart',
+                name: 'cart',
+                component: () => import('./pages/cart.vue'),
+                meta: { title: 'Cart' }
+            },
             // {
             //     path: '/category/:id',
             //     name: 'detailcategory',
@@ -74,12 +80,7 @@ export default [
         component: () => import('./pages/Contact.vue'),
         meta: { title: 'Contact' }
     },
-    {
-        path: '/cart',
-        name: 'cart',
-        component: () => import('./pages/cart.vue'),
-        meta: { title: 'Cart' }
-    },
+
     {
         path: '/auth/signin',
         name: 'signin',
