@@ -29,7 +29,7 @@ public class CategoryService implements ICategoryService{
 	}
     @Override
     public CategoryDTO get(Long id) {
-        CategoryEntity category = categoryRepo.findOne(id);
+        CategoryEntity category = categoryRepo.findById(id).orElse(null);
         CategoryDTO dto = categoryConverter.toDTO(category);
         return dto;
     }

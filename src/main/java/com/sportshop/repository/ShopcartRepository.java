@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ShopcartRepository extends JpaRepository<ShopcartEntity, Long > {
+    java.util.List<ShopcartEntity> findByUserSC_IdAndCartStatus_Id(Long userId, Long statusId);
 }

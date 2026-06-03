@@ -28,7 +28,7 @@ public class CartStatusController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CartStatusEntity> getCartStatusById(@PathVariable("id") Long id) {
-        CartStatusEntity cartstatus = cartstatusRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
+        CartStatusEntity cartstatus = cartstatusRepo.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
         if (cartstatus == null) {
             return ResponseEntity.notFound().build();
         }

@@ -1,7 +1,7 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="detail_product_material")

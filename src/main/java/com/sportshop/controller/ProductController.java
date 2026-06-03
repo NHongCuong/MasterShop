@@ -1,6 +1,7 @@
 package com.sportshop.controller;
 
 import com.sportshop.entity.CategoryEntity;
+import com.sportshop.entity.ProductImageEntity;
 import com.sportshop.entity.ProductEntity;
 import com.sportshop.entity.SupplierEntity;
 import com.sportshop.repository.CategoryRepository;
@@ -39,6 +40,7 @@ public class ProductController {
             return new ResponseEntity<>("Lỗi khi lấy danh sách: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     // Lấy sản phẩm theo ID
     @GetMapping("/{id}")
     public ResponseEntity<ProductEntity> getProductById(@PathVariable("id") Long id) {
@@ -52,7 +54,7 @@ public class ProductController {
         try {
             // Gán category (nếu có ID)
             if (product.getCategory() != null && product.getCategory().getId() != null) {
-                CategoryEntity cate = categoryRepo.findOne(product.getCategory().getId());
+                CategoryEntity cate = categoryRepo.findById(product.getCategory().getId()).orElse(null);
                 product.setCategory(cate);
             } else {
                 // Nếu không có category, có thể gán null hoặc category mặc định
@@ -61,10 +63,15 @@ public class ProductController {
 
             // Gán supplier (nếu có ID)
             if (product.getSupplier() != null && product.getSupplier().getId() != null) {
-                SupplierEntity sup = supplierRepo.findOne(product.getSupplier().getId());
+                SupplierEntity sup = supplierRepo.findById(product.getSupplier().getId()).orElse(null);
                 product.setSupplier(sup);
             } else {
                 product.setSupplier(null);
+            }
+
+            // Gán các ảnh phụ
+            if (product.getProductImages() != null) {
+                product.getProductImages().forEach(img -> img.setProduct(product));
             }
 
             // Lưu sản phẩm
@@ -93,13 +100,22 @@ public class ProductController {
             existing.setAmount(product.getAmount());
 
             if (product.getCategory() != null && product.getCategory().getId() != null) {
-                CategoryEntity cate = categoryRepo.findOne(product.getCategory().getId());
+                CategoryEntity cate = categoryRepo.findById(product.getCategory().getId()).orElse(null);
                 existing.setCategory(cate);
             }
 
             if (product.getSupplier() != null && product.getSupplier().getId() != null) {
-                SupplierEntity sup = supplierRepo.findOne(product.getSupplier().getId());
+                SupplierEntity sup = supplierRepo.findById(product.getSupplier().getId()).orElse(null);
                 existing.setSupplier(sup);
+            }
+
+            // Cập nhật các ảnh phụ
+            if (product.getProductImages() != null) {
+                existing.getProductImages().clear();
+                for (ProductImageEntity img : product.getProductImages()) {
+                    img.setProduct(existing);
+                    existing.getProductImages().add(img);
+                }
             }
 
             ProductEntity updated = productService.save(existing);
@@ -115,7 +131,7 @@ public class ProductController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
-            productRepo.delete(id);
+            productRepo.deleteById(id);
             return new ResponseEntity<>("Đã xóa sản phẩm ID " + id, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi xóa: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

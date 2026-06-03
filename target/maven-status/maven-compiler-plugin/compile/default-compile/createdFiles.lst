@@ -1,6 +1,6 @@
 com\sportshop\repository\ProductRepository.class
 com\sportshop\service\IColorService.class
-com\sportshop\converter\CartDetailConverter.class
+com\sportshop\entity\UserEntity$UserEntityBuilder.class
 com\sportshop\service\IUserTypeService.class
 com\sportshop\dto\UserStatusDTO.class
 com\sportshop\converter\ColorConverter.class
@@ -8,6 +8,7 @@ com\sportshop\dto\CartDetailDTO.class
 com\sportshop\entity\CategoryEntity.class
 com\sportshop\service\impl\BillService.class
 com\sportshop\entity\UserEntity.class
+com\sportshop\entity\BillEntity$BillEntityBuilder.class
 com\sportshop\service\ICartStatusService.class
 com\sportshop\entity\UserStatusEntity.class
 com\sportshop\converter\UserConverter.class
@@ -23,7 +24,6 @@ com\sportshop\service\impl\UserTypeService.class
 com\sportshop\entity\DetailProductMaterialId.class
 com\sportshop\entity\OderEntity.class
 com\sportshop\entity\DetailProductColorEntity.class
-com\sportshop\service\impl\DetailProductMaterialService.class
 com\sportshop\config\WebSecurityConfig.class
 com\sportshop\controller\DimensionsController.class
 com\sportshop\repository\ShopcartRepository.class
@@ -35,7 +35,7 @@ com\sportshop\repository\DimensionsRepository.class
 com\sportshop\config\JwtAuthenticationEntryPoint.class
 com\sportshop\repository\CategoryRepository.class
 com\sportshop\service\impl\ProductService.class
-com\sportshop\service\IDetailProductMaterialService.class
+com\sportshop\entity\OderEntity$OderEntityBuilder.class
 com\sportshop\controller\UserController.class
 com\sportshop\service\impl\UserStatusService.class
 com\sportshop\converter\UserTypeConverter.class
@@ -49,7 +49,6 @@ com\sportshop\converter\MaterialConverter.class
 com\sportshop\entity\BillStatusEntity.class
 com\sportshop\controller\UserStatusController.class
 com\sportshop\controller\CartDetailController.class
-com\sportshop\converter\BillStatusHistoryConverter.class
 com\sportshop\dto\DetailProductColorDTO.class
 com\sportshop\security\MyUserDetails.class
 com\sportshop\entity\ProductEntity.class
@@ -62,7 +61,7 @@ com\sportshop\config\JwtTokenUtils.class
 com\sportshop\dto\ProductDTO.class
 com\sportshop\converter\CategoryConverter.class
 com\sportshop\converter\DimensionsConverter.class
-com\sportshop\controller\ProductDetailController.class
+com\sportshop\service\ProductColorDetailService.class
 com\sportshop\entity\ColorEntity.class
 com\sportshop\dto\CartStatusDTO.class
 com\sportshop\dto\CategoryDTO.class
@@ -78,7 +77,6 @@ com\sportshop\converter\ShopcartConverter.class
 com\sportshop\dto\BillDTO.class
 com\sportshop\service\impl\MaterialService.class
 com\sportshop\response\AuthResponse.class
-com\sportshop\controller\DetailProductMaterialController.class
 com\sportshop\dto\BillStatusHistoryDTO.class
 com\sportshop\controller\CategoryController.class
 com\sportshop\controller\SupplierController.class
@@ -96,8 +94,9 @@ com\sportshop\service\IUserService.class
 com\sportshop\dto\UserTypeDTO.class
 com\sportshop\filter\JwtTokenFilter.class
 com\sportshop\repository\ColorRepository.class
-com\sportshop\service\impl\CartDetailService.class
 com\sportshop\repository\CartDetailRepository.class
+com\sportshop\controller\ProductMaterialDetailController.class
+com\sportshop\entity\ProductEntity$ProductEntityBuilder.class
 com\sportshop\repository\DetailProductMaterialRepository.class
 com\sportshop\controller\UserTypeController.class
 com\sportshop\repository\BillRepository.class
@@ -105,9 +104,9 @@ com\sportshop\service\IBillService.class
 com\sportshop\Application.class
 com\sportshop\dto\MaterialDTO.class
 com\sportshop\dto\DetailProductMaterialDTO.class
+com\sportshop\controller\ProductColorDetailController.class
 com\sportshop\entity\DetailProductMaterialEntity.class
 com\sportshop\entity\CartStatusEntity.class
-com\sportshop\converter\DetailProductMaterialConverter.class
 com\sportshop\entity\ShopcartEntity.class
 com\sportshop\entity\ShipMethodEntity.class
 com\sportshop\controller\ShopcartController.class
@@ -120,6 +119,6 @@ com\sportshop\service\IShopcartService.class
 com\sportshop\entity\CartDetailId.class
 com\sportshop\entity\BillEntity.class
 com\sportshop\response\BaseResponse.class
-com\sportshop\service\ProductDetailService.class
+com\sportshop\service\ProductMaterialDetailService.class
 com\sportshop\controller\CartStatusController.class
 com\sportshop\entity\CartDetailEntity.class

@@ -34,7 +34,7 @@
 //            @PathVariable Long idProduct) {
 //
 //        DetailProductColorId id = new DetailProductColorId(idColor, idProduct);
-//        DetailProductColorEntity color = detailproductcolorRepository.findOne(id);
+//        DetailProductColorEntity color = detailproductcolorRepository.findById(id).orElse(null);
 //        if (color == null) {
 //            return ResponseEntity.notFound().build();
 //        }

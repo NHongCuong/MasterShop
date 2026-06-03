@@ -28,7 +28,7 @@ public class MaterialController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MaterialEntity> getMaterialById(@PathVariable("id") Long id) {
-        MaterialEntity material = materialRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
+        MaterialEntity material = materialRepo.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
         if (material == null) {
             return ResponseEntity.notFound().build();
         }

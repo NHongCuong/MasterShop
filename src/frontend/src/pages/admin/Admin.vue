@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import {MyApp} from '../../app/MyApp';
-import {User} from '../../interfaces/app';
-import {ref, onMounted} from 'vue';
+import {MyApp, state} from '../../app/MyApp';
+import {onMounted} from 'vue';
 
-const isAuthenticated = ref(false);
-const user = ref<User>();
 onMounted(() => {
-  MyApp.getIntance().authenticate(isAuthenticated, user);
+  MyApp.getInstance().authenticate();
 })
 </script>
 <template>
@@ -149,7 +146,7 @@ onMounted(() => {
   </nav>
   <aside style="position:fixed" class="main-sidebar sidebar-dark-primary elevation-4">
 
-    <a href="index3.html" class="brand-link">
+    <a href="index3.html" class="brand-link text-center">
       <img src="/images/logotech.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
            style="border-radius:100px">
       <span class="brand-text font-weight-light">HC TECH</span>
@@ -159,10 +156,10 @@ onMounted(() => {
 
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="/vite.svg" class="img-circle elevation-2" alt="User Image">
+          <img src="/images/logotech.png" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block">{{ user?.userType.name }}</a>
+          <a href="#" class="d-block text-uppercase fw-bold">{{ state.user?.nameUser || state.user?.email.split('@')[0] }}</a>
         </div>
       </div>
 
@@ -192,7 +189,7 @@ onMounted(() => {
           </li>
           <li class="nav-item">
             <router-link to="/admin/user" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-holly-berry"></i>
+              <i class="nav-icon fas fa-users"></i>
               <p>
                 Users
               </p>
@@ -200,7 +197,7 @@ onMounted(() => {
           </li>
           <li class="nav-item">
             <router-link to="/admin/product" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-holly-berry"></i>
+              <i class="nav-icon fas fa-shopping-bag"></i>
               <p>
                 Products
               </p>
@@ -208,7 +205,7 @@ onMounted(() => {
           </li>
           <li class="nav-item">
             <router-link to="/admin/category" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-ellipsis-v"></i>
+              <i class="nav-icon fas fa-list"></i>
               <p>
                 Category
               </p>
@@ -216,8 +213,7 @@ onMounted(() => {
           </li>
           <li class="nav-item">
             <router-link to="/admin/saleoff" active-class="active" class="nav-link">
-              <!--                            <img width="24" src="https://lazycodet.com/icon.png" />-->
-              <i class="nav-icon fas fa-vr-cardboard"></i>
+              <i class="nav-icon fas fa-tag"></i>
               <p>
                 Khuyến mãi
               </p>
@@ -225,55 +221,19 @@ onMounted(() => {
           </li>
           <li class="nav-item">
             <router-link to="/admin/bill/1" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-list"></i>
+              <i class="nav-icon fas fa-file-invoice"></i>
               <p>
                 Đơn hàng
               </p>
             </router-link>
           </li>
+          
           <li class="nav-item">
-            <router-link to="/admin/users" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-users"></i>
-              <p>
-                Khách hàng
-              </p>
-            </router-link>
-          </li>
-
-          <li v-if="user?.userType.name == 'admin'" class="nav-item">
-            <router-link to="/admin/seller" active-class="active" class="nav-link">
-              <i class="nav-icon fas fa-user"></i>
-              <p>
-                Người bán
-              </p>
-            </router-link>
-          </li>
-
-
-          <li class="nav-item">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>
-                Khác
-                <i class="right fas fa-angle-left"></i>
-              </p>
+            <a href="#" class="nav-link" @click="() => { MyApp.getInstance().clearState(); $router.push('/admin-login'); }">
+              <i class="nav-icon fas fa-sign-out-alt"></i>
+              <p>Đăng xuất</p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="#" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Active Page</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Inactive Page</p>
-                </a>
-              </li>
-            </ul>
           </li>
-
         </ul>
       </nav>
 
@@ -284,15 +244,6 @@ onMounted(() => {
   <div class="content-wrapper">
     <router-view></router-view>
   </div>
-
-
-  <aside class="control-sidebar control-sidebar-dark">
-
-    <div class="p-3">
-      <h5>Title</h5>
-      <p>Sidebar content</p>
-    </div>
-  </aside>
 
 
   <footer class="main-footer">

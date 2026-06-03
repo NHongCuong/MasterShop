@@ -1,7 +1,7 @@
 package com.sportshop.entity;
 
 import java.util.List;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity

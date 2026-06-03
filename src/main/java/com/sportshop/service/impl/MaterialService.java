@@ -29,7 +29,7 @@ public class MaterialService implements IMaterialService {
     }
     @Override
     public MaterialDTO getById(Long id) {
-        MaterialEntity category = materialRepo.findOne(id);
+        MaterialEntity category = materialRepo.findById(id).orElse(null);
         MaterialDTO dto = materialConverter.toDTO(category);
         return dto;
     }

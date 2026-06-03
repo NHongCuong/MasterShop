@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-
 public interface DimensionsRepository extends JpaRepository<DimensionsEntity, Long> {
+    java.util.List<DimensionsEntity> findByDemensions_Id(Long productId);
 }

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {useRoute} from 'vue-router';
-import {User, Product, MyImage, ShopCart} from '../../interfaces/app';
+import {Product, MyImage, ShopCart} from '../../interfaces/app';
 import {computed, onMounted, reactive, ref} from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
 import Galleria from 'primevue/Galleria';
 import Image from 'primevue/image';
 import {useToast} from "primevue/usetoast";
-import {MyApp} from "../../app/MyApp.ts";
+import {MyApp, state} from "../../app/MyApp.ts";
 import Toast from "primevue/toast";
 //import SelectButton from "primevue/selectbutton";   // ✅ dùng để chọn màu / kích thước
 import Dropdown from "primevue/dropdown";
@@ -20,11 +20,8 @@ const checkingAmount = ref(false);
 const CART_API = 'http://localhost:8081/cart';
 const USER_API = 'http://localhost:8081/user';
 const toast = useToast()
-const visibleCount = computed(() => (images.value.length > 3 ? 3 : images.value.length));
-const isAuthenticated = ref(false);
-const selectedUser = ref<any>(null);
+const visibleCount = computed(() => (images.value.length > 5 ? 5 : images.value.length));
 
-const userList = ref<User[]>([]);
 const shopcartList = ref<ShopCart[]>([]);
 
 // ✅ Các danh sách thuộc tính sản phẩm
@@ -32,10 +29,12 @@ const colorList = ref<any[]>([]);
 const materialList = ref<any[]>([]);
 const dimensionList = ref<any[]>([]);
 
-axios.get(USER_API).then(res => (userList.value = res.data));
-
 onMounted(() => {
-  MyApp.getIntance().authenticate(isAuthenticated, selectedUser);
+  MyApp.getInstance().authenticate();
+  loadProduct();
+  loadColors();
+  loadMaterials();
+  loadDimensions();
 });
 
 interface FormState {
@@ -64,14 +63,30 @@ const responsiveOptions = ref([
 // ✅ Load thông tin sản phẩm
 function loadProduct() {
   axios.get(`http://localhost:8081/product/${idProduct}`).then(res => {
-    myProduct.value = res.data;
-    if (myProduct.value?.avatar) {
-      images.value.push({
-        itemImageSrc: myProduct.value.avatar,
-        thumbnailImageSrc: myProduct.value.avatar,
+    const prod = res.data;
+    myProduct.value = prod;
+    const imgList: MyImage[] = [];
+    
+    if (prod.avatar) {
+      imgList.push({
+        itemImageSrc: prod.avatar,
+        thumbnailImageSrc: prod.avatar,
         alt: "Avatar Image"
       });
     }
+    
+    if (prod.productImages && Array.isArray(prod.productImages)) {
+      prod.productImages.forEach((img: any) => {
+        if (img.imageUrl && img.imageUrl !== prod.avatar) {
+          imgList.push({
+            itemImageSrc: img.imageUrl,
+            thumbnailImageSrc: img.imageUrl,
+            alt: "Product Image"
+          });
+        }
+      });
+    }
+    images.value = imgList;
   });
 }
 
@@ -106,8 +121,8 @@ async function loadDimensions() {
   try {
     const res = await axios.get(`http://localhost:8081/dimensions/all/${idProduct}`);
     dimensionList.value = res.data.map((d: any) => ({
-      label: d.nameD || d.name || `Size ${d.idD}`,
-      value: d.idD
+      label: d.nameD || `Size ${d.id || d.Id}`,
+      value: d.id || d.Id
     }));
   } catch (err) {
     console.error("❌ Lỗi tải kích thước:", err);
@@ -135,27 +150,40 @@ const changeAmount = (event: Event) => {
 
 // ✅ Thêm vào giỏ hàng
 async function AdddCart() {
+  if (!state.isAuthenticated) {
+     toast.add({ severity: 'warn', summary: 'Yêu cầu đăng nhập', detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng', life: 3000 });
+     return;
+  }
+  
+  if (!form.ID_Color || !form.ID_Material || !form.ID_Dimensions) {
+     toast.add({ severity: 'warn', summary: 'Thiếu thông tin', detail: 'Vui lòng chọn đầy đủ màu, chất liệu và kích thước', life: 3000 });
+     return;
+  }
+
   try {
-    const newCart = {
-      userSC: { id: selectedUser.value.id },
-      cartStatus: { id: 3 },
+    const payload = {
+      userId: state.user?.id,
+      productId: idProduct,
+      amount: form.Amount,
+      colorId: form.ID_Color,
+      materialId: form.ID_Material,
+      dimensionId: form.ID_Dimensions
     };
-    const res = await axios.post(`${CART_API}/add`, newCart);
+    
+    const res = await axios.post(`http://localhost:8081/cart/add-item`, payload);
+    
     if (res.status === 200 || res.status === 201) {
+      const colorName = colorList.value.find(c => c.value === form.ID_Color)?.label;
+      const dimensionName = dimensionList.value.find(d => d.value === form.ID_Dimensions)?.label;
+      
       toast.add({
         severity: "success",
-        summary: "Thành công",
-        detail: "Đã thêm sản phẩm vào giỏ hàng",
-        life: 2000,
+        summary: "Đã thêm vào giỏ hàng thành công",
+        detail: `${myProduct.value?.name} (${colorName}, ${dimensionName}) x${form.Amount}`,
+        life: 4000,
       });
-      await loadShopCart();
-    } else {
-      toast.add({
-        severity: "warn",
-        summary: "Cảnh báo",
-        detail: "Phản hồi không mong đợi từ server",
-        life: 2500,
-      });
+      // Cập nhật lại số lượng giỏ hàng trên header
+      await MyApp.getInstance().updateCartCount();
     }
   } catch (err: any) {
     toast.add({
@@ -166,160 +194,150 @@ async function AdddCart() {
     });
   }
 }
-function BuyNow() {
-}
-// ✅ Khi mở trang
-onMounted(() => {
-  loadProduct();
-  loadColors();
-  loadMaterials();
-  loadDimensions();
-});
 </script>
+
 <template>
   <div class="p-5 mt-5 bg-light" style="border-radius: 25px;">
+    <Toast />
     <div class="row w-100">
       <div class="col-lg-5">
         <div class="p-3">
           <Galleria v-if="myProduct" :value="images" :responsiveOptions="responsiveOptions" :numVisible="visibleCount"
-                    containerStyle="max-width: 640px">
+                    containerStyle="max-width: 100%" class="custom-galleria">
             <template #item="slotProps">
-              <Image :src="'http://localhost:8081' + slotProps.item.itemImageSrc" height="400" :alt="slotProps.item.alt"
-                     :id="'product-avt'" preview/>
+              <div class="main-image-container">
+                <Image :src="Helper.GetImageUrl(slotProps.item.itemImageSrc)" :alt="slotProps.item.alt"
+                       class="main-image" preview/>
+              </div>
             </template>
-            <template  #thumbnail="slotProps">
-              <img  :src="'http://localhost:8081' + slotProps.item.thumbnailImageSrc" width="100" height="100"
-                    :alt="slotProps.item.alt"/>
+            <template #thumbnail="slotProps">
+              <div class="thumbnail-wrapper">
+                <img :src="Helper.GetImageUrl(slotProps.item.thumbnailImageSrc)"
+                      :alt="slotProps.item.alt" class="thumbnail-img"/>
+              </div>
             </template>
           </Galleria>
-          <div v-else>
-            <Skeleton height="20rem" class="mb-2"></Skeleton>
-            <Skeleton height="10rem" class="mb-2"></Skeleton>
-          </div>
         </div>
       </div>
-      <div class="col-lg-7 w3-animate-bottom">
-        <div class="pl-3 ml-3">
-          <h1 v-if="myProduct">{{ myProduct?.name }}</h1>
-          <Skeleton v-else height="4rem" class="mb-2"></Skeleton>
-          <p v-if="myProduct" class="text-danger h3"><strong>{{ Helper.ToMoney(myProduct!.price) }}</strong></p>
-          <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
+      <div class="col-lg-7">
+        <div v-if="myProduct" class="p-3">
+          <h2 class="fw-bold mb-3">{{ myProduct.name }}</h2>
+          <div class="d-flex align-items-center mb-4">
+            <h3 class="text-danger fw-bold m-0 me-3">{{ Helper.ToMoney(myProduct.price) }}</h3>
+            <span class="badge bg-success">Còn hàng: {{ myProduct.amount }}</span>
+          </div>
+          
+          <p class="text-muted mb-4">{{ myProduct.description }}</p>
 
-          <hr>
-          <div v-if="myProduct">
-            <div class="mt-3">
-              <span><b>Color:</b></span>
-              <Dropdown
-                  v-model="form.ID_Color"
-                  :options="colorList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn màu"
-                  class="mt-2 w-50"
-              />
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Màu sắc</label>
+              <Dropdown v-model="form.ID_Color" :options="colorList" optionLabel="label" optionValue="value" placeholder="Chọn màu" class="w-100" />
             </div>
-
-            <div class="mt-4">
-              <span><b>Material:</b></span>
-              <Dropdown
-                  v-model="form.ID_Material"
-                  :options="materialList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn chất liệu"
-                  class="mt-2 w-50"
-              />
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Chất liệu</label>
+              <Dropdown v-model="form.ID_Material" :options="materialList" optionLabel="label" optionValue="value" placeholder="Chọn chất liệu" class="w-100" />
             </div>
-
-            <div class="mt-4">
-              <span><b>Dimensions:</b></span>
-              <Dropdown
-                  v-model="form.ID_Dimensions"
-                  :options="dimensionList"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Chọn kích thước"
-                  class="mt-2 w-50"
-              />
-            </div>
-            <div class="row g-3 align-items-center mt-4">
-              <div class="col-auto">
-                <label class="col-form-label">Amount</label>
-              </div>
-              <div class="col-auto">
-                <div class="input-group" style="width:50%;">
-                  <span class="input-group-btn">
-                    <button class="btn btn-white btn-minuse" @click="changeAmount" type="button">-</button>
-                  </span>
-                  <input v-model="form.Amount" type="text" class="form-control text-center" maxlength="3">
-                  <span class="input-group-btn">
-                    <button class="btn btn-red btn-pluss" @click="changeAmount" type="button">+</button>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="row mt-3">
-              <button class="btn btn-primary" @click="AdddCart"><i class="fas fa-shopping-cart mr-2"></i>Add to cart
-              </button>
-              <button @click="BuyNow" class="btn btn-success ml-3" :disabled="myProduct.amount <= 0">Buy now</button>
-            </div>
-
-            <div class="row mt-3">
-              <b class="mr-2">Stock:</b>
-              <Badge v-if="checkingAmount" value="Checking..."></Badge>
-              <Badge v-else-if="myProduct.amount == -1" value="Chưa xác định"></Badge>
-              <Badge v-else :value="myProduct.amount"></Badge>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Kích thước</label>
+              <Dropdown v-model="form.ID_Dimensions" :options="dimensionList" optionLabel="label" optionValue="value" placeholder="Chọn size" class="w-100" />
             </div>
           </div>
-          <Skeleton v-else height="20rem" class="mb-2"></Skeleton>
+
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="input-group" style="width: 140px;">
+              <button class="btn btn-outline-secondary btn-minuse" type="button" @click="changeAmount">-</button>
+              <input type="text" class="form-control text-center" v-model="form.Amount">
+              <button class="btn btn-outline-secondary btn-pluse" type="button" @click="changeAmount">+</button>
+            </div>
+            <button class="btn btn-primary px-4 py-2 fw-bold" @click="AdddCart">
+              <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+            </button>
+            <button class="btn btn-danger px-4 py-2 fw-bold">
+              Mua ngay
+            </button>
+          </div>
+
+          <div class="border-top pt-4">
+            <div class="d-flex align-items-center gap-4 text-muted small">
+              <span><i class="fas fa-truck me-1"></i> Giao hàng toàn quốc</span>
+              <span><i class="fas fa-undo me-1"></i> Đổi trả trong 7 ngày</span>
+              <span><i class="fas fa-shield-alt me-1"></i> Bảo hành chính hãng</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <Toast/>
 </template>
 <style scoped>
-:deep(.p-galleria-thumbnail-wrapper) {
-  background-color: #dc3545 !important;
-
+/* Galleria Overrides */
+:deep(.custom-galleria) {
+  border: none;
+  width: 100%;
 }
 
-:deep(.p-galleria-thumbnail-container) {
-  background-color: grey !important;
-
-}
-
-:deep(.p-galleria-thumbnail-item img) {
-  border-radius: 10px;
-  background-color: white;
-  border: 1px solid #ccc;
-  width: 100px;
-  height: auto;
-  object-fit: contain;
-}
-
-:deep(.p-galleria) {
-  max-width: 640px;
-  margin: 0 auto;
-}
-
-:deep(.p-galleria-thumbnail-container) {
+:deep(.p-galleria-item) {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
   justify-content: center;
+  align-items: center;
+  height: 500px; /* Tăng chiều cao khung hình */
 }
 
-/* Nút điều hướng trái phải */
-:deep(.p-galleria-thumbnail-prev),
+.main-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.main-image img) {
+  max-width: 100%;
+  max-height: 480px;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block;
+}
+
+:deep(.p-galleria-thumbnail-container) {
+  background: transparent !important;
+  padding: 1rem 0;
+}
+
+:deep(.p-galleria-thumbnail-items-container) {
+  height: auto !important;
+}
+
+.thumbnail-wrapper {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  width: 80px;
+  height: 80px;
+  margin: 0 5px;
+}
+
+.p-galleria-thumbnail-item-current .thumbnail-wrapper {
+  border-color: #ffd700;
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Chrome fix for Galleria navigators */
+:deep(.p-galleria-thumbnail-prev), 
 :deep(.p-galleria-thumbnail-next) {
-  color: white !important;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-}
-
-:deep(.p-galleria-thumbnail-prev:hover),
-:deep(.p-galleria-thumbnail-next:hover) {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #333;
 }
 </style>

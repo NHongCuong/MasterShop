@@ -28,7 +28,7 @@ public class ColorController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ColorEntity> getColorById(@PathVariable("id") Long id) {
-        ColorEntity color = colorRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
+        ColorEntity color = colorRepo.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
         if (color == null) {
             return ResponseEntity.notFound().build();
         }

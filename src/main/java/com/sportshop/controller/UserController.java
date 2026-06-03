@@ -61,7 +61,7 @@ public class UserController {
     // Lấy users theo ID
     @GetMapping("/users/{id}")
     public ResponseEntity<UserEntity> getProductById(@PathVariable("id") Long id) {
-        UserEntity user = userRepository.findOne(id); // ✅ Spring 1.5 dùng findOne
+        UserEntity user = userRepository.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -118,7 +118,7 @@ public class UserController {
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserEntity user) {
         try {
-            UserEntity existing = userRepository.findOne(id);
+            UserEntity existing = userRepository.findById(id).orElse(null);
             if (existing == null) {
                 return new ResponseEntity<>("Không tìm thấy User ID " + id, HttpStatus.NOT_FOUND);
             }
@@ -149,12 +149,12 @@ public class UserController {
             existing.setVerify(user.getVerify());
 
             if (user.getUserType() != null && user.getUserType().getId() != null) {
-                UserTypeEntity usertype = usertypeRepo.findOne(user.getUserType().getId());
+                UserTypeEntity usertype = usertypeRepo.findById(user.getUserType().getId()).orElse(null);
                 existing.setUserType(usertype);
             }
 
             if (user.getUserStatus() != null && user.getUserStatus().getId() != null) {
-                UserStatusEntity userstatus = userstatusRepo.findOne(user.getUserStatus().getId());
+                UserStatusEntity userstatus = userstatusRepo.findById(user.getUserStatus().getId()).orElse(null);
                 existing.setUserStatus(userstatus);
             }
 
@@ -170,7 +170,7 @@ public class UserController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
-            userRepository.delete(id);
+            userRepository.deleteById(id);
             return new ResponseEntity<>("Đã xóa người dùng ID " + id, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi xóa: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -180,21 +180,31 @@ public class UserController {
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(@RequestBody UserDTO userDTO) throws Exception
 	{
-		_authenticate(userDTO.getEmail(), userDTO.getPassword());
-		final MyUserDetails userDetails = userDetailsService.loadUserByUsername(userDTO.getEmail());
-		String token = jwtTokenUtils.generateToken(userDetails);
-		UserDTO userInfo = userService.loadUserByEmail(userDTO.getEmail());
-		return ResponseEntity.ok(new AuthResponse(200, "Login is successful",userInfo, token));
+        try {
+            _authenticate(userDTO.getEmail(), userDTO.getPassword());
+            final MyUserDetails userDetails = userDetailsService.loadUserByUsername(userDTO.getEmail());
+            String token = jwtTokenUtils.generateToken(userDetails);
+            UserDTO userInfo = userService.loadUserByEmail(userDTO.getEmail());
+            return ResponseEntity.ok(new AuthResponse(200, "Login is successful", userInfo, token));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponse(401, "Login failed: " + e.getMessage()));
+        }
 	}
 	@PostMapping("/authenticate")
 	public ResponseEntity<AuthResponse> authenticate(Authentication authentication) throws Exception
 	{
         try{
+            if (authentication == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse(401, "Not authenticated"));
+            }
             String email = authentication.getName(); // 'example@yahoo.com'
             UserDTO userInfo = userService.loadUserByEmail(email);
             return ResponseEntity.ok(new AuthResponse(200, "Authenticated",userInfo));
         } catch (Exception e) {
-            throw new Exception(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponse(500, "Error: " + e.getMessage()));
         }
 
 	}

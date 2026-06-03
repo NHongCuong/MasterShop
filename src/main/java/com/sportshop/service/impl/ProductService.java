@@ -21,7 +21,7 @@ public class ProductService implements IProductService{
     @Override
     public  ProductEntity getByID(Long id) {
 
-        return productRepository.findOne(id);
+        return productRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ProductService implements IProductService{
 //    }
 //    @Override
 //    public ProductDTO get(Long id) {
-//        ProductEntity product = productRepo.findOne(id);
+//        ProductEntity product = productRepo.findById(id).orElse(null);
 //        ProductDTO dto = productConverter.toDTO(product);
 //        return dto;
 //    }

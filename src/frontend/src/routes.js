@@ -1,4 +1,13 @@
+import { state, MyApp } from './app/MyApp';
 
+const adminGuard = async (to, from) => {
+    await MyApp.getInstance().authenticate();
+    if (state.isAuthenticated && state.user?.userType.name === 'admin') {
+        return true;
+    } else {
+        return '/admin-login';
+    }
+};
 
 export default [
     {
@@ -6,11 +15,11 @@ export default [
         name: 'home',
         component: () => import('./pages/Home.vue'),
         meta: { title: 'Home' },
-        children:[
+        children: [
             {
                 path: '',
                 name: 'shophome',
-                component: () => import('./pages/shop/shophome.vue'),
+                component: () => import('./pages/shop/ShopHome.vue'),
                 meta: { title: 'Shop Home' }
             },
             {
@@ -18,21 +27,63 @@ export default [
                 name: 'detailproduct',
                 component: () => import('./pages/shop/DetailProduct.vue'),
                 meta: { title: 'Detail Product' }
+            },
+            {
+                path: '/contact',
+                name: 'contact',
+                component: () => import('./pages/Contact.vue'),
+                meta: { title: 'Contact' }
+            },
+            {
+                path: '/cart',
+                name: 'cart',
+                component: () => import('./pages/cart.vue'),
+                meta: { title: 'Cart' }
+            },
+            {
+                path: '/profile',
+                name: 'profile',
+                component: () => import('./pages/shop/Profile.vue'),
+                meta: { title: 'Profile' }
+            },
+            {
+                path: '/auth/signin',
+                name: 'signin',
+                component: () => import('./pages/auth/Signin.vue'),
+                meta: { title: 'Signin' }
+            },
+            {
+                path: '/auth/signup',
+                name: 'signup',
+                component: () => import('./pages/auth/Signup.vue'),
+                meta: { title: 'Signup' }
+            },
+            {
+                path: '/guides',
+                name: 'guides',
+                component: () => import('./pages/shop/ShopHome.vue'),
+                meta: { title: 'Hướng dẫn' }
+            },
+            {
+                path: '/about',
+                name: 'about',
+                component: () => import('./pages/shop/ShopHome.vue'),
+                meta: { title: 'Về chúng tôi' }
             }
-            // {
-            //     path: '/category/:id',
-            //     name: 'detailcategory',
-            //     component: () => import('./pages/shop/DetailCategory.vue'),
-            //     meta: { title: 'Detail Category' }
-            // }
-
         ]
-    },  
+    },
+    {
+        path: '/admin-login',
+        name: 'adminlogin',
+        component: () => import('./pages/admin/AdminLogin.vue'),
+        meta: { title: 'Admin Login' }
+    },
     {
         path: '/admin',
         name: 'admin',
         component: () => import('./pages/admin/Admin.vue'),
-        children:[
+        beforeEnter: adminGuard,
+        children: [
             {
                 path: '',
                 name: 'dashboardroot',
@@ -43,19 +94,19 @@ export default [
                 path: 'dashboard',
                 name: 'dashboard',
                 component: () => import('./pages/admin/Dashboard.vue'),
-                meta: {title: 'Dashboard'}
+                meta: { title: 'Dashboard' }
             },
             {
                 path: 'user',
                 name: 'user',
                 component: () => import('./pages/admin/user.vue'),
-                meta: {title: 'Users'}
+                meta: { title: 'Users' }
             },
             {
                 path: 'product',
                 name: 'product',
                 component: () => import('./pages/admin/product.vue'),
-                meta: {title: 'Products'}
+                meta: { title: 'Products' }
             },
             {
                 path: 'category',
@@ -63,33 +114,6 @@ export default [
                 component: () => import('./pages/admin/category.vue'),
                 meta: { title: 'Category' }
             }
-
-
         ]
-    },  
-    
-    {
-        path: '/contact',
-        name: 'contact',
-        component: () => import('./pages/Contact.vue'),
-        meta: { title: 'Contact' }
-    },
-    {
-        path: '/cart',
-        name: 'cart',
-        component: () => import('./pages/cart.vue'),
-        meta: { title: 'Cart' }
-    },
-    {
-        path: '/auth/signin',
-        name: 'signin',
-        component: () => import('./pages/auth/Signin.vue'),
-        meta: { title: 'Signin' }
-    },
-    {
-        path: '/auth/signup',
-        name: 'signup',
-        component: () => import('./pages/auth/Signup.vue'),
-        meta: { title: 'Signup' }
     }
 ]

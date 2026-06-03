@@ -30,7 +30,7 @@ public class DimensionsService implements IDimensionsService {
     }
     @Override
     public DimensionsDTO get(Long id) {
-        DimensionsEntity category = dimensionsRepo.findOne(id);
+        DimensionsEntity category = dimensionsRepo.findById(id).orElse(null);
         DimensionsDTO dto = dimensionsConverter.toDTO(category);
         return dto;
     }

@@ -52,8 +52,23 @@ public class CartDetailService implements ICartDetailService {
     }
     @Override
     public CartDetailDTO get(CartDetailId id) {
-        CartDetailEntity bill = cartDetailRepository.findOne(id);
+        CartDetailEntity bill = cartDetailRepository.findById(id).orElse(null);
         CartDetailDTO dto = cartDetailConverter.toDTO(bill);
         return dto;
+    }
+
+    @Override
+    public void save(CartDetailEntity entity) {
+        cartDetailRepository.save(entity);
+    }
+
+    @Override
+    public List<CartDetailDTO> findActiveItemsByUserId(Long userId) {
+        List<CartDetailEntity> entities = cartDetailRepository.findActiveItemsByUserId(userId);
+        List<CartDetailDTO> result = new ArrayList<>();
+        for (CartDetailEntity e : entities) {
+            result.add(cartDetailConverter.toDTO(e));
+        }
+        return result;
     }
 }

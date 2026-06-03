@@ -26,9 +26,15 @@ public class DimensionsController {
         }
     }
 
+    @GetMapping("/all/{productId}")
+    public ResponseEntity<java.util.List<DimensionsEntity>> getAllByProductId(@PathVariable Long productId) {
+        java.util.List<DimensionsEntity> list = dimensionsRepo.findByDemensions_Id(productId);
+        return ResponseEntity.ok(list);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DimensionsEntity> getDimensionsById(@PathVariable("id") Long id) {
-        DimensionsEntity dimensions = dimensionsRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
+        DimensionsEntity dimensions = dimensionsRepo.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
         if (dimensions == null) {
             return ResponseEntity.notFound().build();
         }

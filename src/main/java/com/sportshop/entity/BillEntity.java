@@ -1,119 +1,51 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import javax.persistence.*;
+import jakarta.persistence.*;
+import lombok.*;
 import java.util.Date;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name="bill")
 public class BillEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="ID_Bill")
-    public Long id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name="ID_BS")
-    public BillStatusEntity bill;
+    private BillStatusEntity bill;
 
     @ManyToOne
     @JoinColumn(name="ID_Oder")
-    public OderEntity orderbill;
+    private OderEntity orderbill;
 
     @OneToMany(mappedBy = "bill")
     @JsonIgnore
     private List<BillStatusHistoryEntity> billstatushistory;
 
     @Column(name="CreateDate")
-    public Date createDate;
+    private Date createDate;
 
     @Column(name="TotalMoney")
-    public Long totalMoney;
+    private Long totalMoney;
 
     @Column(name="VAT_rate")
-    public Long vatRate;
+    private Long vatRate;
 
     @Column(name="VAT_amount")
-    public Long vatAmount;
+    private Long vatAmount;
 
     @Column(name="TotalMoneyCheckout")
-    public Float totalMoneyCheckout;
+    private Float totalMoneyCheckout;
 
     @Column(name="TotalMoneyaftersaleoff")
-    public Long totalMoneyaftersaleoff;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public BillStatusEntity getBill() {
-        return bill;
-    }
-
-    public void setBill(BillStatusEntity bill) {
-        this.bill = bill;
-    }
-
-    public OderEntity getOrderbill() {
-        return orderbill;
-    }
-
-    public void setOrderbill(OderEntity orderbill) {
-        this.orderbill = orderbill;
-    }
-
-    public Date getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(Date createDate) {
-        this.createDate = createDate;
-    }
-
-    public Long getTotalMoney() {
-        return totalMoney;
-    }
-
-    public void setTotalMoney(Long totalMoney) {
-        this.totalMoney = totalMoney;
-    }
-
-    public Long getVatRate() {
-        return vatRate;
-    }
-
-    public void setVatRate(Long vatRate) {
-        this.vatRate = vatRate;
-    }
-
-    public Long getVatAmount() {
-        return vatAmount;
-    }
-
-    public void setVatAmount(Long vatAmount) {
-        this.vatAmount = vatAmount;
-    }
-
-    public float getTotalMoneyCheckout() {
-        return totalMoneyCheckout;
-    }
-
-    public void setTotalMoneyCheckout(float totalMoneyCheckout) {
-        this.totalMoneyCheckout = totalMoneyCheckout;
-    }
-
-    public Long getTotalMoneyaftersaleoff() {
-        return totalMoneyaftersaleoff;
-    }
-
-    public void setTotalMoneyaftersaleoff(Long totalMoneyaftersaleoff) {
-        this.totalMoneyaftersaleoff = totalMoneyaftersaleoff;
-    }
-
+    private Long totalMoneyaftersaleoff;
 }

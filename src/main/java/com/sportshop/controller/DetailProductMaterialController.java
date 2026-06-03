@@ -31,7 +31,7 @@
 //
 //    @GetMapping("/{id}")
 //    public ResponseEntity<DetailProductMaterialEntity> getDetailColorById(@PathVariable("id") DetailProductMaterialId id) {
-//        DetailProductMaterialEntity color = detailproductmaterialRepository.findOne(id); // ✅ Spring 1.5 dùng findOne
+//        DetailProductMaterialEntity color = detailproductmaterialRepository.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
 //        if (color == null) {
 //            return ResponseEntity.notFound().build();
 //        }
@@ -44,7 +44,7 @@
 //            @PathVariable Long idProduct) {
 //
 //        DetailProductMaterialId id = new DetailProductMaterialId(idMaterial, idProduct);
-//        DetailProductMaterialEntity material = detailproductmaterialRepository.findOne(id);
+//        DetailProductMaterialEntity material = detailproductmaterialRepository.findById(id).orElse(null);
 //        if (material == null) {
 //            return ResponseEntity.notFound().build();
 //        }

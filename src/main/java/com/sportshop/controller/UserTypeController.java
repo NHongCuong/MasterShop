@@ -31,7 +31,7 @@ public class UserTypeController {
 //    // Lấy danh muc theo ID
 //    @GetMapping("/{id}")
 //    public ResponseEntity<CategoryEntity> getProductById(@PathVariable("id") Long id) {
-//        CategoryEntity category = categoryRepo.findOne(id); // ✅ Spring 1.5 dùng findOne
+//        CategoryEntity category = categoryRepo.findById(id).orElse(null); // ✅ Spring 1.5 dùng findOne
 //        if (category == null) {
 //            return ResponseEntity.notFound().build();
 //        }
@@ -51,7 +51,7 @@ public class UserTypeController {
 //    @PutMapping("/update/{id}")
 //    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody CategoryEntity categoryEntity){
 //        try{
-//            CategoryEntity existing = categoryRepo.findOne(id);
+//            CategoryEntity existing = categoryRepo.findById(id).orElse(null);
 //            if(existing==null){
 //                return new ResponseEntity<>("Không tìm thấy ID danh mục" +id , HttpStatus.NOT_FOUND);
 //            }
@@ -69,7 +69,7 @@ public class UserTypeController {
 //    @DeleteMapping("/delete/{id}")
 //    public ResponseEntity<?> deleteCategory(@PathVariable Long id){
 //        try{
-//            categoryRepo.delete(id);
+//            categoryRepo.deleteById(id);
 //            return new ResponseEntity<>("Đã xóa danh mục ID" +id, HttpStatus.OK);
 //        } catch (Exception e) {
 //            e.printStackTrace();

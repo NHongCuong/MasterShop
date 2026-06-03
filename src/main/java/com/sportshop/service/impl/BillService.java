@@ -29,7 +29,7 @@ public class BillService implements IBillService {
     }
     @Override
     public BillDTO get(Long id) {
-        BillEntity bill = billRepo.findOne(id);
+        BillEntity bill = billRepo.findById(id).orElse(null);
         BillDTO dto = billConverter.toDTO(bill);
         return dto;
     }

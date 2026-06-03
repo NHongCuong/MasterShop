@@ -16,13 +16,15 @@ public class CartDetailController {
     @Autowired
     private ICartDetailService cartDetailService;
 
-    @Autowired
-    private CartDetailRepository cartDetailRepository;
-
     @GetMapping("/all")
     public ResponseEntity<List<CartDetailDTO>> getAll() {
         List<CartDetailDTO> list = cartDetailService.findAllDTO();
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<CartDetailDTO>> getByUserId(@PathVariable Long userId) {
+        List<CartDetailDTO> list = cartDetailService.findActiveItemsByUserId(userId);
+        return ResponseEntity.ok(list);
+    }
 }

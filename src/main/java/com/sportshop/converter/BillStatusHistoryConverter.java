@@ -13,7 +13,7 @@ public class BillStatusHistoryConverter {
         en.setBill(dto.getBill());
         en.setBillStatus(dto.getBillStatus());
         en.setUserbillSH(dto.getUserbillSH());
-        en.setDate_BSH(dto.getDate_BSH());
+        en.setDateBSH(dto.getDate_BSH());
 
         return en;
     }
@@ -24,7 +24,7 @@ public class BillStatusHistoryConverter {
         dto.setBillStatus(en.getBillStatus());
         dto.setBill(en.getBill());
         dto.setUserbillSH(en.getUserbillSH());
-        dto.setDate_BSH(en.getDate_BSH());
+        dto.setDate_BSH(en.getDateBSH());
 
         return dto;
     }

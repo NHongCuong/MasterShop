@@ -7,4 +7,6 @@ import java.util.List;
 public interface ICartDetailService {
     List<CartDetailDTO> findAllDTO();
     CartDetailDTO get(CartDetailId id);
+    void save(com.sportshop.entity.CartDetailEntity entity);
+    List<CartDetailDTO> findActiveItemsByUserId(Long userId);
 }

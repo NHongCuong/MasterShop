@@ -29,7 +29,7 @@ public class ColorService implements IColorService {
     }
     @Override
     public ColorDTO get(Long id) {
-        ColorEntity category = colorRepo.findOne(id);
+        ColorEntity category = colorRepo.findById(id).orElse(null);
         ColorDTO dto = colorConverter.toDTO(category);
         return dto;
     }

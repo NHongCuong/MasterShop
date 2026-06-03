@@ -30,7 +30,7 @@ public class ShopcartService implements IShopcartService {
     }
     @Override
     public ShopcartDTO get(Long id) {
-        ShopcartEntity shopcart = shopcartRepo.findOne(id);
+        ShopcartEntity shopcart = shopcartRepo.findById(id).orElse(null);
         ShopcartDTO dto = shopcartConverter.toDTO(shopcart);
         return dto;
     }

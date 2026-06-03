@@ -16,8 +16,20 @@ public class CartDetailDTO {
 
     // Thông tin mở rộng hiển thị cho frontend
     private String productName;
+    private Long productPrice;
+    private String productAvatar;
     private String materialName;
     private String dimensionName;
+    private String colorName; // Thêm tên màu
+
+    public Long getProductPrice() { return productPrice; }
+    public void setProductPrice(Long productPrice) { this.productPrice = productPrice; }
+
+    public String getProductAvatar() { return productAvatar; }
+    public void setProductAvatar(String productAvatar) { this.productAvatar = productAvatar; }
+
+    public String getColorName() { return colorName; }
+    public void setColorName(String colorName) { this.colorName = colorName; }
 
     // Getters & Setters
     public Long getIdSC() { return idSC; }

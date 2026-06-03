@@ -38,7 +38,7 @@
 //        DetailProductMaterialId id = new DetailProductMaterialId( idMaterial, idProduct);
 //
 //        // Gọi repository
-//        DetailProductMaterialEntity detailcolor = detailproductmaterialRepository.findOne(id);
+//        DetailProductMaterialEntity detailcolor = detailproductmaterialRepository.findById(id).orElse(null);
 //
 //        // Nếu không tìm thấy thì trả null
 //        if (detailcolor == null) {
