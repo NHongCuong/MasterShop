@@ -72,6 +72,7 @@ C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\Met
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\OderDetailEntity.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\OderEntity.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\ProductEntity.java
+C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\ProductImageEntity.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\ShipMethodEntity.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\ShopcartEntity.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\entity\SupplierEntity.java
@@ -88,6 +89,7 @@ C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\DetailProductMaterialRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\DimensionsRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\MaterialRepository.java
+C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\ProductImageRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\ProductRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\ShopcartRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\SupplierRepository.java

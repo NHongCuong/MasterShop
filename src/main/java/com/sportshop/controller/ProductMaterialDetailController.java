@@ -1,8 +1,6 @@
 package com.sportshop.controller;
 
-import com.sportshop.dto.DetailProductColorDTO;
 import com.sportshop.dto.DetailProductMaterialDTO;
-import com.sportshop.service.ProductColorDetailService;
 import com.sportshop.service.ProductMaterialDetailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

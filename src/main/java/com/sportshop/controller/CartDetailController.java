@@ -1,7 +1,6 @@
 package com.sportshop.controller;
 
 import com.sportshop.dto.CartDetailDTO;
-import com.sportshop.repository.CartDetailRepository;
 import com.sportshop.service.ICartDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

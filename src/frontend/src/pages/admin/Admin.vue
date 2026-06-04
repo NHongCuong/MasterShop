@@ -212,6 +212,14 @@ onMounted(() => {
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/admin/product-color" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-palette"></i>
+              <p>
+                Product Color
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/admin/saleoff" active-class="active" class="nav-link">
               <i class="nav-icon fas fa-tag"></i>
               <p>

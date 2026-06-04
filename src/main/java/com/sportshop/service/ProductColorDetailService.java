@@ -24,35 +24,34 @@ public class ProductColorDetailService {
      */
     public List<DetailProductColorDTO> getAllDetailProductColorsByProduct(Long idProduct) {
         List<DetailProductColorDTO> dtos = new ArrayList<>();
-
-        // Giả sử repository có hàm: findByProduct_Id(Long idProduct)
         List<DetailProductColorEntity> entities = detailProductColorRepository.findByIdIdProduct(idProduct);
 
         for (DetailProductColorEntity entity : entities) {
-            String nameColor = null;
-            if (entity.getDetailColor() != null) {
-                nameColor = entity.getDetailColor().getNameColor();
-            }
-
-            DetailProductColorDTO dto = new DetailProductColorDTO(
-                    entity.getId().getIdColor(),
-                    entity.getId().getIdProduct(),
-                    nameColor
-            );
+            DetailProductColorDTO dto = new DetailProductColorDTO();
+            dto.setIdColor(entity.getId().getIdColor());
+            dto.setIdProduct(entity.getId().getIdProduct());
+            dto.setNameColor(entity.getDetailColor() != null ? entity.getDetailColor().getNameColor() : null);
+            dto.setProductName(entity.getDetailColorProduct() != null ? entity.getDetailColorProduct().getName() : null);
+            dto.setCreatedAt(entity.getCreatedAt());
+            dto.setUpdatedAt(entity.getUpdatedAt());
             dtos.add(dto);
         }
         return dtos;
     }
+
     public List<DetailProductColorDTO> getAllDetailProductColors() {
         List<DetailProductColorEntity> entities = detailProductColorRepository.findAll();
         List<DetailProductColorDTO> dtos = new ArrayList<>();
 
         for (DetailProductColorEntity e : entities) {
-            dtos.add(new DetailProductColorDTO(
-                    e.getId().getIdColor(),
-                    e.getId().getIdProduct(),
-                    e.getDetailColor() != null ? e.getDetailColor().getNameColor() : null
-            ));
+            DetailProductColorDTO dto = new DetailProductColorDTO();
+            dto.setIdColor(e.getId().getIdColor());
+            dto.setIdProduct(e.getId().getIdProduct());
+            dto.setNameColor(e.getDetailColor() != null ? e.getDetailColor().getNameColor() : null);
+            dto.setProductName(e.getDetailColorProduct() != null ? e.getDetailColorProduct().getName() : null);
+            dto.setCreatedAt(e.getCreatedAt());
+            dto.setUpdatedAt(e.getUpdatedAt());
+            dtos.add(dto);
         }
 
         return dtos;

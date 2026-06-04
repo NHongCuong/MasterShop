@@ -1,10 +1,7 @@
 package com.sportshop.service;
 
-import com.sportshop.dto.DetailProductColorDTO;
 import com.sportshop.dto.DetailProductMaterialDTO;
-import com.sportshop.entity.DetailProductColorEntity;
 import com.sportshop.entity.DetailProductMaterialEntity;
-import com.sportshop.repository.DetailProductColorRepository;
 import com.sportshop.repository.DetailProductMaterialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

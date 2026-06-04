@@ -113,6 +113,12 @@ export default [
                 name: 'category',
                 component: () => import('./pages/admin/category.vue'),
                 meta: { title: 'Category' }
+            },
+            {
+                path: 'product-color',
+                name: 'productColor',
+                component: () => import('./pages/admin/AdminProductColor.vue'),
+                meta: { title: 'Product Color' }
             }
         ]
     }

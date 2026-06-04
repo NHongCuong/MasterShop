@@ -2,8 +2,6 @@ package com.sportshop.controller;
 
 import com.sportshop.entity.*;
 import com.sportshop.repository.*;
-import com.sportshop.service.ICartDetailService;
-import com.sportshop.service.IShopcartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +34,6 @@ public class ShopcartController {
     @Autowired
     private DimensionsRepository dimensionsRepo;
 
-    @Autowired
-    private ICartDetailService cartDetailService;
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllShopcarts() {
@@ -168,7 +164,13 @@ public class ShopcartController {
         try {
             java.util.List<ShopcartEntity> carts = shopcartRepo.findByUserSC_IdAndCartStatus_Id(userId, 3L);
             for (ShopcartEntity cart : carts) {
-                // Logic xóa chi tiết
+                // Xóa tất cả chi tiết của giỏ hàng này
+                java.util.List<CartDetailEntity> details = cartDetailRepo.findAll(); // Cần lọc theo cart
+                for (CartDetailEntity detail : details) {
+                    if (detail.getId().getIdSC().equals(cart.getId())) {
+                        cartDetailRepo.delete(detail);
+                    }
+                }
             }
             return ResponseEntity.ok("Đã dọn dẹp giỏ hàng");
         } catch (Exception e) {
