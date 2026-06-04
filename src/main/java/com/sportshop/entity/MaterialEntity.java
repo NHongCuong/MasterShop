@@ -5,15 +5,33 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name="material")
+@Table(name = "material")
 public class MaterialEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="ID_Material")
-    public Long Id;
+    @Column(name = "ID_Material")
+    private Long id;
 
-    @Column(name="Name_Material")
-    public String NameMaterial;
+    @Column(name = "Name_Material")
+    private String nameMaterial;
+
+    @Column(name = "created_at")
+    public java.util.Date createdAt;
+
+    @Column(name = "updated_at")
+    public java.util.Date updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = new java.util.Date();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new java.util.Date();
+    }
 
     @OneToMany(mappedBy = "materialcartdetail")
     @JsonIgnore
@@ -24,19 +42,35 @@ public class MaterialEntity {
     private List<DetailProductMaterialEntity> detailproductmaterial;
 
     public Long getId() {
-        return Id;
+        return id;
     }
 
     public void setId(Long id) {
-        Id = id;
+        this.id = id;
     }
 
     public String getNameMaterial() {
-        return NameMaterial;
+        return nameMaterial;
     }
 
     public void setNameMaterial(String nameMaterial) {
-        NameMaterial = nameMaterial;
+        this.nameMaterial = nameMaterial;
+    }
+
+    public java.util.Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.util.Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.util.Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.util.Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public List<CartDetailEntity> getMaterial() {
@@ -47,7 +81,6 @@ public class MaterialEntity {
         this.material = material;
     }
 
-
     public List<DetailProductMaterialEntity> getDetailproductmaterial() {
         return detailproductmaterial;
     }
@@ -55,6 +88,5 @@ public class MaterialEntity {
     public void setDetailproductmaterial(List<DetailProductMaterialEntity> detailproductmaterial) {
         this.detailproductmaterial = detailproductmaterial;
     }
-
 
 }

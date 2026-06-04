@@ -21,6 +21,24 @@ public class ColorEntity {
     @Column(name="Name_Color")
     private String nameColor;
 
+    @Column(name = "created_at")
+    private java.util.Date createdAt;
+
+    @Column(name = "updated_at")
+    private java.util.Date updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = new java.util.Date();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = new java.util.Date();
+    }
+
     @OneToMany(mappedBy = "detailColor")
     @JsonIgnore
     private List<DetailProductColorEntity> detailproductcolor;

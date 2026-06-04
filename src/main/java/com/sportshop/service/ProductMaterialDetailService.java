@@ -23,35 +23,34 @@ public class ProductMaterialDetailService {
      */
     public List<DetailProductMaterialDTO> getAllDetailProductMaterialsByProduct(Long idProduct) {
         List<DetailProductMaterialDTO> dtos = new ArrayList<>();
-
-        // Giả sử repository có hàm: findByProduct_Id(Long idProduct)
         List<DetailProductMaterialEntity> entities = detailProductMaterialRepository.findByIdIdProduct(idProduct);
 
         for (DetailProductMaterialEntity entity : entities) {
-            String nameColor = null;
-            if (entity.getDetailMaterial() != null) {
-                nameColor = entity.getDetailMaterial().getNameMaterial();
-            }
-
-            DetailProductMaterialDTO dto = new DetailProductMaterialDTO(
-                    entity.getId().getIdMaterial(),
-                    entity.getId().getIdProduct(),
-                    nameColor
-            );
+            DetailProductMaterialDTO dto = new DetailProductMaterialDTO();
+            dto.setIdMaterial(entity.getId().getIdMaterial());
+            dto.setIdProduct(entity.getId().getIdProduct());
+            dto.setNameMaterial(entity.getDetailMaterial() != null ? entity.getDetailMaterial().getNameMaterial() : null);
+            dto.setProductName(entity.getDetailMaterialProduct() != null ? entity.getDetailMaterialProduct().getName() : null);
+            dto.setCreatedAt(entity.getCreatedAt());
+            dto.setUpdatedAt(entity.getUpdatedAt());
             dtos.add(dto);
         }
         return dtos;
     }
+
     public List<DetailProductMaterialDTO> getAllDetailProductMaterials() {
         List<DetailProductMaterialEntity> entities = detailProductMaterialRepository.findAll();
         List<DetailProductMaterialDTO> dtos = new ArrayList<>();
 
         for (DetailProductMaterialEntity e : entities) {
-            dtos.add(new DetailProductMaterialDTO(
-                    e.getId().getIdMaterial(),
-                    e.getId().getIdProduct(),
-                    e.getDetailMaterial() != null ? e.getDetailMaterial().getNameMaterial() : null
-            ));
+            DetailProductMaterialDTO dto = new DetailProductMaterialDTO();
+            dto.setIdMaterial(e.getId().getIdMaterial());
+            dto.setIdProduct(e.getId().getIdProduct());
+            dto.setNameMaterial(e.getDetailMaterial() != null ? e.getDetailMaterial().getNameMaterial() : null);
+            dto.setProductName(e.getDetailMaterialProduct() != null ? e.getDetailMaterialProduct().getName() : null);
+            dto.setCreatedAt(e.getCreatedAt());
+            dto.setUpdatedAt(e.getUpdatedAt());
+            dtos.add(dto);
         }
 
         return dtos;

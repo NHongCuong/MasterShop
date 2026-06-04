@@ -1,9 +1,14 @@
 package com.sportshop.dto;
 
+import java.util.Date;
+
 public class CategoryDTO {
 	private Long id;
 	private String name;
 	private String icon;
+	private Date createdAt;
+	private Date updatedAt;
+
 	public Long getId() {
 		return id;
 	}
@@ -21,5 +26,17 @@ public class CategoryDTO {
 	}
 	public void setIcon(String icon) {
 		this.icon = icon;
+	}
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
+	public Date getUpdatedAt() {
+		return updatedAt;
+	}
+	public void setUpdatedAt(Date updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 }

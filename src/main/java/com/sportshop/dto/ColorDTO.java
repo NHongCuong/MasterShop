@@ -1,22 +1,22 @@
 package com.sportshop.dto;
 
+import java.util.Date;
+
 public class ColorDTO {
-    public Long Id;
-    public String NameColor;
+    private Long id;
+    private String nameColor;
+    private Date createdAt;
+    private Date updatedAt;
 
-    public Long getId() {
-        return Id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        Id = id;
-    }
+    public String getNameColor() { return nameColor; }
+    public void setNameColor(String nameColor) { this.nameColor = nameColor; }
 
-    public String getNameColor() {
-        return NameColor;
-    }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public void setNameColor(String nameColor) {
-        NameColor = nameColor;
-    }
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 }

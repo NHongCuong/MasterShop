@@ -6,19 +6,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ColorConverter {
-    public ColorEntity toEntity(ColorDTO dto)
-    {
-        ColorEntity en = new ColorEntity();
-        en.setId(dto.getId());
-        en.setNameColor(dto.getNameColor());
 
-        return en;
-    }
-    public ColorDTO toDTO(ColorEntity en)
-    {
+    public ColorDTO toDTO(ColorEntity entity) {
+        if (entity == null) return null;
         ColorDTO dto = new ColorDTO();
-        dto.setId(en.getId());
-        dto.setNameColor(en.getNameColor());
+        dto.setId(entity.getId());
+        dto.setNameColor(entity.getNameColor());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
+    }
+
+    public ColorEntity toEntity(ColorDTO dto) {
+        if (dto == null) return null;
+        ColorEntity entity = new ColorEntity();
+        entity.setId(dto.getId());
+        entity.setNameColor(dto.getNameColor());
+        return entity;
     }
 }

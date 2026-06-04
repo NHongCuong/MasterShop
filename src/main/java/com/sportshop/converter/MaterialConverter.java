@@ -6,20 +6,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MaterialConverter {
-    public MaterialEntity toEntity(MaterialDTO dto)
-    {
-        MaterialEntity en = new MaterialEntity();
-        en.setId(dto.getId());
-        en.setNameMaterial(dto.getNameMaterial());
 
-        return en;
-    }
-    public MaterialDTO toDTO(MaterialEntity en)
-    {
+    public MaterialDTO toDTO(MaterialEntity entity) {
+        if (entity == null) return null;
         MaterialDTO dto = new MaterialDTO();
-        dto.setId(en.getId());
-        dto.setNameMaterial(en.getNameMaterial());
-
+        dto.setId(entity.getId());
+        dto.setNameMaterial(entity.getNameMaterial());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
+    }
+
+    public MaterialEntity toEntity(MaterialDTO dto) {
+        if (dto == null) return null;
+        MaterialEntity entity = new MaterialEntity();
+        entity.setId(dto.getId());
+        entity.setNameMaterial(dto.getNameMaterial());
+        return entity;
     }
 }

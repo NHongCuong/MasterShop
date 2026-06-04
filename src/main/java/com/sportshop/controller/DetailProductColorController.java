@@ -1,6 +1,7 @@
 package com.sportshop.controller;
 
 import com.sportshop.dto.DetailProductColorDTO;
+import com.sportshop.response.PageResponse;
 import com.sportshop.service.IDetailProductColorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -50,7 +51,7 @@ public class DetailProductColorController {
                     (search != null && !search.trim().isEmpty()) ? search.trim() : null,
                     pageable
             );
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(PageResponse.of(result));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

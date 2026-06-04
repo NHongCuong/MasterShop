@@ -60,6 +60,10 @@ public class DetailProductColorService implements IDetailProductColorService {
 
     @Override
     public void save(DetailProductColorDTO dto) {
+        DetailProductColorId id = new DetailProductColorId(dto.getIdColor(), dto.getIdProduct());
+        if (detailProductColorRepository.existsById(id)) {
+            throw new RuntimeException("Sản phẩm tương ứng với màu đã tồn tại");
+        }
         DetailProductColorEntity entity = detailProductColorConverter.toEntity(dto);
         detailProductColorRepository.save(entity);
     }
@@ -67,15 +71,19 @@ public class DetailProductColorService implements IDetailProductColorService {
     @Override
     public void update(Long oldIdColor, Long oldIdProduct, DetailProductColorDTO dto) {
         DetailProductColorId oldId = new DetailProductColorId(oldIdColor, oldIdProduct);
-        DetailProductColorEntity oldEntity = detailProductColorRepository.findById(oldId).orElse(null);
+        DetailProductColorId newId = new DetailProductColorId(dto.getIdColor(), dto.getIdProduct());
         
-        java.util.Date originalCreated = (oldEntity != null) ? oldEntity.getCreatedAt() : new java.util.Date();
-
-        // Nếu ID thay đổi, ta xóa cái cũ và tạo cái mới
-        if (!oldIdColor.equals(dto.getIdColor()) || !oldIdProduct.equals(dto.getIdProduct())) {
+        // Nếu ID thay đổi, kiểm tra xem ID mới đã tồn tại chưa
+        if (!oldId.equals(newId)) {
+            if (detailProductColorRepository.existsById(newId)) {
+                throw new RuntimeException("Sản phẩm tương ứng với màu đã tồn tại");
+            }
             detailProductColorRepository.deleteById(oldId);
         }
         
+        DetailProductColorEntity oldEntity = detailProductColorRepository.findById(oldId).orElse(null);
+        java.util.Date originalCreated = (oldEntity != null) ? oldEntity.getCreatedAt() : new java.util.Date();
+
         DetailProductColorEntity entity = detailProductColorConverter.toEntity(dto);
         
         // Giữ nguyên ngày tạo và cập nhật ngày sửa

@@ -46,6 +46,18 @@ public class DimensionsEntity {
         this.nameD = nameD;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        if (created_at == null) {
+            created_at = new Date();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updated_at = new Date();
+    }
+
     public Date getCreated_at() {
         return created_at;
     }

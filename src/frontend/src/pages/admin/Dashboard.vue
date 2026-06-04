@@ -49,7 +49,7 @@ const totalCategorys = computed(() => categoryLists.value.length)
 // Hàm lấy danh sách user từ backend
 const fetchCategorys = async () => {
   try {
-    const response = await axios.get('http://localhost:8081/category/all')
+    const response = await axios.get('http://localhost:8081/category/list')
     categoryLists.value = response.data
   } catch (error) {
     console.error('Lỗi khi lấy danh sách danh mục:', error)

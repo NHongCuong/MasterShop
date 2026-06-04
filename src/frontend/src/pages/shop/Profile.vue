@@ -74,8 +74,8 @@ onMounted(() => {
                     <span class="text-muted small fw-bold text-uppercase">Trạng thái tài khoản</span>
                   </div>
                   <div class="fw-bold fs-5">
-                    <span :class="state.user?.userStatus.name === 'active' ? 'text-success' : 'text-warning'">
-                      {{ state.user?.userStatus.name === 'active' ? 'Đang hoạt động' : 'Chưa xác thực' }}
+                    <span :class="state.user?.userStatus.name === 'Đang hoạt động' ? 'text-success' : 'text-warning'">
+                      {{ state.user?.userStatus.name === 'Đang hoạt động' ? 'Đang hoạt động' : 'Chưa xác thực' }}
                     </span>
                   </div>
                 </div>

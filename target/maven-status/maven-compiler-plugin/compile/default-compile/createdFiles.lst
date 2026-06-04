@@ -35,8 +35,10 @@ com\sportshop\repository\DimensionsRepository.class
 com\sportshop\config\JwtAuthenticationEntryPoint.class
 com\sportshop\repository\CategoryRepository.class
 com\sportshop\service\impl\ProductService.class
+com\sportshop\response\PageResponse.class
 com\sportshop\entity\OderEntity$OderEntityBuilder.class
 com\sportshop\controller\UserController.class
+com\sportshop\config\CategorySchemaMigration.class
 com\sportshop\service\impl\UserStatusService.class
 com\sportshop\converter\UserTypeConverter.class
 com\sportshop\repository\MaterialRepository.class

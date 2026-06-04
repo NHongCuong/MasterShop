@@ -65,11 +65,13 @@ const loadData = async () => {
 const loadBaseOptions = async () => {
   try {
     const [cRes, pRes] = await Promise.all([
-      axios.get(BASE_COLOR_API),
-      axios.get(BASE_PRODUCT_API)
+      axios.get('http://localhost:8081/color/list'),
+      axios.get('http://localhost:8081/product/all')
     ])
-    colorOptions.value = cRes.data.map((c: any) => ({ label: c.nameColor, value: c.id }))
-    productOptions.value = pRes.data.map((p: any) => ({ label: p.name, value: p.id }))
+    const colorData = Array.isArray(cRes.data) ? cRes.data : (cRes.data.content || [])
+    const productData = Array.isArray(pRes.data) ? pRes.data : (pRes.data.content || [])
+    colorOptions.value = colorData.map((c: any) => ({ label: c.nameColor, value: c.id }))
+    productOptions.value = productData.map((p: any) => ({ label: p.name, value: p.id }))
   } catch (err) {
     console.error('Lỗi tải options:', err)
   }
@@ -110,8 +112,9 @@ const saveItem = async () => {
     }
     displayDialog.value = false
     loadData()
-  } catch (err) {
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Lưu thất bại', life: 2000 })
+  } catch (err: any) {
+    const msg = err.response?.data || 'Lưu thất bại'
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 3000 })
   }
 }
 

@@ -1,4 +1,5 @@
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\Application.java
+C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\config\CategorySchemaMigration.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\config\CloudinaryConfig.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\config\JwtAuthenticationEntryPoint.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\config\JwtTokenUtils.java
@@ -13,6 +14,7 @@ C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\MaterialController.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\ProductColorDetailController.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\ProductController.java
+C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\ProductDimensionsDetailController.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\ProductMaterialDetailController.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\ShopcartController.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\controller\StorageController.java
@@ -98,6 +100,7 @@ C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\repository\UserTypeRepository.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\response\AuthResponse.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\response\BaseResponse.java
+C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\response\PageResponse.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\security\MyUserDetails.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\service\CloudinaryService.java
 C:\Users\Administrator\Desktop\MasterShop\src\main\java\com\sportshop\service\IBillService.java

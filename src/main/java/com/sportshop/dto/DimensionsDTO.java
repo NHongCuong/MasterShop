@@ -3,40 +3,28 @@ package com.sportshop.dto;
 import java.util.Date;
 
 public class DimensionsDTO {
-    public Long Id;
-    public String nameD;
-    public Date created_at;
-    public Date updated_at;
-    public Long getId() {
-        return Id;
-    }
+    private Long id;
+    private String nameD;
+    private Long productId;
+    private String productName;
+    private Date createdAt;
+    private Date updatedAt;
 
-    public void setId(Long id) {
-        Id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getNameD() {
-        return nameD;
-    }
+    public String getNameD() { return nameD; }
+    public void setNameD(String nameD) { this.nameD = nameD; }
 
-    public void setNameD(String nameD) {
-        this.nameD = nameD;
-    }
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
 
-    public Date getCreated_at() {
-        return created_at;
-    }
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
 
-    public void setCreated_at(Date created_at) {
-        this.created_at = created_at;
-    }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public Date getUpdated_at() {
-        return updated_at;
-    }
-
-    public void setUpdated_at(Date updated_at) {
-        this.updated_at = updated_at;
-    }
-
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -212,10 +212,42 @@ onMounted(() => {
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/admin/color" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-paint-brush"></i>
+              <p>
+                Colors
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/admin/material" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-box-open"></i>
+              <p>
+                Materials
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/admin/product-color" active-class="active" class="nav-link">
               <i class="nav-icon fas fa-palette"></i>
               <p>
                 Product Color
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/admin/product-material" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-industry"></i>
+              <p>
+                Product Material
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/admin/product-dimensions" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-ruler-combined"></i>
+              <p>
+                Product Dimensions
               </p>
             </router-link>
           </li>
@@ -256,7 +288,6 @@ onMounted(() => {
 
   <footer class="main-footer">
 
-    <strong>Copyright &copy; 2025 <a href="https://lazycodet.com/nguyentantai" target="_blank">Nguyễn Tấn
-      Tài</a>.</strong>.
+    <strong>Copyright &copy; 2026 <a href="https://www.linkedin.com/in/cuongnguyenhong96/" target="_blank">Nguyễn Hồng Cường</a></strong>.
   </footer>
 </template>

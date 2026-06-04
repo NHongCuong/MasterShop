@@ -8,6 +8,7 @@ import com.sportshop.entity.CategoryEntity;
 public class CategoryConverter {
 	public CategoryEntity toEntity(CategoryDTO dto)
 	{
+		if (dto == null) return null;
 		CategoryEntity en = new CategoryEntity();
 		en.setId(dto.getId());
 		en.setName(dto.getName());
@@ -16,10 +17,13 @@ public class CategoryConverter {
 	}
 	public CategoryDTO toDTO(CategoryEntity en)
 	{
+		if (en == null) return null;
 		CategoryDTO dto = new CategoryDTO();
 		dto.setId(en.getId());
 		dto.setName(en.getName());
 		dto.setIcon(en.getIcon());
+		dto.setCreatedAt(en.getCreatedAt());
+		dto.setUpdatedAt(en.getUpdatedAt());
 		return dto;
 	}
 }

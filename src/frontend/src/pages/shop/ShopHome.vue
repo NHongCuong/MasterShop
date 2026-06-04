@@ -43,7 +43,7 @@ function startAutoSlide() {
 }
 
 function loadCategory() {
-  axios.get("http://localhost:8081/category/all").then(res => {
+  axios.get("http://localhost:8081/category/list").then(res => {
     if (res.status == 200) {
       categories.value = res.data;
     }

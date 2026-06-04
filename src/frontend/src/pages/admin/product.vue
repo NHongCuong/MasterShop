@@ -110,7 +110,7 @@ const loadProducts = async () => {
 }
 
 const loadCategories = async () => {
-  const res = await axios.get(`${CATEGORY_API}/all`)
+  const res = await axios.get(`${CATEGORY_API}/list`)
   categoryList.value = res.data
 }
 

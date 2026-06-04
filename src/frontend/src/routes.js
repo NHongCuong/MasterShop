@@ -119,6 +119,30 @@ export default [
                 name: 'productColor',
                 component: () => import('./pages/admin/AdminProductColor.vue'),
                 meta: { title: 'Product Color' }
+            },
+            {
+                path: 'product-material',
+                name: 'productMaterial',
+                component: () => import('./pages/admin/AdminProductMaterial.vue'),
+                meta: { title: 'Product Material' }
+            },
+            {
+                path: 'product-dimensions',
+                name: 'productDimensions',
+                component: () => import('./pages/admin/AdminProductDimensions.vue'),
+                meta: { title: 'Product Dimensions' }
+            },
+            {
+                path: 'color',
+                name: 'adminColor',
+                component: () => import('./pages/admin/AdminColor.vue'),
+                meta: { title: 'Colors' }
+            },
+            {
+                path: 'material',
+                name: 'adminMaterial',
+                component: () => import('./pages/admin/AdminMaterial.vue'),
+                meta: { title: 'Materials' }
             }
         ]
     }

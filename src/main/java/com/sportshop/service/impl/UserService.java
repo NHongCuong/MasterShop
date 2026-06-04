@@ -1,10 +1,15 @@
 package com.sportshop.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.sportshop.converter.UserConverter;
@@ -33,6 +38,74 @@ public class UserService implements IUserService{
 		}
 		return listDTO;
 	}
+
+	@Override
+	public Page<UserDTO> findAll(String search, Pageable pageable) {
+		Page<UserEntity> page = userRepo.findWithSearch(search, pageable);
+		return page.map(userConverter::toDTO);
+	}
+
+	@Override
+	public byte[] exportToExcel() throws Exception {
+		List<UserDTO> allData = getAll();
+
+		try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+			Sheet sheet = workbook.createSheet("Users");
+
+			CellStyle headerStyle = workbook.createCellStyle();
+			Font headerFont = workbook.createFont();
+			headerFont.setBold(true);
+			headerStyle.setFont(headerFont);
+			headerStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+			headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+			headerStyle.setBorderBottom(BorderStyle.THIN);
+			headerStyle.setBorderTop(BorderStyle.THIN);
+			headerStyle.setBorderLeft(BorderStyle.THIN);
+			headerStyle.setBorderRight(BorderStyle.THIN);
+			headerStyle.setAlignment(HorizontalAlignment.CENTER);
+
+			CellStyle dataStyle = workbook.createCellStyle();
+			dataStyle.setBorderBottom(BorderStyle.THIN);
+			dataStyle.setBorderTop(BorderStyle.THIN);
+			dataStyle.setBorderLeft(BorderStyle.THIN);
+			dataStyle.setBorderRight(BorderStyle.THIN);
+
+			Row headerRow = sheet.createRow(0);
+			String[] headers = {"STT", "Tên", "SĐT", "Email", "Địa chỉ", "Loại tài khoản", "Trạng thái", "Thời gian"};
+			for (int i = 0; i < headers.length; i++) {
+				Cell cell = headerRow.createCell(i);
+				cell.setCellValue(headers[i]);
+				cell.setCellStyle(headerStyle);
+			}
+
+			int rowNum = 1;
+			for (UserDTO dto : allData) {
+				Row row = sheet.createRow(rowNum);
+				Cell c0 = row.createCell(0); c0.setCellValue(rowNum); c0.setCellStyle(dataStyle);
+				Cell c1 = row.createCell(1); c1.setCellValue(dto.getNameUser() != null ? dto.getNameUser() : ""); c1.setCellStyle(dataStyle);
+				Cell c2 = row.createCell(2); c2.setCellValue(dto.getPhone() != null ? dto.getPhone() : ""); c2.setCellStyle(dataStyle);
+				Cell c3 = row.createCell(3); c3.setCellValue(dto.getEmail() != null ? dto.getEmail() : ""); c3.setCellStyle(dataStyle);
+				Cell c4 = row.createCell(4); c4.setCellValue(dto.getAddress() != null ? dto.getAddress() : ""); c4.setCellStyle(dataStyle);
+				Cell c5 = row.createCell(5);
+				c5.setCellValue(dto.getUserType() != null && dto.getUserType().getName() != null ? dto.getUserType().getName() : "");
+				c5.setCellStyle(dataStyle);
+				Cell c6 = row.createCell(6);
+				c6.setCellValue(dto.getUserStatus() != null && dto.getUserStatus().getName() != null ? dto.getUserStatus().getName() : "");
+				c6.setCellStyle(dataStyle);
+				Cell c7 = row.createCell(7); c7.setCellValue(dto.getRegtime() != null ? dto.getRegtime() : ""); c7.setCellStyle(dataStyle);
+				rowNum++;
+			}
+
+			for (int i = 0; i < headers.length; i++) {
+				sheet.autoSizeColumn(i);
+			}
+
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			workbook.write(out);
+			return out.toByteArray();
+		}
+	}
+
 	@Override
 	public UserDTO loadUserByEmail(String email) {
 		Optional<UserEntity> en = userRepo.findByEmail(email);

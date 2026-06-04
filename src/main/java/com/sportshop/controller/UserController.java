@@ -7,7 +7,13 @@ import com.sportshop.repository.UserRepository;
 import com.sportshop.repository.UserStatusRepository;
 import com.sportshop.repository.UserTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import com.sportshop.config.JwtTokenUtils;
 import com.sportshop.dto.UserDTO;
 import com.sportshop.response.AuthResponse;
+import com.sportshop.response.PageResponse;
 import com.sportshop.security.MyUserDetails;
 import com.sportshop.service.IUserService;
 import com.sportshop.service.impl.MyUserDetailsService;
@@ -51,6 +58,53 @@ public class UserController {
             return new ResponseEntity<>(userRepository.findAll(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi lấy danh sách: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/user/all")
+    public ResponseEntity<?> getAllPaginated(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "newest") String sort) {
+        try {
+            Sort sortObj;
+            switch (sort) {
+                case "oldest":
+                    sortObj = Sort.by(Sort.Direction.ASC, "id");
+                    break;
+                case "az":
+                    sortObj = Sort.by(Sort.Direction.ASC, "nameUser");
+                    break;
+                case "za":
+                    sortObj = Sort.by(Sort.Direction.DESC, "nameUser");
+                    break;
+                case "newest":
+                default:
+                    sortObj = Sort.by(Sort.Direction.DESC, "id");
+                    break;
+            }
+            Pageable pageable = PageRequest.of(page, size, sortObj);
+            Page<UserDTO> result = userService.findAll(
+                    (search != null && !search.trim().isEmpty()) ? search.trim() : null,
+                    pageable);
+            return ResponseEntity.ok(PageResponse.of(result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy danh sách: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/export-excel")
+    public ResponseEntity<byte[]> exportExcel() {
+        try {
+            byte[] data = userService.exportToExcel();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "users.xlsx");
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 //	public List<UserDTO> getAll()

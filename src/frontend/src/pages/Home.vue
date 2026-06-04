@@ -8,7 +8,7 @@ const categories = ref<Category[]>([]);
 
 const loadCategories = async () => {
   try {
-    const res = await axios.get("http://localhost:8081/category/all");
+    const res = await axios.get("http://localhost:8081/category/list");
     categories.value = res.data;
   } catch (err) {
     console.error("Lỗi tải danh mục:", err);
