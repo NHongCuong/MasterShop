@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -48,15 +50,18 @@ public class ProductEntity {
 
     @OneToMany(mappedBy = "demensions")
     @JsonIgnoreProperties("demensions")
-    private List<DimensionsEntity> productDemensions;
+    @BatchSize(size = 20)
+    private Set<DimensionsEntity> productDemensions;
 
     @OneToMany(mappedBy = "detailColorProduct")
     @JsonIgnoreProperties("detailColorProduct")
-    private List<DetailProductColorEntity> detailproductcolor;
+    @BatchSize(size = 20)
+    private Set<DetailProductColorEntity> detailproductcolor;
 
     @OneToMany(mappedBy = "detailMaterialProduct")
     @JsonIgnoreProperties("detailMaterialProduct")
-    private List<DetailProductMaterialEntity> detailproductmaterial;
+    @BatchSize(size = 20)
+    private Set<DetailProductMaterialEntity> detailproductmaterial;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImageEntity> productImages;

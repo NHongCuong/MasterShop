@@ -10,14 +10,5 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
-    @EntityGraph(attributePaths = {
-        "category", 
-        "voucher", 
-        "detailproductcolor.detailColor", 
-        "detailproductmaterial.detailMaterial", 
-        "productDemensions"
-    })
-    List<ProductEntity> findAll();
-    
     Page<ProductEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }
