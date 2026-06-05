@@ -17,6 +17,12 @@ export default [
         meta: { title: 'Home' },
         children: [
             {
+                path: '/products',
+                name: 'products',
+                component: () => import('./pages/shop/Products.vue'),
+                meta: { title: 'Sản phẩm' }
+            },
+            {
                 path: '',
                 name: 'shophome',
                 component: () => import('./pages/shop/ShopHome.vue'),

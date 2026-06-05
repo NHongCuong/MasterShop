@@ -22,6 +22,7 @@ const isEditing = ref(false);
 
 const showDetail = ref(false);
 const orderItems = ref<any[]>([]);
+const currentBill = ref<any>(null);
 const itemsLoading = ref(false);
 
 // Master Data
@@ -83,6 +84,14 @@ const viewDetail = async (order: any) => {
     try {
         const res = await axios.get(`${API}/detail/${order.id}`);
         orderItems.value = res.data;
+        
+        // Lấy thông tin Bill để lấy discount
+        const billRes = await axios.get(`http://localhost:8081/bill/order/${order.id}`);
+        if(billRes.data && billRes.data.length > 0) {
+            currentBill.value = billRes.data[0];
+        } else {
+            currentBill.value = null;
+        }
     } catch {
         toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải chi tiết đơn hàng', life: 2000 });
     } finally {
@@ -118,7 +127,9 @@ const saveOrder = async () => {
 
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật toàn bộ đơn hàng', life: 1500 });
         
-        selectedOrder.value = JSON.parse(JSON.stringify(editOrder.value));
+        // NẠP LẠI DỮ LIỆU để cập nhật TotalMoney, Discount trong Bill
+        await viewDetail(editOrder.value);
+        
         isEditing.value = false;
         loadData();
     } catch (err: any) {
@@ -278,19 +289,21 @@ onMounted(() => {
         <Dialog v-model:visible="showDetail" header="📦 Chi tiết đơn hàng" modal :style="{ width: '1000px' }" class="vc-dialog">
             <div v-if="selectedOrder" class="vc-order-detail">
                 <div class="vc-detail-header-bar">
-                    <h3 class="m-0 text-xl font-bold text-gray-700">#{{ selectedOrder.id }} - Thông tin đơn hàng</h3>
-                    <div>
-                        <button v-if="!isEditing" @click="startEdit" class="vc-btn-edit-inline">
-                            <i class="fas fa-edit"></i> Chỉnh sửa đơn hàng
+                    <div class="vc-detail-header-left">
+                        <h3 class="font-bold text-slate-700 m-0">#{{ selectedOrder.id }} - Thông tin đơn hàng</h3>
+                    </div>
+                    <div v-if="!isEditing">
+                        <button class="vc-btn-edit-inline" @click="startEdit">
+                            <i class="pi pi-user-edit mr-2"></i>Chỉnh sửa đơn hàng
                         </button>
-                        <div v-else class="flex gap-2">
-                            <button @click="saveOrder" class="vc-btn-save-inline">
-                                <i class="fas fa-check"></i> Lưu thay đổi
-                            </button>
-                            <button @click="cancelEdit" class="vc-btn-cancel-inline">
-                                <i class="fas fa-times"></i> Hủy
-                            </button>
-                        </div>
+                    </div>
+                    <div v-else class="flex gap-2">
+                        <button class="vc-btn-save-inline" @click="saveOrder">
+                            <i class="pi pi-check mr-2"></i>Lưu thay đổi
+                        </button>
+                        <button class="vc-btn-cancel-inline" @click="cancelEdit">
+                            <i class="pi pi-times mr-2"></i>Hủy bỏ
+                        </button>
                     </div>
                 </div>
 
@@ -324,59 +337,73 @@ onMounted(() => {
                         <thead>
                             <tr>
                                 <th>Sản phẩm & Thuộc tính</th>
-                                <th style="width:120px" class="text-center">Số lượng</th>
-                                <th style="width:130px" class="text-right">Đơn giá</th>
-                                <th style="width:130px" class="text-right">Thành tiền</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="it in orderItems" :key="it.id">
-                                <td>
-                                    <div class="vc-prod">
-                                        <img :src="Helper.GetImageUrl(it.product?.avatar)" class="vc-prod-img" />
-                                        <div class="vc-prod-info">
-                                            <div v-if="isEditing" class="mb-2">
-                                                <select v-model="it.product" class="vc-it-sel prod-sel">
-                                                    <option v-for="p in masterProducts" :key="p.id" :value="p">{{ p.name }}</option>
-                                                </select>
-                                            </div>
-                                            <span v-else class="vc-prod-name">{{ it.product?.name }}</span>
+                                <td class="vc-it-prod">
+                                    <div class="vc-it-flex">
+                                        <div>
+                                            <div class="vc-it-name" v-if="!isEditing">{{ it.product?.name }}</div>
+                                            <select v-else v-model="it.product" class="vc-it-sel-prod" @change="it.price = it.product.price">
+                                                <option v-for="p in masterProducts" :key="p.id" :value="p">{{ p.name }}</option>
+                                            </select>
                                             
-                                            <div v-if="isEditing" class="vc-item-selectors mt-1">
-                                                <select v-model="it.color" class="vc-it-sel color-sel">
-                                                    <option :value="null">-- Màu sắc --</option>
+                                            <div class="vc-it-opts">
+                                                <!-- Màu sắc -->
+                                                <span class="vc-it-opt-badge clr" v-if="!isEditing && it.color">Màu: {{ it.color?.nameColor }}</span>
+                                                <select v-else-if="isEditing" v-model="it.color" class="vc-it-sel clr-sel">
+                                                    <option :value="null">-- Màu --</option>
                                                     <option v-for="c in masterColors" :key="c.id" :value="c">{{ c.nameColor }}</option>
                                                 </select>
-                                                <select v-model="it.material" class="vc-it-sel mat-sel">
+                                                
+                                                <!-- Chất liệu -->
+                                                <span class="vc-it-opt-badge mat" v-if="!isEditing && it.material">Chất liệu: {{ it.material?.nameMaterial }}</span>
+                                                <select v-else-if="isEditing" v-model="it.material" class="vc-it-sel mat-sel">
                                                     <option :value="null">-- Chất liệu --</option>
                                                     <option v-for="m in masterMaterials" :key="m.id" :value="m">{{ m.nameMaterial }}</option>
                                                 </select>
-                                                <select v-model="it.dimensions" class="vc-it-sel dim-sel">
+
+                                                <!-- Kích cỡ -->
+                                                <span class="vc-it-opt-badge dim" v-if="!isEditing && it.dimensions">Kích cỡ: {{ it.dimensions?.nameD }}</span>
+                                                <select v-else-if="isEditing" v-model="it.dimensions" class="vc-it-sel dim-sel">
                                                     <option :value="null">-- Kích cỡ --</option>
                                                     <option v-for="d in masterDimensions" :key="d.id" :value="d">{{ d.nameD }}</option>
                                                 </select>
-                                            </div>
-                                            <div v-else class="vc-prod-attrs">
-                                                <span v-if="it.color?.nameColor" class="vattr vat-color">Màu: {{ it.color.nameColor }}</span>
-                                                <span v-if="it.material?.nameMaterial" class="vattr vat-mat">Chất liệu: {{ it.material.nameMaterial }}</span>
-                                                <span v-if="it.dimensions?.nameD" class="vattr vat-dim">Kích cỡ: {{ it.dimensions.nameD }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <InputText v-if="isEditing" v-model="it.amount" type="number" class="vc-itx-small" />
-                                    <span v-else>{{ it.amount }}</span>
+                                    <span v-if="!isEditing" class="vc-it-qty">{{ it.amount }}</span>
+                                    <input v-else type="number" v-model="it.amount" class="vc-it-input qty-input" />
                                 </td>
                                 <td class="text-right">
-                                    <InputText v-if="isEditing" v-model="it.price" class="vc-itx-small" />
-                                    <span v-else>{{ Helper.ToMoney(it.price) }}</span>
+                                    <span v-if="!isEditing" class="vc-it-price">{{ Helper.ToMoney(it.price) }}</span>
+                                    <input v-else type="number" v-model="it.price" class="vc-it-input price-input" />
                                 </td>
-                                <td class="text-right font-bold text-orange-600">
-                                    {{ Helper.ToMoney(it.price * it.amount) }}
+                                <td class="text-right font-bold text-blue-600">
+                                    {{ Helper.ToMoney(it.amount * it.price) }}
                                 </td>
                             </tr>
                         </tbody>
+                        <tfoot v-if="currentBill">
+                            <tr class="bg-gray-50">
+                                <td colspan="3" class="text-right font-semibold py-2">Tổng tiền hàng:</td>
+                                <td class="text-right font-bold py-2">{{ Helper.ToMoney(currentBill.totalMoney) }}</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td colspan="3" class="text-right font-semibold py-2 text-green-600">Giảm giá:</td>
+                                <td class="text-right font-bold py-2 text-green-600">-{{ Helper.ToMoney(currentBill.discount || 0) }}</td>
+                            </tr>
+                            <tr class="bg-blue-50">
+                                <td colspan="3" class="text-right font-bold py-3 text-lg text-blue-700">Tổng thanh toán:</td>
+                                <td class="text-right font-bold py-3 text-lg text-blue-700">{{ Helper.ToMoney(currentBill.totalMoneyaftersaleoff) }}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -418,6 +445,14 @@ onMounted(() => {
 .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* FIX COLUMN WRAP PAYMENT */
+.vc-detail-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px 0; margin-bottom: 16px; border-bottom: 2px solid #eff6ff; }
+.vc-btn-edit-inline { background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.vc-btn-edit-inline:hover { background: #15803d; }
+.vc-btn-save-inline { background: #16a34a; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.vc-btn-save-inline:hover { background: #15803d; }
+.vc-btn-cancel-inline { background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.vc-btn-cancel-inline:hover { background: #dc2626; }
+
 .vc-badge-pay { 
     background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; 
     font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -438,16 +473,18 @@ onMounted(() => {
 .vc-page-active { background: #3b82f6; color: white; border-color: #3b82f6; }
 
 /* ORDER DETAIL STYLES */
-.vc-detail-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px 0; margin-bottom: 16px; border-bottom: 2px solid #eff6ff; }
-.vc-btn-edit-inline { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.vc-btn-edit-inline:hover { background: #bae6fd; }
-.vc-btn-save-inline { background: #22c55e; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.vc-btn-cancel-inline { background: #94a3b8; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-
-.vc-detail-info-card { background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; }
-.vc-info-grid { display: grid; grid-template-cols: repeat(4, 1fr); gap: 15px; }
-.vc-info-item { display: flex; flex-direction: column; gap: 6px; }
-.vc-info-item label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+.vc-it-prod { padding: 12px !important; }
+.vc-it-name { font-weight: 700; color: #1e293b; margin-bottom: 6px; font-size: 15px; }
+.vc-it-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.vc-it-opt-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; }
+.clr { background: #fee2e2; color: #991b1b; }
+.mat { background: #f0fdf4; color: #166534; }
+.dim { background: #eff6ff; color: #1e40af; }
+.vc-it-sel { padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; max-width: 130px; }
+.vc-it-sel-prod { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #3b82f6; margin-bottom: 8px; }
+.vc-it-qty { font-weight: 700; color: #475569; }
+.vc-it-price { font-weight: 600; color: #1e293b; }
+.qty-input, .price-input { width: 80px; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; }
 .vc-info-item span { font-weight: 600; color: #1e293b; font-size: 14px; }
 .vc-itx { width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
 .vc-itx-small { width: 100%; padding: 4px 8px; font-size: 13px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; }

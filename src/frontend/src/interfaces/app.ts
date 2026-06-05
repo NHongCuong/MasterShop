@@ -47,6 +47,12 @@ export interface Supplier {
 
 }
 
+export interface Voucher {
+    id: number;
+    maVoucher: string;
+    discountPercent: number;
+}
+
 export interface Product {
     "id": number,
     "name": string,
@@ -56,10 +62,13 @@ export interface Product {
     "amount": number,
     "supplier": Supplier,
     "category": Category,
+    "voucher"?: Voucher | null,
+    "detailproductcolor"?: any[];
+    "detailproductmaterial"?: any[];
+    "productDemensions"?: any[];
     defaultColorId?: number | null;
     defaultMaterialId?: number | null;
     defaultDimensionId?: number | null;
-
 }
 
 export interface MyImage {

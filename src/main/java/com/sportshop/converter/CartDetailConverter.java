@@ -71,6 +71,11 @@ public class CartDetailConverter {
             dto.setProductName(entity.getProductcartdetail().getName());
             dto.setProductPrice(entity.getProductcartdetail().getPrice());
             dto.setProductAvatar(entity.getProductcartdetail().getAvatar());
+            
+            // Lấy mã voucher của sản phẩm (nếu có)
+            if (entity.getProductcartdetail().getVoucher() != null) {
+                dto.setVoucherCode(entity.getProductcartdetail().getVoucher().getMaVoucher());
+            }
         }
 
         // --- Lấy thông tin các entity liên kết (có thể null) ---

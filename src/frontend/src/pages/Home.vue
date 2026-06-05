@@ -98,13 +98,13 @@ onMounted(() => {
           <li class="nav-item">
             <router-link class="nav-link text-white fw-bold px-3" style="font-size: 0.85rem;" to="/">TRANG CHỦ</router-link>
           </li>
-          <li class="nav-item dropdown">
-            <router-link class="nav-link dropdown-toggle text-white fw-bold px-3" style="font-size: 0.85rem;" to="/" role="button" data-bs-toggle="dropdown" @click="() => $router.push('/')">
+          <li class="nav-item dropdown category-dropdown">
+            <router-link class="nav-link dropdown-toggle text-white fw-bold px-3" style="font-size: 0.85rem;" to="/products">
               SẢN PHẨM
             </router-link>
             <ul class="dropdown-menu border-0 shadow">
               <li v-for="cat in categories" :key="cat.id">
-                <router-link class="dropdown-item" :to="'/?category=' + cat.name">{{ cat.name }}</router-link>
+                <router-link class="dropdown-item" :to="'/products?category=' + cat.name">{{ cat.name }}</router-link>
               </li>
             </ul>
           </li>
@@ -161,5 +161,20 @@ onMounted(() => {
 .navbar {
   position: relative;
   z-index: 1020;
+}
+
+/* Hover Dropdown Effect */
+.category-dropdown:hover .dropdown-menu {
+  display: block;
+  top: 90%; /* Adjust position to align with navbar */
+  margin-top: 5px;
+}
+
+.category-dropdown .dropdown-toggle::after {
+    transition: transform 0.3s ease;
+}
+
+.category-dropdown:hover .dropdown-toggle::after {
+    transform: rotate(180deg);
 }
 </style>

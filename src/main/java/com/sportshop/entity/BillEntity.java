@@ -48,4 +48,7 @@ public class BillEntity {
 
     @Column(name="TotalMoneyaftersaleoff")
     private Long totalMoneyaftersaleoff;
+
+    @Column(name="discount")
+    private Long discount;
 }

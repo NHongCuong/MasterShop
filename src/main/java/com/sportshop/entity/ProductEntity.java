@@ -1,6 +1,7 @@
 package com.sportshop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -46,19 +47,23 @@ public class ProductEntity {
     private List<CartDetailEntity> products;
 
     @OneToMany(mappedBy = "demensions")
-    @JsonIgnore
+    @JsonIgnoreProperties("demensions")
     private List<DimensionsEntity> productDemensions;
 
     @OneToMany(mappedBy = "detailColorProduct")
-    @JsonIgnore
+    @JsonIgnoreProperties("detailColorProduct")
     private List<DetailProductColorEntity> detailproductcolor;
 
     @OneToMany(mappedBy = "detailMaterialProduct")
-    @JsonIgnore
+    @JsonIgnoreProperties("detailMaterialProduct")
     private List<DetailProductMaterialEntity> detailproductmaterial;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImageEntity> productImages;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Voucher")
+    private VoucherEntity voucher;
 
     // Added for compatibility with some logic
     public String getName() { return name; }

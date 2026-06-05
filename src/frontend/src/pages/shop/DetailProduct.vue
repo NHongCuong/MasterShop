@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {useRoute} from 'vue-router';
-import {Product, MyImage, ShopCart} from '../../interfaces/app';
-import {computed, onMounted, reactive, ref} from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { Product, MyImage, ShopCart } from '../../interfaces/app';
+import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
 import Galleria from 'primevue/Galleria';
@@ -12,6 +12,7 @@ import Toast from "primevue/toast";
 //import SelectButton from "primevue/selectbutton";   // ✅ dùng để chọn màu / kích thước
 import Dropdown from "primevue/dropdown";
 
+const router = useRouter();
 const myProduct = ref<Product>();
 const route = useRoute();
 const idProduct = route.params.id;
@@ -149,16 +150,13 @@ const changeAmount = (event: Event) => {
 };
 
 // ✅ Thêm vào giỏ hàng
-async function AdddCart() {
+async function AdddCart(isBuyNow = false) {
   if (!state.isAuthenticated) {
-     toast.add({ severity: 'warn', summary: 'Yêu cầu đăng nhập', detail: 'Vui lòng đăng nhập để thêm vào giỏ hàng', life: 3000 });
+     toast.add({ severity: 'warn', summary: 'Yêu cầu đăng nhập', detail: 'Vui lòng đăng nhập để tiếp tục', life: 3000 });
      return;
   }
   
-  if (!form.ID_Color || !form.ID_Material || !form.ID_Dimensions) {
-     toast.add({ severity: 'warn', summary: 'Thiếu thông tin', detail: 'Vui lòng chọn đầy đủ màu, chất liệu và kích thước', life: 3000 });
-     return;
-  }
+  // Đã bỏ verify màu sắc, chất liệu, kích thước theo yêu cầu khách hàng
 
   try {
     const payload = {
@@ -173,26 +171,32 @@ async function AdddCart() {
     const res = await axios.post(`http://localhost:8081/cart/add-item`, payload);
     
     if (res.status === 200 || res.status === 201) {
-      const colorName = colorList.value.find(c => c.value === form.ID_Color)?.label;
-      const dimensionName = dimensionList.value.find(d => d.value === form.ID_Dimensions)?.label;
-      
-      toast.add({
-        severity: "success",
-        summary: "Đã thêm vào giỏ hàng thành công",
-        detail: `${myProduct.value?.name} (${colorName}, ${dimensionName}) x${form.Amount}`,
-        life: 4000,
-      });
       // Cập nhật lại số lượng giỏ hàng trên header
       await MyApp.getInstance().updateCartCount();
+
+      if (isBuyNow) {
+        // Luồng mua ngay: Chuyển hướng tới trang Order
+        router.push('/order');
+      } else {
+        toast.add({
+          severity: "success",
+          summary: "Thành công",
+          detail: `Đã thêm ${myProduct.value?.name} vào giỏ hàng`,
+          life: 3000,
+        });
+      }
     }
   } catch (err: any) {
     toast.add({
       severity: "error",
       summary: "Lỗi",
-      detail: err.response?.data?.message || "Không thể thêm vào giỏ hàng",
+      detail: err.response?.data?.message || "Có lỗi xảy ra",
       life: 3000,
     });
   }
+}
+async function buyNow() {
+    await AdddCart(true);
 }
 </script>
 
@@ -250,10 +254,10 @@ async function AdddCart() {
               <input type="text" class="form-control text-center" v-model="form.Amount">
               <button class="btn btn-outline-secondary btn-pluse" type="button" @click="changeAmount">+</button>
             </div>
-            <button class="btn btn-primary px-4 py-2 fw-bold" @click="AdddCart">
+            <button class="btn btn-primary px-4 py-2 fw-bold" @click="() => AdddCart(false)">
               <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
             </button>
-            <button class="btn btn-danger px-4 py-2 fw-bold">
+            <button class="btn btn-danger px-4 py-2 fw-bold" @click="buyNow">
               Mua ngay
             </button>
           </div>

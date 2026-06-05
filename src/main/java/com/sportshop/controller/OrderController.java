@@ -58,6 +58,9 @@ public class OrderController {
     @Autowired
     private ProductRepository productRepo;
 
+    @Autowired
+    private VoucherRepository voucherRepo;
+
     @GetMapping("/mop")
     public List<MethodOfPaymentEnity> getMop() {
         return mopRepo.findAll();
@@ -119,19 +122,45 @@ public class OrderController {
 
             order = orderRepo.save(order);
 
-            // 2. Create Bill Entity
+            // 2. Calculate Totals & Create Bill Entity
+            List<CartDetailEntity> cartItems = cartDetailRepo.findActiveItemsByUserId(userId);
+            long totalMoney = 0;
+            long totalAfterSale = 0;
+
+            String voucherCode = (String) payload.get("voucherCode");
+            VoucherEntity appliedVoucher = null;
+            if (voucherCode != null && !voucherCode.trim().isEmpty()) {
+                appliedVoucher = voucherRepo.findByMaVoucher(voucherCode.trim()).orElse(null);
+            }
+
+            for (CartDetailEntity item : cartItems) {
+                long itemTotal = item.getProductcartdetail().getPrice() * item.getAmountCD();
+                totalMoney += itemTotal;
+
+                // Kiểm tra voucher của sản phẩm có khớp với voucher đang áp dụng không
+                if (appliedVoucher != null && 
+                    item.getProductcartdetail().getVoucher() != null && 
+                    item.getProductcartdetail().getVoucher().getId().equals(appliedVoucher.getId())) {
+                    
+                    long discount = Math.round(itemTotal * appliedVoucher.getDiscountPercent() / 100.0);
+                    totalAfterSale += (itemTotal - discount);
+                } else {
+                    totalAfterSale += itemTotal;
+                }
+            }
+
             BillEntity bill = new BillEntity();
             bill.setOrderbill(order);
             bill.setCreateDate(new Date());
-            bill.setTotalMoney(Math.round(Double.valueOf(payload.get("totalMoney").toString())));
-            bill.setTotalMoneyaftersaleoff(Math.round(Double.valueOf(payload.get("totalMoneyaftersaleoff").toString())));
-            
+            bill.setTotalMoney(totalMoney);
+            bill.setTotalMoneyaftersaleoff(totalAfterSale);
+            bill.setDiscount(totalMoney - totalAfterSale);
+
             // Set default status (Processing = 1)
             billStatusRepo.findById(1L).ifPresent(bill::setBill);
             billRepo.save(bill);
 
             // 3. Move items from Cart to OrderDetail and then DELETE from Cart
-            List<CartDetailEntity> cartItems = cartDetailRepo.findActiveItemsByUserId(userId);
             for (CartDetailEntity item : cartItems) {
                 OderDetailEntity od = new OderDetailEntity();
                 od.setOrder(order);
@@ -242,6 +271,27 @@ public class OrderController {
             }
 
             orderDetailRepo.save(item);
+
+            // TÍNH LẠI TỔNG TIỀN CHO BILL
+            Long orderId = item.getOrder().getId();
+            List<OderDetailEntity> allItems = orderDetailRepo.findByOrderId(orderId);
+            long subTotal = 0;
+            for (OderDetailEntity od : allItems) {
+                subTotal += (od.getAmount() * od.getPrice());
+            }
+
+            List<BillEntity> bills = billRepo.findByOrderbill_Id(orderId);
+            if (!bills.isEmpty()) {
+                BillEntity bill = bills.get(0);
+                bill.setTotalMoney(subTotal);
+                
+                // Nếu có discount thì trừ đi
+                long discount = bill.getDiscount() != null ? bill.getDiscount() : 0;
+                bill.setTotalMoneyaftersaleoff(subTotal - discount);
+                
+                billRepo.save(bill);
+            }
+
             return ResponseEntity.ok("Cập nhật sản phẩm trong đơn hàng thành công");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());

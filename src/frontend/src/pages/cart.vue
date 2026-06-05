@@ -36,8 +36,18 @@ const totalPrice = computed(() => {
 });
 
 const discountAmount = computed(() => {
-    if (!appliedVoucher.value || !appliedVoucher.value.discountPercent) return 0;
-    return Math.round(totalPrice.value * appliedVoucher.value.discountPercent / 100);
+    if (!appliedVoucher.value || !appliedVoucher.value.maVoucher || !appliedVoucher.value.discountPercent) return 0;
+    
+    // Tính tổng tiền giảm giá dựa trên từng sản phẩm có mã voucher khớp và không trống
+    let totalDiscount = 0;
+    cartItems.value.forEach(item => {
+        if (item.voucherCode && appliedVoucher.value.maVoucher && 
+            item.voucherCode.trim().toUpperCase() === appliedVoucher.value.maVoucher.trim().toUpperCase()) {
+            totalDiscount += (item.productPrice * item.amountCD * appliedVoucher.value.discountPercent / 100);
+        }
+    });
+    
+    return Math.round(totalDiscount);
 });
 
 const finalPrice = computed(() => {
@@ -53,7 +63,20 @@ const applyVoucher = async () => {
     voucherError.value = '';
     try {
         const res = await axios.get(`http://localhost:8081/voucher/check/${voucherCode.value.trim().toUpperCase()}`);
-        appliedVoucher.value = res.data;
+        const voucherData = res.data;
+        
+        // Kiểm tra xem có ít nhất 1 sản phẩm trong giỏ hàng có mã voucher này không
+        const isEligible = cartItems.value.some(item => 
+            item.voucherCode && item.voucherCode.trim().toUpperCase() === voucherData.maVoucher.trim().toUpperCase()
+        );
+
+        if (!isEligible) {
+            voucherError.value = 'Mã giảm giá không áp dụng cho các sản phẩm trong giỏ hàng';
+            toast.add({ severity: 'warn', summary: 'Không khả dụng', detail: 'Mã không áp dụng cho sản phẩm này', life: 3000 });
+            return;
+        }
+
+        appliedVoucher.value = voucherData;
         toast.add({ severity: 'success', summary: 'Thành công', detail: `Áp dụng mã giảm ${res.data.discountPercent}% thành công!`, life: 3000 });
     } catch (err: any) {
         appliedVoucher.value = null;
