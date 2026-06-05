@@ -4,7 +4,6 @@ package com.sportshop.service.impl;
 import com.sportshop.converter.CartDetailConverter;
 import com.sportshop.dto.CartDetailDTO;
 import com.sportshop.entity.CartDetailEntity;
-import com.sportshop.entity.CartDetailId;
 import com.sportshop.repository.CartDetailRepository;
 import com.sportshop.service.ICartDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +50,7 @@ public class CartDetailService implements ICartDetailService {
         return result;
     }
     @Override
-    public CartDetailDTO get(CartDetailId id) {
+    public CartDetailDTO get(Long id) {
         CartDetailEntity bill = cartDetailRepository.findById(id).orElse(null);
         CartDetailDTO dto = cartDetailConverter.toDTO(bill);
         return dto;

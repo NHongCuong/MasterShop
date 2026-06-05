@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class CartDetailDTO {
 
+    private Long idCartDetail;
     private Long idSC;
     private Long idProduct;
     private Long idMaterial;
@@ -32,6 +33,9 @@ public class CartDetailDTO {
     public void setColorName(String colorName) { this.colorName = colorName; }
 
     // Getters & Setters
+    public Long getIdCartDetail() { return idCartDetail; }
+    public void setIdCartDetail(Long idCartDetail) { this.idCartDetail = idCartDetail; }
+
     public Long getIdSC() { return idSC; }
     public void setIdSC(Long idSC) { this.idSC = idSC; }
 

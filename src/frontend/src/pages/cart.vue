@@ -74,7 +74,7 @@ async function removeItem(item: any) {
     if (!confirm("Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?")) return;
     try {
         await axios.delete(`http://localhost:8081/cart/remove-item`, {
-            params: { scId: item.idSC, productId: item.idProduct }
+            params: { idCartDetail: item.idCartDetail }
         });
         toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã xóa sản phẩm', life: 2000 });
         loadCart();
@@ -89,8 +89,7 @@ async function changeQty(item: any, delta: number) {
     if (newAmount < 1) { removeItem(item); return; }
     try {
         await axios.post(`http://localhost:8081/cart/update-amount`, {
-            scId: item.idSC,
-            productId: item.idProduct,
+            idCartDetail: item.idCartDetail,
             amount: newAmount
         });
         item.amountCD = newAmount;
@@ -149,7 +148,7 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="item in cartItems" :key="item.idSC + '-' + item.idProduct">
+                <tr v-for="item in cartItems" :key="item.idCartDetail">
                   <td class="ps-4 py-4">
                     <div class="d-flex align-items-center gap-3">
                       <img :src="Helper.GetImageUrl(item.productAvatar)" 
@@ -157,8 +156,8 @@ onMounted(() => {
                       <div>
                         <h6 class="fw-bold mb-1">{{ item.productName }}</h6>
                         <div class="small text-muted d-flex flex-column gap-1">
-                          <span v-if="item.idColor"><i class="fas fa-palette me-1"></i>Màu sắc: 
-                            <span class="badge bg-light text-dark border">{{ item.idColor }}</span>
+                          <span v-if="item.colorName"><i class="fas fa-palette me-1"></i>Màu sắc: 
+                            <span class="badge bg-light text-dark border">{{ item.colorName }}</span>
                           </span>
                           <span v-if="item.materialName"><i class="fas fa-layer-group me-1"></i>Chất liệu: {{ item.materialName }}</span>
                           <span v-if="item.dimensionName"><i class="fas fa-expand me-1"></i>Kích cỡ: {{ item.dimensionName }}</span>

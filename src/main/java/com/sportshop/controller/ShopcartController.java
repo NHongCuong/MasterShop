@@ -34,6 +34,9 @@ public class ShopcartController {
     @Autowired
     private DimensionsRepository dimensionsRepo;
 
+    @Autowired
+    private ColorRepository colorRepo;
+
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllShopcarts() {
@@ -87,58 +90,39 @@ public class ShopcartController {
                 if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
                 
                 CartStatusEntity status = cartStatusRepo.findById(3L).orElse(null);
-                if (status == null) {
-                    // Nếu chưa có status 3, tạo mới hoặc báo lỗi
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Hệ thống chưa cấu hình trạng thái giỏ hàng (ID=3)");
-                }
+                if (status == null) return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Hệ thống chưa cấu hình trạng thái giỏ hàng (ID=3)");
 
                 cart.setUserSC(user);
                 cart.setCartStatus(status);
                 cart = shopcartRepo.save(cart);
             }
 
-            // 2. Kiểm tra nếu item đã tồn tại trong CartDetail
-            CartDetailId detailId = new CartDetailId();
-            detailId.setIdSC(cart.getId());
-            detailId.setIdProduct(productId);
-            
-            Optional<CartDetailEntity> existingDetail = cartDetailRepo.findById(detailId);
+            // 2. Tìm kiếm item khớp hoàn toàn mọi thuộc tính (Biến thể)
+            Optional<CartDetailEntity> existingDetail = cartDetailRepo.findByAllAttributes(
+                    cart.getId(), productId, colorId, materialId, dimensionId);
 
             if (existingDetail.isPresent()) {
                 CartDetailEntity detail = existingDetail.get();
-                Long currentAmount = detail.getAmountCD() != null ? detail.getAmountCD() : 0L;
-                detail.setAmountCD(currentAmount + amount);
+                detail.setAmountCD(detail.getAmountCD() + amount);
                 detail.setUpdatedAt(new Date());
-                detail.setIdColor(colorId);
                 cartDetailRepo.save(detail);
             } else {
                 CartDetailEntity detail = new CartDetailEntity();
-                detail.setId(detailId);
                 detail.setShopcartdetail(cart);
                 
                 ProductEntity product = productRepo.findById(productId).orElse(null);
-                if (product == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy sản phẩm ID=" + productId);
+                if (product == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy sản phẩm");
                 
                 detail.setProductcartdetail(product);
                 detail.setAmountCD(amount);
                 detail.setCreatedAt(new Date());
                 detail.setUpdatedAt(new Date());
-                detail.setIdColor(colorId);
                 
-                if (materialId != null) {
-                    materialRepo.findById(materialId).ifPresent(detail::setMaterialcartdetail);
-                }
+                if (colorId != null) colorRepo.findById(colorId).ifPresent(detail::setColorEntity);
+                if (materialId != null) materialRepo.findById(materialId).ifPresent(detail::setMaterialcartdetail);
+                if (dimensionId != null) dimensionsRepo.findById(dimensionId).ifPresent(detail::setDemensionsCartDetail);
                 
-                if (dimensionId != null) {
-                    dimensionsRepo.findById(dimensionId).ifPresent(detail::setDemensionsCartDetail);
-                }
-                
-                try {
-                    cartDetailRepo.save(detail);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lưu CartDetail: " + ex.getMessage());
-                }
+                cartDetailRepo.save(detail);
             }
 
             return ResponseEntity.ok("Đã thêm vào giỏ hàng");
@@ -149,13 +133,12 @@ public class ShopcartController {
     }
 
     @DeleteMapping("/remove-item")
-    public ResponseEntity<?> removeItem(@RequestParam Long scId, @RequestParam Long productId) {
+    public ResponseEntity<?> removeItem(@RequestParam Long idCartDetail) {
         try {
-            CartDetailId id = new CartDetailId(scId, productId);
-            cartDetailRepo.deleteById(id);
+            cartDetailRepo.deleteById(idCartDetail);
             return ResponseEntity.ok("Đã xóa sản phẩm khỏi giỏ hàng");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
         }
     }
 
@@ -164,29 +147,27 @@ public class ShopcartController {
         try {
             java.util.List<ShopcartEntity> carts = shopcartRepo.findByUserSC_IdAndCartStatus_Id(userId, 3L);
             for (ShopcartEntity cart : carts) {
-                // Xóa tất cả chi tiết của giỏ hàng này
-                java.util.List<CartDetailEntity> details = cartDetailRepo.findAll(); // Cần lọc theo cart
-                for (CartDetailEntity detail : details) {
-                    if (detail.getId().getIdSC().equals(cart.getId())) {
-                        cartDetailRepo.delete(detail);
+                // Xóa tất cả chi tiết dựa trên ID giỏ hàng
+                java.util.List<CartDetailEntity> items = cartDetailRepo.findAll();
+                for(CartDetailEntity it : items) {
+                    if(it.getShopcartdetail().getId().equals(cart.getId())) {
+                        cartDetailRepo.delete(it);
                     }
                 }
             }
             return ResponseEntity.ok("Đã dọn dẹp giỏ hàng");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
         }
     }
 
     @PostMapping("/update-amount")
     public ResponseEntity<?> updateAmount(@RequestBody java.util.Map<String, Object> payload) {
         try {
-            Long scId = Long.valueOf(payload.get("scId").toString());
-            Long productId = Long.valueOf(payload.get("productId").toString());
+            Long idCartDetail = Long.valueOf(payload.get("idCartDetail").toString());
             Long amount = Long.valueOf(payload.get("amount").toString());
             
-            CartDetailId id = new CartDetailId(scId, productId);
-            Optional<CartDetailEntity> detailOpt = cartDetailRepo.findById(id);
+            Optional<CartDetailEntity> detailOpt = cartDetailRepo.findById(idCartDetail);
             if (detailOpt.isPresent()) {
                 CartDetailEntity detail = detailOpt.get();
                 if (amount <= 0) {
@@ -198,9 +179,9 @@ public class ShopcartController {
                 cartDetailRepo.save(detail);
                 return ResponseEntity.ok("Đã cập nhật số lượng");
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy mục giỏ hàng");
+            return ResponseEntity.status(404).body("Không tìm thấy mục giỏ hàng");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
         }
     }
 }

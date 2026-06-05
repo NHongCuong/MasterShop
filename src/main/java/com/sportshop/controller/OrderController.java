@@ -139,9 +139,9 @@ public class OrderController {
                 od.setAmount(item.getAmountCD());
                 od.setPrice(item.getProductcartdetail().getPrice()); 
                 
-                // Gán màu sắc bằng đối tượng ColorEntity
-                if (item.getIdColor() != null) {
-                    colorRepo.findById(item.getIdColor()).ifPresent(od::setColor);
+                // Gán màu sắc trực tiếp từ ColorEntity
+                if (item.getColorEntity() != null) {
+                    od.setColor(item.getColorEntity());
                 }
                 
                 od.setMaterial(item.getMaterialcartdetail());

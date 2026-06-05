@@ -13,25 +13,25 @@ import java.util.Date;
 @Table(name = "cart_detail")
 public class CartDetailEntity {
 
-    @EmbeddedId
-    private CartDetailId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cart_detail")
+    private Long idCartDetail;
 
-    @MapsId("idSC")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_SC")
     private ShopcartEntity shopcartdetail;
 
-    @MapsId("idProduct")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_Product")
     private ProductEntity productcartdetail;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "ID_Material", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_Material")
     private MaterialEntity materialcartdetail;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "ID_D", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_D")
     private DimensionsEntity demensionsCartDetail;
 
     @Column(name = "Amount_CD")
@@ -43,6 +43,7 @@ public class CartDetailEntity {
     @Column(name = "updated_at")
     private Date updatedAt;
 
-    @Column(name = "ID_Color")
-    private Long idColor;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_Color")
+    private ColorEntity colorEntity;
 }
