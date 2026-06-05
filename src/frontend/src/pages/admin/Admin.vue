@@ -144,7 +144,7 @@ onMounted(() => {
       </li>
     </ul>
   </nav>
-  <aside style="position:fixed" class="main-sidebar sidebar-dark-primary elevation-4">
+  <aside style="position:fixed; display:flex; flex-direction:column; height:100vh; overflow:hidden;" class="main-sidebar sidebar-dark-primary elevation-4">
 
     <a href="index3.html" class="brand-link text-center">
       <img src="/images/logotech.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
@@ -152,7 +152,7 @@ onMounted(() => {
       <span class="brand-text font-weight-light">HC TECH</span>
     </a>
 
-    <div class="sidebar">
+    <div class="sidebar" style="flex:1; overflow-y:auto; overflow-x:hidden;">
 
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
@@ -291,3 +291,25 @@ onMounted(() => {
     <strong>Copyright &copy; 2026 <a href="https://www.linkedin.com/in/cuongnguyenhong96/" target="_blank">Nguyễn Hồng Cường</a></strong>.
   </footer>
 </template>
+
+<style scoped>
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+/* Firefox */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+</style>

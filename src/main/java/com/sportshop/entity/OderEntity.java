@@ -21,6 +21,18 @@ public class OderEntity {
     @Column(name = "Customer_Name")
     private String customerName;
 
+    @Column(name = "Email_O")
+    private String email;
+
+    @Column(name = "Gender_O")
+    private String gender;
+
+    @Column(name = "Receiver_Name")
+    private String receiverName;
+
+    @Column(name = "Receiver_Phone")
+    private String receiverPhone;
+
     @Column(name="Note_O")
     private String noteO;
 

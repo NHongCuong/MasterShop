@@ -28,10 +28,6 @@ public class ShopcartEntity {
     @JsonIgnore
     private List<CartDetailEntity> cartDetail;
 
-    @OneToMany(mappedBy = "shopcartOD")
-    @JsonIgnore
-    private List<OderDetailEntity> orderdetailSC;
-
     public Long getId() {
         return id;
     }
@@ -56,12 +52,5 @@ public class ShopcartEntity {
         this.cartStatus = cartStatus;
     }
 
-    public List<OderDetailEntity> getOrderdetailSC() {
-        return orderdetailSC;
-    }
-
-    public void setOrderdetailSC(List<OderDetailEntity> orderdetailSC) {
-        this.orderdetailSC = orderdetailSC;
-    }
 
 }

@@ -35,6 +35,7 @@ export class MyApp {
             if (res.status === 200) {
                 state.isAuthenticated = true;
                 state.user = res.data.user;
+                await this.updateCartCount(); // Đồng bộ giỏ hàng ngay khi xác thực thành công
             } else {
                 this.clearState();
             }

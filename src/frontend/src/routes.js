@@ -41,6 +41,12 @@ export default [
                 meta: { title: 'Cart' }
             },
             {
+                path: '/order',
+                name: 'order',
+                component: () => import('./pages/Order.vue'),
+                meta: { title: 'Đặt hàng' }
+            },
+            {
                 path: '/profile',
                 name: 'profile',
                 component: () => import('./pages/shop/Profile.vue'),
@@ -143,6 +149,24 @@ export default [
                 name: 'adminMaterial',
                 component: () => import('./pages/admin/AdminMaterial.vue'),
                 meta: { title: 'Materials' }
+            },
+            {
+                path: 'voucher',
+                name: 'adminVoucher',
+                component: () => import('./pages/admin/AdminVoucher.vue'),
+                meta: { title: 'Voucher' }
+            },
+            {
+                path: 'saleoff',
+                name: 'saleoff',
+                component: () => import('./pages/admin/AdminVoucher.vue'),
+                meta: { title: 'Khuyến mãi' }
+            },
+            {
+                path: 'bill/:status',
+                name: 'bill',
+                component: () => import('./pages/admin/AdminOrders.vue'),
+                meta: { title: 'Đơn hàng' }
             }
         ]
     }

@@ -12,23 +12,20 @@ public class ShipMethodEntity {
     @Column(name = "ID_SM")
     public Long id;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "Name_SM")
+    public String nameSM;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public List<OderEntity> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(List<OderEntity> orders) {
-        this.orders = orders;
-    }
+    public String getNameSM() { return nameSM; }
+    public void setNameSM(String nameSM) { this.nameSM = nameSM; }
 
     @OneToMany(mappedBy="shipMethod")
     @JsonIgnore
     private List<OderEntity> orders;
+
+    public List<OderEntity> getOrders() { return orders; }
+    public void setOrders(List<OderEntity> orders) { this.orders = orders; }
 }
+
