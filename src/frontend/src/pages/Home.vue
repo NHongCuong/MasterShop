@@ -3,6 +3,7 @@ import axios from 'axios';
 import {onMounted, ref} from 'vue';
 import {Category} from '../interfaces/app';
 import {MyApp, state} from '../app/MyApp';
+import ContactWidget from '../components/ContactWidget.vue';
 
 const categories = ref<Category[]>([]);
 
@@ -122,6 +123,8 @@ onMounted(() => {
     <div class="content-body">
       <router-view></router-view>
     </div>
+
+    <ContactWidget />
   </div>
 </template>
 

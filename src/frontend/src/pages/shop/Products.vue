@@ -265,27 +265,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Chat Bubble -->
-        <div class="chat-wrapper position-fixed" style="bottom: 30px; right: 30px; z-index: 1000;">
-            <div class="chat-tooltip animate__animated animate__fadeInUp mb-3 bg-white p-3 rounded shadow-lg border-0 position-relative">
-                <i class="fas fa-times position-absolute top-0 end-0 p-2 cursor-pointer text-muted" style="font-size: 0.7rem;"></i>
-                <div class="d-flex align-items-center gap-3">
-                    <img src="/images/logotech.png" width="35" class="rounded-circle shadow-sm">
-                    <div style="font-size: 0.8rem; line-height: 1.3;">
-                        <strong class="d-block mb-1">HC Shop</strong>
-                        HC shop hân hạnh phục vụ! Anh/chị có cần tư vấn sản phẩm hay hỗ trợ gì không ạ?
-                    </div>
-                </div>
-            </div>
-            <div class="chat-icons d-flex flex-column gap-2 align-items-end">
-                <div class="icon-circle bg-success shadow-sm animate__animated animate__bounceIn">
-                    <i class="fab fa-whatsapp text-white"></i>
-                </div>
-                <div class="icon-circle bg-warning shadow-sm animate__animated animate__bounceIn" style="animation-delay: 0.1s;">
-                    <i class="fas fa-comment shadow-sm text-white"></i>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -454,37 +433,6 @@ onMounted(() => {
 @keyframes loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
-}
-
-/* Chat UI Improvements */
-.icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.icon-circle:hover {
-    transform: scale(1.1);
-}
-
-.chat-tooltip {
-    width: 250px;
-}
-
-.chat-tooltip::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    right: 20px;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid white;
 }
 
 .breadcrumb-item a {
