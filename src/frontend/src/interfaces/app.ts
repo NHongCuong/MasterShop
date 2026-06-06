@@ -60,6 +60,7 @@ export interface Product {
     "price": number,
     "avatar": string,
     "amount": number,
+    "discountPercent"?: number,
     "supplier": Supplier,
     "category": Category,
     "voucher"?: Voucher | null,
@@ -97,6 +98,7 @@ export interface ProductItem {
     "price": number,
     "avatar": string,
     "amount": number,
+    "discountPercent"?: number,
     "category": Category
 }
 export interface DetailProductColor{

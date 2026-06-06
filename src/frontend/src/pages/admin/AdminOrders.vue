@@ -148,6 +148,10 @@ const deleteOrder = async (id: number) => {
     }
 };
 
+const exportExcel = () => {
+    window.location.href = 'http://localhost:8081/order/export-excel';
+};
+
 const pages = computed(() => {
     const arr: number[] = [];
     const max = 5;
@@ -185,6 +189,11 @@ onMounted(() => {
                 <i class="fas fa-shopping-bag vc-icon"></i>
                 <h2>Quản lý đơn hàng</h2>
             </div>
+            <div class="vc-header-actions">
+                <button class="vc-btn-export" @click="exportExcel">
+                    <i class="fas fa-file-excel me-2"></i>Xuất Excel
+                </button>
+            </div>
         </div>
 
         <div class="vc-toolbar">
@@ -221,6 +230,8 @@ onMounted(() => {
                         <th>Địa chỉ giao hàng</th>
                         <th style="width:160px">Thanh toán</th>
                         <th style="width:150px">Vận chuyển</th>
+                        <th style="width:130px">Ngày đặt</th>
+                        <th style="width:130px">Cập nhật</th>
                         <th style="width:120px">Thao tác</th>
                     </tr>
                 </thead>
@@ -251,6 +262,12 @@ onMounted(() => {
                         </td>
                         <td class="text-center">
                             <span class="vc-status-badge">{{ item.shipMethod?.nameSM || 'Giao tận nơi' }}</span>
+                        </td>
+                        <td class="text-center text-slate-700">
+                             {{ item.createdDate ? Helper.DateFormat(item.createdDate) : '—' }}
+                        </td>
+                        <td class="text-center text-slate-500 italic">
+                             {{ item.updatedDate ? Helper.DateFormat(item.updatedDate) : '—' }}
                         </td>
                         <td class="text-center">
                             <div class="vc-actions">
@@ -288,24 +305,9 @@ onMounted(() => {
 
         <Dialog v-model:visible="showDetail" header="📦 Chi tiết đơn hàng" modal :style="{ width: '1000px' }" class="vc-dialog">
             <div v-if="selectedOrder" class="vc-order-detail">
-                <div class="vc-detail-header-bar">
                     <div class="vc-detail-header-left">
                         <h3 class="font-bold text-slate-700 m-0">#{{ selectedOrder.id }} - Thông tin đơn hàng</h3>
                     </div>
-                    <div v-if="!isEditing">
-                        <button class="vc-btn-edit-inline" @click="startEdit">
-                            <i class="pi pi-user-edit mr-2"></i>Chỉnh sửa đơn hàng
-                        </button>
-                    </div>
-                    <div v-else class="flex gap-2">
-                        <button class="vc-btn-save-inline" @click="saveOrder">
-                            <i class="pi pi-check mr-2"></i>Lưu thay đổi
-                        </button>
-                        <button class="vc-btn-cancel-inline" @click="cancelEdit">
-                            <i class="pi pi-times mr-2"></i>Hủy bỏ
-                        </button>
-                    </div>
-                </div>
 
                 <div class="vc-detail-info-card">
                     <div class="vc-info-grid">
@@ -328,6 +330,11 @@ onMounted(() => {
                             <label>Người nhận khác:</label>
                             <InputText v-if="isEditing" v-model="editOrder.receiverName" class="vc-itx" />
                             <span v-else>{{ selectedOrder.receiverName || '—' }}</span>
+                        </div>
+                        <div class="vc-info-item">
+                            <label>SĐT người nhận:</label>
+                            <InputText v-if="isEditing" v-model="editOrder.receiverPhone" class="vc-itx" />
+                            <span v-else>{{ selectedOrder.receiverPhone || '—' }}</span>
                         </div>
                     </div>
                 </div>
@@ -409,7 +416,14 @@ onMounted(() => {
             </div>
             <template #footer>
                 <div class="vc-dialog-footer">
-                    <Button label="Đóng cửa sổ" icon="pi pi-times" class="p-button-secondary" @click="showDetail = false" />
+                    <template v-if="!isEditing">
+                        <Button label="Chỉnh sửa" icon="pi pi-user-edit" class="p-button-success" @click="startEdit" />
+                        <Button label="Đóng" icon="pi pi-times" class="p-button-secondary" @click="showDetail = false" />
+                    </template>
+                    <template v-else>
+                        <Button label="Lưu thay đổi" icon="pi pi-check" class="p-button-success" @click="saveOrder" />
+                        <Button label="Hủy bỏ" icon="pi pi-times" class="p-button-danger" @click="cancelEdit" />
+                    </template>
                 </div>
             </template>
         </Dialog>
@@ -421,6 +435,7 @@ onMounted(() => {
 .vc-page { padding: 24px; font-family: 'Inter', sans-serif; }
 .vc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #f1f5f9; padding-bottom: 16px; }
 .vc-header-left { display: flex; align-items: center; gap: 12px; }
+.vc-header-actions { display: flex; gap: 12px; }
 .vc-icon { font-size: 28px; color: #3b82f6; }
 .vc-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
 
@@ -442,7 +457,7 @@ onMounted(() => {
 .vc-cust-name { font-weight: 700; color: #3b82f6; }
 .vc-cust-email { color: #94a3b8; font-style: italic; }
 .vc-address { color: #475569; font-size: 13px; line-height: 1.4; }
-.truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* FIX COLUMN WRAP PAYMENT */
 .vc-detail-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px 0; margin-bottom: 16px; border-bottom: 2px solid #eff6ff; }
@@ -471,6 +486,7 @@ onMounted(() => {
 .vc-pagination { display: flex; gap: 6px; }
 .vc-page-btn { padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; }
 .vc-page-active { background: #3b82f6; color: white; border-color: #3b82f6; }
+.vc-date-info { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 
 /* ORDER DETAIL STYLES */
 .vc-it-prod { padding: 12px !important; }
@@ -505,6 +521,8 @@ onMounted(() => {
 .vat-color { background: #fef3c7; color: #92400e; }
 .vat-mat { background: #dcfce7; color: #166534; }
 .vat-dim { background: #f1f5f9; color: #475569; }
+.vc-btn-export { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
+.vc-btn-export:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
 .vc-items-table table { width: 100%; border-collapse: collapse; }
 .vc-items-table th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 12px; color: #475569; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; }

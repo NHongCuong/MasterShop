@@ -36,6 +36,9 @@ public class ProductEntity {
 	@Column(name = "Amount_Product")
 	private String amount;
 
+	@Column(name = "Discount_Percent")
+	private Integer discountPercent;
+
 	@ManyToOne
 	@JoinColumn(name = "ID_Category")
 	private CategoryEntity category;

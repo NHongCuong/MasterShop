@@ -32,7 +32,12 @@ const loadCart = async () => {
 };
 
 const totalPrice = computed(() => {
-    return cartItems.value.reduce((sum, item) => sum + (item.productPrice * item.amountCD), 0);
+    return cartItems.value.reduce((sum, item) => {
+        const itemPrice = item.productDiscountPercent 
+            ? Math.round(item.productPrice * (1 - item.productDiscountPercent / 100)) 
+            : item.productPrice;
+        return sum + (itemPrice * item.amountCD);
+    }, 0);
 });
 
 const discountAmount = computed(() => {
@@ -41,9 +46,13 @@ const discountAmount = computed(() => {
     // Tính tổng tiền giảm giá dựa trên từng sản phẩm có mã voucher khớp và không trống
     let totalDiscount = 0;
     cartItems.value.forEach(item => {
+        const itemDiscountedPrice = item.productDiscountPercent 
+            ? Math.round(item.productPrice * (1 - item.productDiscountPercent / 100)) 
+            : item.productPrice;
+
         if (item.voucherCode && appliedVoucher.value.maVoucher && 
             item.voucherCode.trim().toUpperCase() === appliedVoucher.value.maVoucher.trim().toUpperCase()) {
-            totalDiscount += (item.productPrice * item.amountCD * appliedVoucher.value.discountPercent / 100);
+            totalDiscount += (itemDiscountedPrice * item.amountCD * appliedVoucher.value.discountPercent / 100);
         }
     });
     
@@ -188,7 +197,14 @@ onMounted(() => {
                       </div>
                     </div>
                   </td>
-                  <td class="text-center fw-bold">{{ Helper.ToMoney(item.productPrice) }}</td>
+                  <td class="text-center">
+                    <div v-if="item.productDiscountPercent" class="text-muted text-decoration-line-through small">
+                        {{ Helper.ToMoney(item.productPrice) }}
+                    </div>
+                    <div class="fw-bold">
+                        {{ Helper.ToMoney(item.productDiscountPercent ? Math.round(item.productPrice * (1 - item.productDiscountPercent / 100)) : item.productPrice) }}
+                    </div>
+                  </td>
                   <td class="text-center">
                     <div class="input-group input-group-sm">
                         <button class="btn btn-outline-secondary" type="button" @click="changeQty(item, -1)">-</button>
@@ -197,7 +213,7 @@ onMounted(() => {
                     </div>
                   </td>
                   <td class="text-center text-danger fw-bold">
-                    {{ Helper.ToMoney(item.productPrice * item.amountCD) }}
+                    {{ Helper.ToMoney((item.productDiscountPercent ? Math.round(item.productPrice * (1 - item.productDiscountPercent / 100)) : item.productPrice) * item.amountCD) }}
                   </td>
                   <td class="pe-4 text-end">
                     <button class="btn btn-sm btn-outline-danger border-0" @click="removeItem(item)">

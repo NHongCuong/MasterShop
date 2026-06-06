@@ -4,7 +4,7 @@ import { Product, MyImage, ShopCart } from '../../interfaces/app';
 import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
-import Galleria from 'primevue/Galleria';
+import Galleria from 'primevue/galleria';
 import Image from 'primevue/image';
 import {useToast} from "primevue/usetoast";
 import {MyApp, state} from "../../app/MyApp.ts";
@@ -171,11 +171,36 @@ async function AdddCart(isBuyNow = false) {
     const res = await axios.post(`http://localhost:8081/cart/add-item`, payload);
     
     if (res.status === 200 || res.status === 201) {
-      // Cập nhật lại số lượng giỏ hàng trên header
-      await MyApp.getInstance().updateCartCount();
-
       if (isBuyNow) {
-        // Luồng mua ngay: Chuyển hướng tới trang Order
+        // ✅ Cập nhật sessionStorage NGAY LẬP TỨC để Order.vue lấy được dữ liệu mới nhất
+        const prod = myProduct.value;
+        const qty = form.Amount;
+        const total = (prod?.price || 0) * qty;
+        
+        const buyNowData = {
+          cartItems: [{
+            idCartDetail: 0,
+            idProduct: Number(idProduct),
+            productName: prod?.name,
+            productPrice: prod?.price,
+            productAvatar: prod?.avatar,
+            amountCD: qty,
+            colorId: form.ID_Color,
+            materialId: form.ID_Material,
+            dimensionId: form.ID_Dimensions,
+            // Các trường đồng bộ cho giao diện Order.vue
+            idColor: form.ID_Color,
+            idMaterial: form.ID_Material,
+            idDimension: form.ID_Dimensions,
+            voucherCode: prod?.voucher?.maVoucher || null
+          }],
+          voucher: null,
+          totalPrice: total,
+          discountAmount: 0,
+          finalPrice: total
+        };
+        
+        sessionStorage.setItem('checkoutData', JSON.stringify(buyNowData));
         router.push('/order');
       } else {
         toast.add({
@@ -185,6 +210,9 @@ async function AdddCart(isBuyNow = false) {
           life: 3000,
         });
       }
+      
+      // Cập nhật lại số lượng giỏ hàng trên header sau khi đã chuyển trang hoặc show toast
+      MyApp.getInstance().updateCartCount();
     }
   } catch (err: any) {
     toast.add({
@@ -196,7 +224,47 @@ async function AdddCart(isBuyNow = false) {
   }
 }
 async function buyNow() {
-    await AdddCart(true);
+    if (!state.isAuthenticated) {
+        toast.add({ severity: 'warn', summary: 'Yêu cầu đăng nhập', detail: 'Vui lòng đăng nhập để tiếp tục', life: 3000 });
+        return;
+    }
+    if (!myProduct.value) return;
+
+    const prod = myProduct.value;
+    const qty = form.Amount;
+    
+    // Tính toán đơn giá sau khi giảm (nếu có)
+    const discountedPrice = prod?.discountPercent 
+        ? Math.round((prod.price || 0) * (1 - prod.discountPercent / 100)) 
+        : (prod?.price || 0);
+    const total = discountedPrice * qty;
+    
+    // ✅ Tạo dữ liệu thanh toán ảo cho trang Order, KHÔNG gọi API thêm vào giỏ hàng DB
+    const buyNowData = {
+      cartItems: [{
+        idCartDetail: 0,
+        idProduct: Number(idProduct),
+        productName: prod?.name,
+        productPrice: prod?.price,
+        productAvatar: prod?.avatar,
+        productDiscountPercent: prod?.discountPercent,
+        amountCD: qty,
+        colorId: form.ID_Color,
+        materialId: form.ID_Material,
+        dimensionId: form.ID_Dimensions,
+        idColor: form.ID_Color,
+        idMaterial: form.ID_Material,
+        idDimension: form.ID_Dimensions,
+        voucherCode: prod?.voucher?.maVoucher || null
+      }],
+      voucher: null,
+      totalPrice: total,
+      discountAmount: 0,
+      finalPrice: total
+    };
+    
+    sessionStorage.setItem('checkoutData', JSON.stringify(buyNowData));
+    router.push('/order');
 }
 </script>
 
@@ -227,7 +295,14 @@ async function buyNow() {
         <div v-if="myProduct" class="p-3">
           <h2 class="fw-bold mb-3">{{ myProduct.name }}</h2>
           <div class="d-flex align-items-center mb-4">
-            <h3 class="text-danger fw-bold m-0 me-3">{{ Helper.ToMoney(myProduct.price) }}</h3>
+            <div class="price-container">
+              <div v-if="myProduct.discountPercent" class="text-muted text-decoration-line-through small">
+                {{ Helper.ToMoney(myProduct.price) }}
+              </div>
+              <h3 class="text-danger fw-bold m-0 me-3">
+                {{ Helper.ToMoney(myProduct.discountPercent ? Math.round(myProduct.price * (1 - myProduct.discountPercent / 100)) : myProduct.price) }}
+              </h3>
+            </div>
             <span class="badge bg-success">Còn hàng: {{ myProduct.amount }}</span>
           </div>
           

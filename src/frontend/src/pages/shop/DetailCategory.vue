@@ -4,7 +4,7 @@ import {Product, MyImage} from '../../interfaces/app';
 import {computed, onMounted, reactive, ref} from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
-import Galleria from 'primevue/Galleria';
+import Galleria from 'primevue/galleria';
 import Image from 'primevue/image';
 
 
@@ -126,7 +126,14 @@ onMounted(() => {
 
           </div>
           <p v-else-if="myProduct" class="text-danger h3"><strong>{{ LazyConvert.ToMoney(myProduct?.Price) }}</strong></p> -->
-          <p v-if="myProduct" class="text-danger h3"><strong>{{ Helper.ToMoney(myProduct!.price) }}</strong></p>
+          <div v-if="myProduct" class="price-section mb-3">
+            <div v-if="myProduct.discountPercent" class="text-muted text-decoration-line-through small">
+              {{ Helper.ToMoney(myProduct.price) }}
+            </div>
+            <p class="text-danger h3 m-0">
+              <strong>{{ Helper.ToMoney(myProduct.discountPercent ? Math.round(myProduct.price * (1 - myProduct.discountPercent / 100)) : myProduct.price) }}</strong>
+            </p>
+          </div>
           <Skeleton v-else height="2rem" class="mb-2"></Skeleton>
 
           <hr>

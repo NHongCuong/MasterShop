@@ -71,6 +71,7 @@ public class CartDetailConverter {
             dto.setProductName(entity.getProductcartdetail().getName());
             dto.setProductPrice(entity.getProductcartdetail().getPrice());
             dto.setProductAvatar(entity.getProductcartdetail().getAvatar());
+            dto.setProductDiscountPercent(entity.getProductcartdetail().getDiscountPercent());
             
             // Lấy mã voucher của sản phẩm (nếu có)
             if (entity.getProductcartdetail().getVoucher() != null) {

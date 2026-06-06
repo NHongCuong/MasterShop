@@ -47,8 +47,8 @@ const loadData = async () => {
     }
 };
 
-const filteredProducts = computed(() => {
-    let result = [...products.value];
+const filteredProducts = computed((): Product[] => {
+    let result = [...products.value] as Product[];
 
     if (selectedCategory.value) {
         result = result.filter(p => p.category?.name === selectedCategory.value);
@@ -102,6 +102,16 @@ const clearFilters = () => {
 watch(() => route.query.category, (newCat) => {
     selectedCategory.value = newCat as string || null;
 }, { immediate: true });
+
+const addToWishlist = (p: Product) => {
+    alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+};
+
+const shareProduct = (p: Product) => {
+    const url = window.location.origin + '/product/' + p.id;
+    navigator.clipboard.writeText(url);
+    alert('Đã sao chép liên kết sản phẩm!');
+};
 
 onMounted(() => {
     loadData();
@@ -215,27 +225,34 @@ onMounted(() => {
                             <div class="product-card-wrap">
                                 <router-link :to="'/product/' + p.id" class="text-decoration-none">
                                     <div class="product-card h-100 bg-white shadow-sm border-0 rounded-4 overflow-hidden position-relative">
-                                        <!-- Voucher Badge -->
-                                        <div v-if="p.voucher" class="voucher-badge animate__animated animate__fadeInDown">
-                                            <i class="fas fa-minus me-1"></i>{{ p.voucher.discountPercent }}%
+                                        <!-- Product Discount Badge (Lấy từ % giảm giá của sản phẩm) -->
+                                        <div v-if="p.discountPercent" class="discount-badge animate__animated animate__fadeInDown">
+                                            -{{ p.discountPercent }}%
                                         </div>
                                         
                                         <div class="product-img-box">
                                             <img :src="Helper.GetImageUrl(p.avatar)" :alt="p.name" class="img-fluid">
-                                            <div class="product-actions">
-                                                <button class="btn-action"><i class="far fa-heart"></i></button>
-                                                <button class="btn-action"><i class="fas fa-share-alt"></i></button>
+                                            <!-- Cụm nút Wishlist & Share -->
+                                            <div class="product-side-actions">
+                                                <button class="side-btn" @click.stop.prevent="addToWishlist(p)" title="Yêu thích">
+                                                    <i class="far fa-heart"></i>
+                                                </button>
+                                                <button class="side-btn" @click.stop.prevent="shareProduct(p)" title="Chia sẻ">
+                                                    <i class="fas fa-share-alt"></i>
+                                                </button>
                                             </div>
                                         </div>
                                         
                                         <div class="p-3 text-center">
                                             <h6 class="product-name text-dark mb-2">{{ p.name }}</h6>
                                             <div class="d-flex flex-column align-items-center">
-                                                <div v-if="p.voucher" class="old-price small text-muted text-decoration-line-through">
+                                                <!-- Giá cũ nếu có giảm giá -->
+                                                <div v-if="p.discountPercent" class="old-price small text-muted text-decoration-line-through">
                                                     {{ Helper.ToMoney(p.price) }}
                                                 </div>
+                                                <!-- Giá thực tế sau giảm -->
                                                 <div class="price fw-bold text-danger fs-5">
-                                                    {{ Helper.ToMoney(p.voucher ? Math.round(p.price * (1 - p.voucher.discountPercent / 100)) : p.price) }}
+                                                    {{ Helper.ToMoney(p.discountPercent ? Math.round(p.price * (1 - p.discountPercent / 100)) : p.price) }}
                                                 </div>
                                             </div>
                                         </div>
@@ -376,18 +393,54 @@ onMounted(() => {
     height: 2.6em;
 }
 
-.voucher-badge {
+.discount-badge {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 15px;
+    left: 15px;
     background: #ef4444;
     color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     font-weight: 700;
     z-index: 5;
-    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+}
+
+.product-side-actions {
+    position: absolute;
+    right: -50px;
+    top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.product-card:hover .product-side-actions {
+    right: 15px;
+}
+
+.side-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 4px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.2s;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.side-btn:hover {
+    background: #f8fafc;
+    color: #ef4444;
+    border-color: #ef4444;
 }
 
 /* Skeleton Loader */

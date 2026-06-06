@@ -260,6 +260,23 @@ onMounted(() => {
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/admin/supplier" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-truck"></i>
+              <p>
+                Nhà cung cấp
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/admin/bills" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-file-invoice-dollar"></i>
+              <p>
+                Quản lý Hóa đơn
+              </p>
+            </router-link>
+          </li>
+          
+          <li class="nav-item">
             <router-link to="/admin/bill/1" active-class="active" class="nav-link">
               <i class="nav-icon fas fa-file-invoice"></i>
               <p>

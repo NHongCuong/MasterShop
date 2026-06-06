@@ -143,7 +143,8 @@ const placeOrder = async () => {
             userId: state.user?.id,
             totalMoney: totalPrice.value,
             totalMoneyaftersaleoff: finalPrice.value,
-            voucherCode: voucher.value?.maVoucher || null
+            voucherCode: voucher.value?.maVoucher || null,
+            cartItems: cartItems.value // Gửi danh sách sản phẩm trực tiếp từ sessionStorage
         };
 
         await axios.post('http://localhost:8081/order/create', orderPayload);
@@ -359,7 +360,12 @@ onMounted(async () => {
                 <p class="summary-item-name">{{ item.productName }}</p>
                 <small class="text-muted" v-if="item.idColor">Màu: {{ item.idColor }}</small>
               </div>
-              <div class="summary-item-price">{{ Helper.ToMoney(item.productPrice * item.amountCD) }}</div>
+              <div class="summary-item-price text-end">
+                <div v-if="item.productDiscountPercent" class="text-muted text-decoration-line-through small" style="font-size: 11px;">
+                  {{ Helper.ToMoney(item.productPrice) }}
+                </div>
+                <div>{{ Helper.ToMoney((item.productDiscountPercent ? Math.round(item.productPrice * (1 - item.productDiscountPercent / 100)) : item.productPrice) * item.amountCD) }}</div>
+              </div>
             </div>
 
             <hr>

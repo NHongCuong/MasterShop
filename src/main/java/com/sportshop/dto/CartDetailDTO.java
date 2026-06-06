@@ -23,9 +23,13 @@ public class CartDetailDTO {
     private String dimensionName;
     private String colorName; // Thêm tên màu
     private String voucherCode; // Mã voucher áp dụng cho sản phẩm này
+    private Integer productDiscountPercent; // % giảm giá của sản phẩm
 
     public String getVoucherCode() { return voucherCode; }
     public void setVoucherCode(String voucherCode) { this.voucherCode = voucherCode; }
+
+    public Integer getProductDiscountPercent() { return productDiscountPercent; }
+    public void setProductDiscountPercent(Integer productDiscountPercent) { this.productDiscountPercent = productDiscountPercent; }
 
     public Long getProductPrice() { return productPrice; }
     public void setProductPrice(Long productPrice) { this.productPrice = productPrice; }

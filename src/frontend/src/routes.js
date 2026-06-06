@@ -173,6 +173,18 @@ export default [
                 name: 'bill',
                 component: () => import('./pages/admin/AdminOrders.vue'),
                 meta: { title: 'Đơn hàng' }
+            },
+            {
+                path: 'supplier',
+                name: 'adminSupplier',
+                component: () => import('./pages/admin/AdminSuppliers.vue'),
+                meta: { title: 'Nhà cung cấp' }
+            },
+            {
+                path: 'bills',
+                name: 'adminBills',
+                component: () => import('./pages/admin/AdminBills.vue'),
+                meta: { title: 'Quản lý Hóa đơn' }
             }
         ]
     }

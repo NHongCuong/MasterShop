@@ -42,6 +42,14 @@ public class OderEntity {
     @Column(name="Address_O")
     private String addressO;
 
+    @Column(name = "Created_Date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private java.util.Date createdDate;
+
+    @Column(name = "Updated_Date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private java.util.Date updatedDate;
+
     @ManyToOne
     @JoinColumn(name="ID_MOP")
     private MethodOfPaymentEnity methodofPayment;
@@ -53,4 +61,14 @@ public class OderEntity {
     @OneToMany(mappedBy = "orderbill")
     @JsonIgnore
     private List<BillEntity> osderbill;
+
+    @PrePersist
+    protected void onCreate() {
+        createdDate = new java.util.Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedDate = new java.util.Date();
+    }
 }

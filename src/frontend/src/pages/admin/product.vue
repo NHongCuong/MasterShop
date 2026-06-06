@@ -144,6 +144,7 @@ const openAddDialog = () => {
         price: 0,
         avatar: '',
         amount: 0,
+        discountPercent: 0,
         category: null,
         supplier: null,
         voucher: null
@@ -190,6 +191,7 @@ const saveProduct = async () => {
             price: selectedProduct.value.price,
             avatar: avatarUrl,
             amount: selectedProduct.value.amount,
+            discountPercent: selectedProduct.value.discountPercent,
             category: selectedProduct.value.category ? { id: selectedProduct.value.category.id } : null,
             supplier: selectedProduct.value.supplier ? { id: selectedProduct.value.supplier.id } : null,
             voucher: selectedProduct.value.voucher ? { id: selectedProduct.value.voucher.id } : null,
@@ -347,7 +349,12 @@ onMounted(() => {
                         <td><span class="p-name">{{ p.name }}</span></td>
                         <td><span class="p-badge-cat">{{ p.category?.name || '—' }}</span></td>
                         <td>{{ p.supplier?.name || '—' }}</td>
-                        <td class="font-bold text-blue-600">{{ Helper.ToMoney(p.price) }}</td>
+                        <td class="font-bold text-blue-600">
+                            {{ Helper.ToMoney(p.price) }}
+                            <div v-if="p.discountPercent" class="text-orange-500 text-xs">
+                                <i class="fas fa-arrow-down mr-1"></i>{{ p.discountPercent }}%
+                            </div>
+                        </td>
                         <td class="text-center">
                             <span :class="p.amount > 0 ? 'text-green-600' : 'text-red-500'" class="font-bold">
                                 {{ p.amount }}
@@ -414,6 +421,10 @@ onMounted(() => {
                         <div class="p-col-6 p-field">
                             <label><i class="fas fa-archive mr-2"></i>Số lượng kho</label>
                             <InputNumber v-model="selectedProduct.amount" class="p-input-premium" />
+                        </div>
+                        <div class="p-col-6 p-field">
+                            <label><i class="fas fa-percentage mr-2"></i>Giảm giá (%)</label>
+                            <InputNumber v-model="selectedProduct.discountPercent" class="p-input-premium" :min="0" :max="100" />
                         </div>
 
                         <div class="p-col-12 p-field">

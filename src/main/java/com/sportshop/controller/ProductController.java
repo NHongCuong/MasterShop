@@ -17,6 +17,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
 
 @RestController
@@ -137,6 +142,7 @@ public class ProductController {
             existing.setPrice(product.getPrice());
             existing.setAvatar(product.getAvatar());
             existing.setAmount(product.getAmount());
+            existing.setDiscountPercent(product.getDiscountPercent());
 
             if (product.getCategory() != null && product.getCategory().getId() != null) {
                 CategoryEntity cate = categoryRepo.findById(product.getCategory().getId()).orElse(null);
@@ -182,5 +188,56 @@ public class ProductController {
         } catch (Exception e) {
             return new ResponseEntity<>("Lỗi khi xóa: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/export-excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=products.xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<ProductEntity> listProducts = productRepo.findAll();
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Products");
+
+        // Header style
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        headerStyle.setFont(font);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Số lượng", "Danh mục", "Nhà cung cấp"};
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowCount = 1;
+        for (ProductEntity prod : listProducts) {
+            Row row = sheet.createRow(rowCount++);
+            row.createCell(0).setCellValue(prod.getId());
+            row.createCell(1).setCellValue(prod.getName());
+            row.createCell(2).setCellValue(prod.getDescription());
+            row.createCell(3).setCellValue(prod.getPrice() != null ? prod.getPrice() : 0);
+            row.createCell(4).setCellValue(prod.getDiscountPercent() != null ? prod.getDiscountPercent() : 0);
+            row.createCell(5).setCellValue(prod.getAmount() != null ? prod.getAmount() : "0");
+            row.createCell(6).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
+            row.createCell(7).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
+        }
+
+        // Auto size columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
     }
 }
