@@ -33,6 +33,13 @@ const selectedProduct = ref<any>(null)
 const visibleDialog = ref(false)
 const editMode = ref(false)
 
+const showDetailDialog = ref(false)
+const detailProduct = ref<any>(null)
+const detailLoading = ref(false)
+const detailColors = ref<string[]>([])
+const detailMaterials = ref<string[]>([])
+const detailDimensions = ref<string[]>([])
+
 const search = ref('')
 const pageSize = ref(10)
 const currentPage = ref(0)
@@ -234,6 +241,49 @@ const deleteProduct = async (id: number) => {
     }
 }
 
+const getSalePrice = (p: any) => {
+    if (!p?.price) return 0
+    if (p.discountPercent) return Math.round(p.price * (1 - p.discountPercent / 100))
+    return p.price
+}
+
+const parseStock = (val: any) => {
+    const n = Number(val)
+    return Number.isNaN(n) ? 0 : n
+}
+
+const getStockRemaining = (p: any) => {
+    const stock = parseStock(p?.amount)
+    const sold = parseStock(p?.soldQuantity ?? 0)
+    return Math.max(0, stock - sold)
+}
+
+const viewProductDetail = async (p: any) => {
+    showDetailDialog.value = true
+    detailLoading.value = true
+    detailProduct.value = null
+    detailColors.value = []
+    detailMaterials.value = []
+    detailDimensions.value = []
+    try {
+        const [prodRes, colorRes, matRes, dimRes] = await Promise.all([
+            axios.get(`${PRODUCT_API}/${p.id}`),
+            axios.get(`${API_URL}/detailcolor/all/${p.id}`),
+            axios.get(`${API_URL}/detailmaterial/all/${p.id}`),
+            axios.get(`${API_URL}/dimensions/all/${p.id}`)
+        ])
+        detailProduct.value = prodRes.data
+        detailColors.value = (colorRes.data || []).map((c: any) => c.nameColor || c.name).filter(Boolean)
+        detailMaterials.value = (matRes.data || []).map((m: any) => m.nameMaterial || m.name).filter(Boolean)
+        detailDimensions.value = (dimRes.data || []).map((d: any) => d.nameD).filter(Boolean)
+    } catch {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải chi tiết sản phẩm', life: 2000 })
+        showDetailDialog.value = false
+    } finally {
+        detailLoading.value = false
+    }
+}
+
 const exportExcel = async () => {
     try {
         const res = await axios.get(`${PRODUCT_API}/export-excel`, { responseType: 'blob' })
@@ -337,19 +387,20 @@ onMounted(() => {
                         <th>Danh mục</th>
                         <th>Nhà cung cấp</th>
                         <th>Giá</th>
-                        <th style="width:80px">Kho</th>
+                        <th style="width:80px">Tồn kho</th>
+                        <th style="width:90px">Đã bán</th>
                         <th>Voucher</th>
                         <th style="width:120px">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="loading">
-                        <td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                        <td colspan="10" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
                     </tr>
                     <tr v-else-if="productList.length === 0">
-                        <td colspan="9" class="text-center py-5">Không tìm thấy sản phẩm</td>
+                        <td colspan="10" class="text-center py-5">Không tìm thấy sản phẩm</td>
                     </tr>
-                    <tr v-for="p in productList" :key="p.id" class="p-row">
+                    <tr v-for="p in productList" :key="p.id" class="p-row p-row-clickable" @click="viewProductDetail(p)">
                         <td class="text-center">{{ p.id }}</td>
                         <td class="text-center">
                             <img :src="Helper.GetImageUrl(p.avatar)" class="p-table-img" />
@@ -364,9 +415,12 @@ onMounted(() => {
                             </div>
                         </td>
                         <td class="text-center">
-                            <span :class="p.amount > 0 ? 'text-green-600' : 'text-red-500'" class="font-bold">
-                                {{ p.amount }}
+                            <span :class="getStockRemaining(p) > 0 ? 'text-green-600' : 'text-red-500'" class="font-bold">
+                                {{ getStockRemaining(p) }}
                             </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="font-bold text-blue-600">{{ p.soldQuantity ?? 0 }}</span>
                         </td>
                         <td>
                             <span v-if="p.voucher" class="p-voucher-badge">
@@ -374,7 +428,7 @@ onMounted(() => {
                             </span>
                             <span v-else class="text-gray-400 italic">Trống</span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" @click.stop>
                             <div class="p-actions">
                                 <button class="p-action-btn p-edit" @click="openEditDialog(p)"><i class="fas fa-edit"></i></button>
                                 <button class="p-action-btn p-delete" @click="deleteProduct(p.id)"><i class="fas fa-trash"></i></button>
@@ -427,7 +481,7 @@ onMounted(() => {
                             <InputNumber v-model="selectedProduct.price" class="p-input-premium" mode="currency" currency="VND" locale="vi-VN" />
                         </div>
                         <div class="p-col-6 p-field">
-                            <label><i class="fas fa-archive mr-2"></i>Số lượng kho</label>
+                            <label><i class="fas fa-archive mr-2"></i>Số lượng nhập kho</label>
                             <InputNumber v-model="selectedProduct.amount" class="p-input-premium" />
                         </div>
                         <div class="p-col-6 p-field">
@@ -498,6 +552,53 @@ onMounted(() => {
                 </div>
             </template>
         </Dialog>
+
+        <!-- CHI TIẾT SẢN PHẨM -->
+        <Dialog v-model:visible="showDetailDialog" modal class="p-detail-dialog" :style="{ width: '960px' }" header="Thông tin sản phẩm">
+            <div v-if="detailLoading" class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-3 text-muted">Đang tải chi tiết...</p>
+            </div>
+            <div v-else-if="detailProduct" class="p-detail-body">
+                <div class="p-detail-top">
+                    <div class="p-detail-image">
+                        <img :src="Helper.GetImageUrl(detailProduct.avatar)" :alt="detailProduct.name" />
+                    </div>
+                    <div class="p-detail-info">
+                        <div class="p-detail-row"><label>ID:</label><span>{{ detailProduct.id }}</span></div>
+                        <div class="p-detail-row"><label>Tên sản phẩm:</label><span class="fw-bold">{{ detailProduct.name }}</span></div>
+                        <div class="p-detail-row"><label>Giá:</label><span class="text-danger fw-bold fs-5">{{ Helper.ToMoney(getSalePrice(detailProduct)) }}</span></div>
+                        <div class="p-detail-row" v-if="detailProduct.discountPercent">
+                            <label>Giá gốc:</label>
+                            <span class="text-muted text-decoration-line-through">{{ Helper.ToMoney(detailProduct.price) }}</span>
+                        </div>
+                        <div class="p-detail-row"><label>Số lượng trong kho:</label><span>{{ getStockRemaining(detailProduct) }}</span></div>
+                        <div class="p-detail-row"><label>Đã bán:</label><span class="text-primary fw-bold">{{ detailProduct.soldQuantity ?? 0 }}</span></div>
+                        <div class="p-detail-row"><label>Giảm giá:</label><span>{{ detailProduct.discountPercent ? detailProduct.discountPercent + '%' : '—' }}</span></div>
+                        <div class="p-detail-row"><label>Danh mục:</label><span>{{ detailProduct.category?.name || '—' }}</span></div>
+                        <div class="p-detail-row"><label>Nhà cung cấp:</label><span>{{ detailProduct.supplier?.name || '—' }}</span></div>
+                        <div class="p-detail-row"><label>Màu sắc:</label><span>{{ detailColors.length ? detailColors.join(', ') : '—' }}</span></div>
+                        <div class="p-detail-row"><label>Chất liệu:</label><span>{{ detailMaterials.length ? detailMaterials.join(', ') : '—' }}</span></div>
+                        <div class="p-detail-row"><label>Kích cỡ:</label><span>{{ detailDimensions.length ? detailDimensions.join(', ') : '—' }}</span></div>
+                        <div class="p-detail-row"><label>Mã voucher:</label><span>{{ detailProduct.voucher?.maVoucher || '—' }}</span></div>
+                    </div>
+                </div>
+                <div class="p-detail-desc" v-if="detailProduct.description">
+                    <h5 class="p-detail-desc-title">Mô tả</h5>
+                    <p>{{ detailProduct.description }}</p>
+                </div>
+            </div>
+            <template #footer>
+                <div class="p-modal-footer">
+                    <button class="p-footer-btn p-btn-export-detail" @click="exportExcel">
+                        <i class="fas fa-file-excel mr-2"></i>Export Sản Phẩm
+                    </button>
+                    <button class="p-footer-btn p-btn-cancel" @click="showDetailDialog = false">
+                        <i class="fas fa-times mr-2"></i>Đóng
+                    </button>
+                </div>
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -529,6 +630,26 @@ onMounted(() => {
 .p-table th { padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
 .p-table td { padding: 16px; border-top: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
 .p-row:hover { background: #fbfcfe; }
+.p-row-clickable { cursor: pointer; }
+.p-row-clickable:hover { background: #eff6ff !important; }
+
+.p-detail-body { padding: 8px 0; }
+.p-detail-top { display: grid; grid-template-columns: 320px 1fr; gap: 32px; margin-bottom: 24px; }
+.p-detail-image { background: #f8fafc; border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 360px; border: 1px solid #e2e8f0; }
+.p-detail-image img { max-width: 100%; max-height: 320px; object-fit: contain; }
+.p-detail-info { display: flex; flex-direction: column; gap: 10px; }
+.p-detail-row { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.p-detail-row label { font-weight: 600; color: #64748b; }
+.p-detail-row span { color: #1e293b; }
+.p-detail-desc { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
+.p-detail-desc-title { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid #3b82f633; }
+.p-detail-desc p { margin: 0; line-height: 1.7; color: #475569; white-space: pre-wrap; }
+.p-btn-export-detail { background: #16a34a; color: #fff; }
+.p-btn-export-detail:hover { background: #15803d; }
+
+@media (max-width: 768px) {
+    .p-detail-top { grid-template-columns: 1fr; }
+}
 
 .p-table-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .p-name { font-weight: 700; color: #1e293b; }

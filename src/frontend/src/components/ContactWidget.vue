@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
-const GREETING_KEY = 'hc_contact_greeting_closed';
 const PHONE = '0776856666';
 const PHONE_DISPLAY = '077.685.6666';
 
@@ -35,15 +34,8 @@ const contactLinks = [
     }
 ];
 
-onMounted(() => {
-    if (sessionStorage.getItem(GREETING_KEY) === '1') {
-        showGreeting.value = false;
-    }
-});
-
 const closeGreeting = () => {
     showGreeting.value = false;
-    sessionStorage.setItem(GREETING_KEY, '1');
 };
 
 const toggleMenu = () => {

@@ -82,6 +82,23 @@ function scrollCategories(direction: 'left' | 'right') {
   }
 }
 
+const addToWishlist = (p: Product) => {
+  alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+};
+
+const shareProduct = (p: Product) => {
+  const url = window.location.origin + '/product/' + p.id;
+  navigator.clipboard.writeText(url);
+  alert('Đã sao chép liên kết sản phẩm!');
+};
+
+const getSalePrice = (p: Product) => {
+  if (p.discountPercent) {
+    return Math.round(p.price * (1 - p.discountPercent / 100));
+  }
+  return p.price;
+};
+
 watch(() => route.query.category, () => {
   applyFilter();
 });
@@ -171,18 +188,37 @@ onUnmounted(() => {
     </div>
     
     <div v-else class="row g-4 px-2 justify-content-center">
-      <div v-for="pr in filteredProducts" :key="pr.id" class="col-6 col-md-4 col-lg-3 col-xl-2">
-        <div class="product-card h-100 bg-white shadow-sm border rounded overflow-hidden">
+      <div v-for="pr in filteredProducts" :key="pr.id" class="col-6 col-md-4 col-lg-3">
+        <div class="product-card-wrap">
           <router-link :to="'/product/' + pr.id" class="text-decoration-none">
-            <div class="position-relative overflow-hidden" style="height: 200px;">
-              <img :src="Helper.GetImageUrl(pr.avatar)" class="w-100 h-100 object-fit-cover transition-scale">
-              <div class="overlay d-flex align-items-center justify-content-center">
-                <span class="btn btn-sm btn-primary rounded-pill px-3">Chi tiết</span>
+            <div class="product-card h-100 bg-white shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+              <div v-if="pr.discountPercent" class="discount-badge">
+                -{{ pr.discountPercent }}%
               </div>
-            </div>
-            <div class="p-3 text-center">
-              <h6 class="text-dark fw-bold mb-2 text-truncate">{{ pr.name }}</h6>
-              <div class="text-danger fw-bold fs-6">{{ Helper.ToMoney(pr.price) }}</div>
+
+              <div class="product-img-box">
+                <img :src="Helper.GetImageUrl(pr.avatar)" :alt="pr.name" class="img-fluid">
+                <div class="product-side-actions">
+                  <button class="side-btn" @click.stop.prevent="addToWishlist(pr)" title="Yêu thích">
+                    <i class="far fa-heart"></i>
+                  </button>
+                  <button class="side-btn" @click.stop.prevent="shareProduct(pr)" title="Chia sẻ">
+                    <i class="fas fa-share-alt"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-3 text-center">
+                <h6 class="product-name text-dark mb-2">{{ pr.name }}</h6>
+                <div class="d-flex flex-column align-items-center">
+                  <div v-if="pr.discountPercent" class="old-price small text-muted text-decoration-line-through">
+                    {{ Helper.ToMoney(pr.price) }}
+                  </div>
+                  <div class="price fw-bold text-danger fs-5">
+                    {{ Helper.ToMoney(getSalePrice(pr)) }}
+                  </div>
+                </div>
+              </div>
             </div>
           </router-link>
         </div>
@@ -272,21 +308,102 @@ onUnmounted(() => {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* Product card styling */
-.product-card { transition: all 0.3s ease; }
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px rgba(0,0,0,0.1) !important;
+.product-card-wrap {
+  transition: all 0.3s ease;
 }
 
-.transition-scale { transition: transform 0.5s ease; }
-.product-card:hover .transition-scale { transform: scale(1.08); }
+.product-card-wrap:hover {
+  transform: translateY(-8px);
+}
 
-.overlay {
+.product-card {
+  transition: box-shadow 0.3s ease;
+}
+
+.product-card-wrap:hover .product-card {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.product-img-box {
+  position: relative;
+  padding: 15px;
+  background: #fff;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.product-img-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.5s ease;
+}
+
+.product-card-wrap:hover .product-img-box img {
+  transform: scale(1.1);
+}
+
+.product-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.6em;
+}
+
+.discount-badge {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.1);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  top: 15px;
+  left: 15px;
+  background: #ef4444;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  z-index: 5;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
 }
-.product-card:hover .overlay { opacity: 1; }
+
+.product-side-actions {
+  position: absolute;
+  right: -50px;
+  top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.product-card:hover .product-side-actions {
+  right: 15px;
+}
+
+.side-btn {
+  width: 35px;
+  height: 35px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.side-btn:hover {
+  background: #f8fafc;
+  color: #ef4444;
+  border-color: #ef4444;
+}
 </style>

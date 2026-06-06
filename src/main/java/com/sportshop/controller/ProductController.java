@@ -212,7 +212,7 @@ public class ProductController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Số lượng", "Danh mục", "Nhà cung cấp"};
+        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -227,9 +227,12 @@ public class ProductController {
             row.createCell(2).setCellValue(prod.getDescription());
             row.createCell(3).setCellValue(prod.getPrice() != null ? prod.getPrice() : 0);
             row.createCell(4).setCellValue(prod.getDiscountPercent() != null ? prod.getDiscountPercent() : 0);
-            row.createCell(5).setCellValue(prod.getAmount() != null ? prod.getAmount() : "0");
-            row.createCell(6).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
-            row.createCell(7).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
+            long stockIn = parseStockAmount(prod.getAmount());
+            long sold = prod.getSoldQuantity() != null ? prod.getSoldQuantity() : 0;
+            row.createCell(5).setCellValue(Math.max(0, stockIn - sold));
+            row.createCell(6).setCellValue(sold);
+            row.createCell(7).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
+            row.createCell(8).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
         }
 
         // Auto size columns
@@ -239,5 +242,14 @@ public class ProductController {
 
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+    private long parseStockAmount(String amount) {
+        if (amount == null || amount.isBlank()) return 0;
+        try {
+            return Long.parseLong(amount.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

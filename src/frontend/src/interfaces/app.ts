@@ -60,6 +60,7 @@ export interface Product {
     "price": number,
     "avatar": string,
     "amount": number,
+    "soldQuantity"?: number,
     "discountPercent"?: number,
     "supplier": Supplier,
     "category": Category,

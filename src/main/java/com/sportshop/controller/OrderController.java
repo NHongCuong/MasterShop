@@ -168,6 +168,7 @@ public class OrderController {
                     }
 
                     orderDetailRepo.save(od);
+                    incrementSoldQuantity(product, amount);
 
                     long itemTotal = discountedPrice * amount;
                     totalMoney += (basePrice * amount); // Lưu tổng tiền gốc để tính discount tổng
@@ -217,6 +218,7 @@ public class OrderController {
                     od.setMaterial(item.getMaterialcartdetail());
                     od.setDimensions(item.getDemensionsCartDetail());
                     orderDetailRepo.save(od);
+                    incrementSoldQuantity(product, item.getAmountCD());
                     cartDetailRepo.delete(item);
                 }
             }
@@ -506,5 +508,13 @@ public class OrderController {
 
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+    private void incrementSoldQuantity(ProductEntity product, long amount) {
+        if (product == null || amount <= 0) return;
+        Long current = product.getSoldQuantity();
+        if (current == null) current = 0L;
+        product.setSoldQuantity(current + amount);
+        productRepo.save(product);
     }
 }

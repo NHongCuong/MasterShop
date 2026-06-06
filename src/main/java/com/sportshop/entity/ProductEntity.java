@@ -36,6 +36,9 @@ public class ProductEntity {
 	@Column(name = "Amount_Product")
 	private String amount;
 
+	@Column(name = "Sold_Quantity")
+	private Long soldQuantity;
+
 	@Column(name = "Discount_Percent")
 	private Integer discountPercent;
 
