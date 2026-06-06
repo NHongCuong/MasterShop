@@ -86,7 +86,12 @@ watch(() => route.query.category, () => {
   applyFilter();
 });
 
+function recordVisit() {
+  axios.post('http://localhost:8081/traffic/visit').catch(() => {});
+}
+
 onMounted(() => {
+  recordVisit();
   showSlides(myIndex = 1);
   startAutoSlide();
   loadCategory();

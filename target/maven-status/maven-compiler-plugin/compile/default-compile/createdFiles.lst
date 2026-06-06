@@ -118,7 +118,6 @@ com\sportshop\dto\BillStatusDTO.class
 com\sportshop\dto\ColorDTO.class
 com\sportshop\service\ICartDetailService.class
 com\sportshop\service\IShopcartService.class
-com\sportshop\entity\CartDetailId.class
 com\sportshop\entity\BillEntity.class
 com\sportshop\response\BaseResponse.class
 com\sportshop\service\ProductMaterialDetailService.class
