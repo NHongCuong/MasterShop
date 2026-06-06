@@ -7,6 +7,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
 import com.sportshop.entity.SupplierEntity;
 import com.sportshop.repository.SupplierRepository;
+import com.sportshop.response.PageResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class SupplierController {
     private SupplierRepository supplierRepo;
 
     @GetMapping("/list")
-    public Page<SupplierEntity> list(
+    public PageResponse<SupplierEntity> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String search,
@@ -36,9 +37,9 @@ public class SupplierController {
         Pageable pageable = PageRequest.of(page, size, sortObj);
         
         if (search.isEmpty()) {
-            return supplierRepo.findAll(pageable);
+            return PageResponse.of(supplierRepo.findAll(pageable));
         } else {
-            return supplierRepo.findBySearch(search, pageable);
+            return PageResponse.of(supplierRepo.findBySearch(search, pageable));
         }
     }
 

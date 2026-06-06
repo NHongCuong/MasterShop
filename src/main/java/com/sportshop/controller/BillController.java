@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 import com.sportshop.entity.BillEntity;
 import com.sportshop.repository.BillRepository;
+import com.sportshop.response.PageResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class BillController {
     private BillRepository billRepo;
 
     @GetMapping("/list")
-    public Page<BillEntity> list(
+    public PageResponse<BillEntity> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String search,
@@ -35,9 +36,9 @@ public class BillController {
         Pageable pageable = PageRequest.of(page, size, sortObj);
         
         if (search.isEmpty()) {
-            return billRepo.findAll(pageable);
+            return PageResponse.of(billRepo.findAll(pageable));
         } else {
-            return billRepo.findBySearch(search, pageable);
+            return PageResponse.of(billRepo.findBySearch(search, pageable));
         }
     }
 

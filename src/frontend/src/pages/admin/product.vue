@@ -252,11 +252,7 @@ const parseStock = (val: any) => {
     return Number.isNaN(n) ? 0 : n
 }
 
-const getStockRemaining = (p: any) => {
-    const stock = parseStock(p?.amount)
-    const sold = parseStock(p?.soldQuantity ?? 0)
-    return Math.max(0, stock - sold)
-}
+const getStockRemaining = (p: any) => parseStock(p?.amount)
 
 const viewProductDetail = async (p: any) => {
     showDetailDialog.value = true

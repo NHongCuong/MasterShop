@@ -9,6 +9,7 @@ import com.sportshop.repository.CategoryRepository;
 import com.sportshop.repository.ProductRepository;
 import com.sportshop.repository.SupplierRepository;
 import com.sportshop.repository.VoucherRepository;
+import com.sportshop.response.PageResponse;
 import com.sportshop.service.impl.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -71,7 +72,7 @@ public class ProductController {
             } else {
                 result = productRepo.findAll(PageRequest.of(page, size, sortObj));
             }
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(PageResponse.of(result));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Lỗi phân trang: " + e.getMessage());
         }
@@ -229,7 +230,7 @@ public class ProductController {
             row.createCell(4).setCellValue(prod.getDiscountPercent() != null ? prod.getDiscountPercent() : 0);
             long stockIn = parseStockAmount(prod.getAmount());
             long sold = prod.getSoldQuantity() != null ? prod.getSoldQuantity() : 0;
-            row.createCell(5).setCellValue(Math.max(0, stockIn - sold));
+            row.createCell(5).setCellValue(stockIn);
             row.createCell(6).setCellValue(sold);
             row.createCell(7).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
             row.createCell(8).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");

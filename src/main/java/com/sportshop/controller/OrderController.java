@@ -3,6 +3,7 @@ package com.sportshop.controller;
 import com.sportshop.entity.*;
 import com.sportshop.repository.*;
 import com.sportshop.response.PageResponse;
+import com.sportshop.service.ProductStockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -65,6 +66,9 @@ public class OrderController {
 
     @Autowired
     private VoucherRepository voucherRepo;
+
+    @Autowired
+    private ProductStockService productStockService;
 
     @GetMapping("/mop")
     public List<MethodOfPaymentEnity> getMop() {
@@ -168,7 +172,7 @@ public class OrderController {
                     }
 
                     orderDetailRepo.save(od);
-                    incrementSoldQuantity(product, amount);
+                    productStockService.deductStockAfterOrder(productId, amount);
 
                     long itemTotal = discountedPrice * amount;
                     totalMoney += (basePrice * amount); // Lưu tổng tiền gốc để tính discount tổng
@@ -218,7 +222,7 @@ public class OrderController {
                     od.setMaterial(item.getMaterialcartdetail());
                     od.setDimensions(item.getDemensionsCartDetail());
                     orderDetailRepo.save(od);
-                    incrementSoldQuantity(product, item.getAmountCD());
+                    productStockService.deductStockAfterOrder(product.getId(), item.getAmountCD());
                     cartDetailRepo.delete(item);
                 }
             }
@@ -508,13 +512,5 @@ public class OrderController {
 
         workbook.write(response.getOutputStream());
         workbook.close();
-    }
-
-    private void incrementSoldQuantity(ProductEntity product, long amount) {
-        if (product == null || amount <= 0) return;
-        Long current = product.getSoldQuantity();
-        if (current == null) current = 0L;
-        product.setSoldQuantity(current + amount);
-        productRepo.save(product);
     }
 }
