@@ -78,16 +78,22 @@ const loadProducts = async () => {
 
 const loadMetaData = async () => {
     try {
-        const [catRes, supRes, vchRes] = await Promise.all([
-            axios.get(`${CATEGORY_API}/list`),
-            axios.get(`${SUPPLIER_API}/all`),
-            axios.get(`${VOUCHER_API}/list`)
-        ])
-        categoryList.value = catRes.data
-        supplierList.value = supRes.data
-        voucherList.value = vchRes.data
-    } catch (err) {
-        console.error("Load metadata error", err)
+        const catRes = await axios.get(`${CATEGORY_API}/list`)
+        categoryList.value = Array.isArray(catRes.data) ? catRes.data : (catRes.data?.content || [])
+    } catch {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể tải danh mục', life: 2000 })
+    }
+    try {
+        const supRes = await axios.get(`${SUPPLIER_API}/list`, { params: { page: 0, size: 500, sort: 'name,asc' } })
+        supplierList.value = supRes.data?.content || []
+    } catch {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể tải nhà cung cấp', life: 2000 })
+    }
+    try {
+        const vchRes = await axios.get(`${VOUCHER_API}/list`)
+        voucherList.value = Array.isArray(vchRes.data) ? vchRes.data : (vchRes.data?.content || [])
+    } catch {
+        toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Không thể tải voucher', life: 2000 })
     }
 }
 
@@ -136,7 +142,8 @@ const uploadAllImages = async (): Promise<string[]> => {
 }
 
 // ========== DIALOG ACTIONS ==========
-const openAddDialog = () => {
+const openAddDialog = async () => {
+    await loadMetaData()
     selectedProduct.value = {
         id: null,
         name: '',
@@ -156,7 +163,8 @@ const openAddDialog = () => {
     visibleDialog.value = true
 }
 
-const openEditDialog = (product: any) => {
+const openEditDialog = async (product: any) => {
+    await loadMetaData()
     selectedProduct.value = { ...product }
     // Map objects to ensure dropdown selection
     if (product.category) selectedProduct.value.category = categoryList.value.find(c => c.id === product.category.id)
