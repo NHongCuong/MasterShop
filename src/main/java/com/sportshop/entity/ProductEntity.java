@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -41,6 +42,21 @@ public class ProductEntity {
 
 	@Column(name = "Discount_Percent")
 	private Integer discountPercent;
+
+	@Column(name = "created_at")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date createdAt;
+
+	@Column(name = "updated_at")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date updatedAt;
+
+	@PrePersist
+	protected void onCreate() {
+		if (createdAt == null) {
+			createdAt = new Date();
+		}
+	}
 
 	@ManyToOne
 	@JoinColumn(name = "ID_Category")

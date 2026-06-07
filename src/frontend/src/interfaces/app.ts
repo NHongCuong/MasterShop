@@ -65,6 +65,8 @@ export interface Product {
     "supplier": Supplier,
     "category": Category,
     "voucher"?: Voucher | null,
+    "createdAt"?: string | Date,
+    "updatedAt"?: string | Date,
     "detailproductcolor"?: any[];
     "detailproductmaterial"?: any[];
     "productDemensions"?: any[];

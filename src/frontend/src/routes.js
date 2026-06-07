@@ -121,6 +121,12 @@ export default [
                 meta: { title: 'Products' }
             },
             {
+                path: 'inventory',
+                name: 'inventory',
+                component: () => import('./pages/admin/AdminInventory.vue'),
+                meta: { title: 'Quản lý tồn kho' }
+            },
+            {
                 path: 'category',
                 name: 'category',
                 component: () => import('./pages/admin/category.vue'),

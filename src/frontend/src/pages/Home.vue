@@ -4,6 +4,7 @@ import {onMounted, ref} from 'vue';
 import {Category} from '../interfaces/app';
 import {MyApp, state} from '../app/MyApp';
 import ContactWidget from '../components/ContactWidget.vue';
+import BackToTop from '../components/BackToTop.vue';
 
 const categories = ref<Category[]>([]);
 
@@ -124,6 +125,7 @@ onMounted(() => {
       <router-view></router-view>
     </div>
 
+    <BackToTop :bottom="96" />
     <ContactWidget />
   </div>
 </template>

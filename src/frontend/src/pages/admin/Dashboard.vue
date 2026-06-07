@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Chart from 'primevue/chart'
 import Skeleton from 'primevue/skeleton'
+
+const router = useRouter()
 
 const API = 'http://localhost:8081/dashboard/stats'
 const loading = ref(true)
@@ -16,6 +19,16 @@ interface OverviewStats {
   conversionRate: number
   totalVisits: number
   lowStock: number
+  totalProducts: number
+  totalCategories: number
+}
+
+interface OverviewCard {
+  label: string
+  value: string
+  icon: string
+  variant: string
+  route?: string
 }
 
 interface TodayStats {
@@ -78,20 +91,26 @@ const formatTrend = (change: number) => {
   return { text: `${arrow} ${Math.abs(change)}% so với hôm qua`, cls }
 }
 
-const overviewCards = computed(() => {
+const overviewCards = computed((): OverviewCard[] => {
   const o = stats.value?.overview
   if (!o) return []
   return [
     { label: 'Tổng Doanh thu', value: formatNumber(o.totalRevenue), icon: 'fas fa-dollar-sign', variant: '' },
-    { label: 'Tổng Đơn hàng', value: formatNumber(o.totalOrders), icon: 'fas fa-shopping-cart', variant: '' },
-    { label: 'Tổng Sản phẩm đã bán', value: formatNumber(o.totalProductsSold), icon: 'fas fa-box', variant: '' },
-    { label: 'Tổng Khách hàng', value: formatNumber(o.totalCustomers), icon: 'fas fa-user', variant: '' },
+    { label: 'Tổng Đơn hàng', value: formatNumber(o.totalOrders), icon: 'fas fa-shopping-cart', variant: '', route: '/admin/bill/1' },
+    { label: 'Tổng Sản phẩm đã bán', value: formatNumber(o.totalProductsSold), icon: 'fas fa-box-open', variant: '' },
+    { label: 'Tổng Khách hàng', value: formatNumber(o.totalCustomers), icon: 'fas fa-user', variant: '', route: '/admin/user' },
     { label: 'Giá trị đơn TB', value: formatNumber(o.averageOrderValue), icon: 'fas fa-calculator', variant: '' },
     { label: 'Tỷ lệ chuyển đổi', value: `${o.conversionRate}%`, icon: 'fas fa-percent', variant: '' },
     { label: 'Tổng lượt truy cập', value: formatNumber(o.totalVisits), icon: 'fas fa-globe', variant: '' },
-    { label: 'Sắp hết hàng', value: formatNumber(o.lowStock), icon: 'fas fa-exclamation-triangle', variant: 'warning' },
+    { label: 'Sắp hết hàng', value: formatNumber(o.lowStock), icon: 'fas fa-exclamation-triangle', variant: 'warning', route: '/admin/inventory?lowStockOnly=true' },
+    { label: 'Tổng sản phẩm hiện có', value: formatNumber(o.totalProducts), icon: 'fas fa-shopping-bag', variant: '', route: '/admin/product' },
+    { label: 'Tổng Danh mục', value: formatNumber(o.totalCategories), icon: 'fas fa-list', variant: '', route: '/admin/category' },
   ]
 })
+
+const goToCard = (card: OverviewCard) => {
+  if (card.route) router.push(card.route)
+}
 
 const todayCards = computed(() => {
   const t = stats.value?.today
@@ -316,14 +335,18 @@ onMounted(fetchStats)
         <h5 class="dash-section-title">Thống kê tổng quan</h5>
         <div class="dash-overview-grid">
           <template v-if="loading">
-            <Skeleton v-for="i in 8" :key="i" height="90px" borderRadius="10px" />
+            <Skeleton v-for="i in 10" :key="i" height="90px" borderRadius="10px" />
           </template>
           <template v-else>
             <div
               v-for="(card, i) in overviewCards"
               :key="i"
               class="dash-stat-card"
-              :class="{ 'dash-stat-warning': card.variant === 'warning' }"
+              :class="{
+                'dash-stat-warning': card.variant === 'warning',
+                'dash-stat-clickable': !!card.route
+              }"
+              @click="goToCard(card)"
             >
               <div class="dash-stat-body">
                 <span class="dash-stat-label">{{ card.label }}</span>
@@ -473,6 +496,16 @@ onMounted(fetchStats)
 .dash-stat-warning {
   background: #fff8f0;
   border-color: #fed7aa;
+}
+
+.dash-stat-clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-stat-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .dash-stat-body {

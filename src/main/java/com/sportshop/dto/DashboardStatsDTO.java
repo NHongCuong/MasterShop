@@ -32,6 +32,8 @@ public class DashboardStatsDTO {
         private double conversionRate;
         private long totalVisits;
         private long lowStock;
+        private long totalProducts;
+        private long totalCategories;
     }
 
     @Getter

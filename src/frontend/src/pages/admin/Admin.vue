@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {MyApp, state} from '../../app/MyApp';
 import {onMounted} from 'vue';
+import BackToTop from '../../components/BackToTop.vue';
 
 onMounted(() => {
   MyApp.getInstance().authenticate();
@@ -204,6 +205,14 @@ onMounted(() => {
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/admin/inventory" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-warehouse"></i>
+              <p>
+                Quản lý tồn kho
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/admin/category" active-class="active" class="nav-link">
               <i class="nav-icon fas fa-list"></i>
               <p>
@@ -307,6 +316,8 @@ onMounted(() => {
 
     <strong>Copyright &copy; 2026 <a href="https://www.linkedin.com/in/cuongnguyenhong96/" target="_blank">Nguyễn Hồng Cường</a></strong>.
   </footer>
+
+  <BackToTop />
 </template>
 
 <style scoped>

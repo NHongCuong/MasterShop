@@ -1,5 +1,6 @@
 com\sportshop\repository\ProductRepository.class
 com\sportshop\service\IColorService.class
+com\sportshop\service\ProductInventoryService.class
 com\sportshop\entity\UserEntity$UserEntityBuilder.class
 com\sportshop\service\IUserTypeService.class
 com\sportshop\dto\UserStatusDTO.class

@@ -10,6 +10,7 @@ import com.sportshop.repository.ProductRepository;
 import com.sportshop.repository.SupplierRepository;
 import com.sportshop.repository.VoucherRepository;
 import com.sportshop.response.PageResponse;
+import com.sportshop.service.ProductInventoryService;
 import com.sportshop.service.impl.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,9 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -43,6 +46,9 @@ public class ProductController {
 
     @Autowired
     private VoucherRepository voucherRepo;
+
+    @Autowired
+    private ProductInventoryService productInventoryService;
 
     // 🟢 API xem danh sách sản phẩm
     @GetMapping("/all")
@@ -171,12 +177,42 @@ public class ProductController {
                 }
             }
 
+            existing.setUpdatedAt(new Date());
             ProductEntity updated = productService.save(existing);
             return new ResponseEntity<>(updated, HttpStatus.OK);
 
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>("Lỗi khi cập nhật: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/inventory")
+    public ResponseEntity<PageResponse<ProductEntity>> getInventory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "newest") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "false") boolean lowStockOnly) {
+        return ResponseEntity.ok(productInventoryService.getInventory(page, size, sort, search, lowStockOnly));
+    }
+
+    @GetMapping("/inventory/low-stock-count")
+    public ResponseEntity<Map<String, Long>> getLowStockCount() {
+        return ResponseEntity.ok(Map.of("count", productInventoryService.countLowStock()));
+    }
+
+    @PutMapping("/stock/{id}")
+    public ResponseEntity<?> updateStock(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        try {
+            if (body.get("amount") == null) {
+                return ResponseEntity.badRequest().body("Thiếu số lượng tồn kho");
+            }
+            long amount = Long.parseLong(body.get("amount").toString());
+            ProductEntity updated = productInventoryService.updateStock(id, amount);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi cập nhật tồn kho: " + e.getMessage());
         }
     }
 
@@ -213,7 +249,7 @@ public class ProductController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp"};
+        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp", "Ngày tạo", "Ngày sửa"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -234,6 +270,8 @@ public class ProductController {
             row.createCell(6).setCellValue(sold);
             row.createCell(7).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
             row.createCell(8).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
+            row.createCell(9).setCellValue(prod.getCreatedAt() != null ? prod.getCreatedAt().toString() : "");
+            row.createCell(10).setCellValue(prod.getUpdatedAt() != null ? prod.getUpdatedAt().toString() : "");
         }
 
         // Auto size columns

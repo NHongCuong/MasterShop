@@ -386,15 +386,17 @@ onMounted(() => {
                         <th style="width:80px">Tồn kho</th>
                         <th style="width:90px">Đã bán</th>
                         <th>Voucher</th>
+                        <th style="width:150px">Ngày tạo</th>
+                        <th style="width:150px">Ngày sửa</th>
                         <th style="width:120px">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-if="loading">
-                        <td colspan="10" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                        <td colspan="12" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
                     </tr>
                     <tr v-else-if="productList.length === 0">
-                        <td colspan="10" class="text-center py-5">Không tìm thấy sản phẩm</td>
+                        <td colspan="12" class="text-center py-5">Không tìm thấy sản phẩm</td>
                     </tr>
                     <tr v-for="p in productList" :key="p.id" class="p-row p-row-clickable" @click="viewProductDetail(p)">
                         <td class="text-center">{{ p.id }}</td>
@@ -424,6 +426,8 @@ onMounted(() => {
                             </span>
                             <span v-else class="text-gray-400 italic">Trống</span>
                         </td>
+                        <td class="p-date-cell">{{ Helper.DateFormat(p.createdAt) }}</td>
+                        <td class="p-date-cell">{{ Helper.DateFormat(p.updatedAt) }}</td>
                         <td class="text-center" @click.stop>
                             <div class="p-actions">
                                 <button class="p-action-btn p-edit" @click="openEditDialog(p)"><i class="fas fa-edit"></i></button>
@@ -577,6 +581,8 @@ onMounted(() => {
                         <div class="p-detail-row"><label>Chất liệu:</label><span>{{ detailMaterials.length ? detailMaterials.join(', ') : '—' }}</span></div>
                         <div class="p-detail-row"><label>Kích cỡ:</label><span>{{ detailDimensions.length ? detailDimensions.join(', ') : '—' }}</span></div>
                         <div class="p-detail-row"><label>Mã voucher:</label><span>{{ detailProduct.voucher?.maVoucher || '—' }}</span></div>
+                        <div class="p-detail-row"><label>Ngày tạo:</label><span>{{ Helper.DateFormat(detailProduct.createdAt) }}</span></div>
+                        <div class="p-detail-row"><label>Ngày sửa:</label><span>{{ Helper.DateFormat(detailProduct.updatedAt) }}</span></div>
                     </div>
                 </div>
                 <div class="p-detail-desc" v-if="detailProduct.description">
@@ -620,11 +626,24 @@ onMounted(() => {
 .p-search-box:focus-within { border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
 .p-search-box input { border: none; background: transparent; outline: none; flex: 1; font-size: 14px; }
 
-.p-table-wrapper { border-radius: 16px; overflow: hidden; border: 1px solid #f1f5f9; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
-.p-table { width: 100%; border-collapse: collapse; }
+.p-table-wrapper {
+  border-radius: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #f1f5f9;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  -webkit-overflow-scrolling: touch;
+}
+.p-table-wrapper::-webkit-scrollbar { height: 10px; }
+.p-table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 0 0 16px 16px; }
+.p-table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+.p-table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.p-table { width: 100%; min-width: 1320px; border-collapse: collapse; }
 .p-table thead { background: #f8fafc; border-bottom: 2px solid #f1f5f9; }
-.p-table th { padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-.p-table td { padding: 16px; border-top: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
+.p-table th { padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.p-table td { padding: 16px; border-top: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; white-space: nowrap; }
+.p-table td:nth-child(3) { white-space: normal; min-width: 140px; max-width: 220px; }
 .p-row:hover { background: #fbfcfe; }
 .p-row-clickable { cursor: pointer; }
 .p-row-clickable:hover { background: #eff6ff !important; }
@@ -648,6 +667,7 @@ onMounted(() => {
 }
 
 .p-table-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.p-date-cell { font-size: 12px; color: #64748b; white-space: nowrap; }
 .p-name { font-weight: 700; color: #1e293b; }
 .p-badge-cat { background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; }
 .p-voucher-badge { background: #f0fdf4; color: #15803d; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; }

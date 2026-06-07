@@ -237,10 +237,10 @@ onMounted(() => {
                 </thead>
                 <tbody>
                     <tr v-if="loading">
-                        <td colspan="7" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                        <td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
                     </tr>
                     <tr v-else-if="list.length === 0">
-                        <td colspan="7" class="text-center py-5">Không tìm thấy đơn hàng nào</td>
+                        <td colspan="9" class="text-center py-5">Không tìm thấy đơn hàng nào</td>
                     </tr>
                     <tr v-for="(item, idx) in list" :key="item.id" class="vc-row">
                         <td class="text-center">{{ currentPage * pageSize + idx + 1 }}</td>
@@ -446,11 +446,24 @@ onMounted(() => {
 .vc-search-box { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; width: 300px; }
 .vc-search-box input { border: none; outline: none; font-size: 14px; width: 100%; }
 
-.vc-table-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-.vc-table { width: 100%; border-collapse: collapse; background: white; }
+.vc-table-wrapper {
+  border-radius: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch;
+}
+.vc-table-wrapper::-webkit-scrollbar { height: 10px; }
+.vc-table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 0 0 12px 12px; }
+.vc-table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+.vc-table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.vc-table { width: 100%; min-width: 1180px; border-collapse: collapse; background: white; }
 .vc-table thead { background: #f1f5f9; }
-.vc-table th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; text-transform: uppercase; }
-.vc-table td { padding: 14px 16px; border-top: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; }
+.vc-table th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; text-transform: uppercase; white-space: nowrap; }
+.vc-table td { padding: 14px 16px; border-top: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; white-space: nowrap; }
+.vc-table td:nth-child(3),
+.vc-table td:nth-child(4) { white-space: normal; min-width: 160px; max-width: 260px; }
 .vc-row:hover { background: #f8fafc; }
 
 .vc-cust-info { display: flex; flex-direction: column; gap: 2px; }

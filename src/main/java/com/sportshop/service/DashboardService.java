@@ -32,6 +32,8 @@ public class DashboardService {
     private CartDetailRepository cartDetailRepo;
     @Autowired
     private TrafficService trafficService;
+    @Autowired
+    private CategoryRepository categoryRepo;
 
     public DashboardStatsDTO getStats() {
         List<BillEntity> bills = billRepo.findAll();
@@ -100,6 +102,8 @@ public class DashboardService {
                         .conversionRate(conversionRate)
                         .totalVisits(totalVisits)
                         .lowStock(lowStock)
+                        .totalProducts(products.size())
+                        .totalCategories(categoryRepo.count())
                         .build())
                 .today(todayStats)
                 .revenueByDay(revenueByDay)
