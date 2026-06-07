@@ -775,7 +775,8 @@ CREATE TABLE `users` (
   `Address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci,
   `password` varchar(65) CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci NOT NULL,
   `verify` char(0) CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci DEFAULT NULL,
-  `regtime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL,
   `salt` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_vietnamese_ci DEFAULT NULL,
   `ID_UT` int NOT NULL DEFAULT '1',
   `ID_UStatus` int DEFAULT '1'
@@ -785,14 +786,14 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`ID_User`, `Name_User`, `Phone`, `Email`, `Address`, `password`, `verify`, `regtime`, `salt`, `ID_UT`, `ID_UStatus`) VALUES
-(5, 'Nguyễn Văn Test', '0123456788', 'nguyenvantest@gmail.com', 'Tân Châu - An Giang', '$2y$10$TlP0noYlq4xDuwhLVanI0OgifnXEXeacmwmgumDU4vWHHUjvVRS0y', NULL, '2023-08-29 13:51:11', NULL, 2, 1),
-(6, 'Nguyễn Văn Huy', NULL, 'nguyenvantest2@gmail.com', NULL, '$2y$10$TlP0noYlq4xDuwhLVanI0OgifnXEXeacmwmgumDU4vWHHUjvVRS0y', NULL, '2023-08-29 14:31:27', NULL, 3, 1),
-(7, 'Lê Khách Hàng', NULL, 'khachhang@gmail.com', NULL, '$2y$10$DFSfHaLDmeIuokDVub1H9eTk.dvDRpnPZi5sVQ8vfE0VUJRWYQ2w2', NULL, '2023-11-13 04:19:50', NULL, 1, 1),
-(8, NULL, NULL, 'asdsad@yahoo.com', NULL, '$2y$10$hmnk62zvwvjsuWG9tWgL5OmlXsvouQ70uKBaljY7d8umnq6te1r2S', NULL, '2023-11-23 06:11:19', NULL, 1, 1),
-(9, NULL, NULL, 'nguyentantaitcag2000@yahoo.com', NULL, '$2y$10$LrShWws6dlQ1mg3R90DEhegdhdMAF8Zu8bsPAJaFMcqOQ4gxGPcta', NULL, '2023-11-23 06:11:36', NULL, 1, 1),
-(10, NULL, NULL, 'xxxxzzzzz@yahoo.com', NULL, '$2y$10$dadhkGKGU9bjK67WWbYR1uENf9PxC6/iNRXxUECIlVlk.eT53Nzi2', NULL, '2023-11-23 06:12:12', NULL, 1, 1),
-(11, NULL, NULL, 'jjjjj@yahoo.com', NULL, '$2y$10$EWCL1p5sNPxFjf4ZAB2aFuwuXMomquKo5qv4Nm6mFyxA4SQ7jtYhy', NULL, '2023-11-23 06:16:42', NULL, 1, 1);
+INSERT INTO `users` (`ID_User`, `Name_User`, `Phone`, `Email`, `Address`, `password`, `verify`, `created_at`, `updated_at`, `salt`, `ID_UT`, `ID_UStatus`) VALUES
+(5, 'Nguyễn Văn Test', '0123456788', 'nguyenvantest@gmail.com', 'Tân Châu - An Giang', '$2y$10$TlP0noYlq4xDuwhLVanI0OgifnXEXeacmwmgumDU4vWHHUjvVRS0y', NULL, '2023-08-29 13:51:11', NULL, NULL, 2, 1),
+(6, 'Nguyễn Văn Huy', NULL, 'nguyenvantest2@gmail.com', NULL, '$2y$10$TlP0noYlq4xDuwhLVanI0OgifnXEXeacmwmgumDU4vWHHUjvVRS0y', NULL, '2023-08-29 14:31:27', NULL, NULL, 3, 1),
+(7, 'Lê Khách Hàng', NULL, 'khachhang@gmail.com', NULL, '$2y$10$DFSfHaLDmeIuokDVub1H9eTk.dvDRpnPZi5sVQ8vfE0VUJRWYQ2w2', NULL, '2023-11-13 04:19:50', NULL, NULL, 1, 1),
+(8, NULL, NULL, 'asdsad@yahoo.com', NULL, '$2y$10$hmnk62zvwvjsuWG9tWgL5OmlXsvouQ70uKBaljY7d8umnq6te1r2S', NULL, '2023-11-23 06:11:19', NULL, NULL, 1, 1),
+(9, NULL, NULL, 'nguyentantaitcag2000@yahoo.com', NULL, '$2y$10$LrShWws6dlQ1mg3R90DEhegdhdMAF8Zu8bsPAJaFMcqOQ4gxGPcta', NULL, '2023-11-23 06:11:36', NULL, NULL, 1, 1),
+(10, NULL, NULL, 'xxxxzzzzz@yahoo.com', NULL, '$2y$10$dadhkGKGU9bjK67WWbYR1uENf9PxC6/iNRXxUECIlVlk.eT53Nzi2', NULL, '2023-11-23 06:12:12', NULL, NULL, 1, 1),
+(11, NULL, NULL, 'jjjjj@yahoo.com', NULL, '$2y$10$EWCL1p5sNPxFjf4ZAB2aFuwuXMomquKo5qv4Nm6mFyxA4SQ7jtYhy', NULL, '2023-11-23 06:16:42', NULL, NULL, 1, 1);
 
 -- --------------------------------------------------------
 

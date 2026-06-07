@@ -23,7 +23,8 @@ export interface User {
     address: string;
     password?: string; // This property is marked as WRITE_ONLY
     verify: string;
-    regtime: string;
+    createdAt?: string;
+    updatedAt?: string;
     salt?: string; // This property is marked as WRITE_ONLY
     userStatus: UserStatus;
     userType: UserType;

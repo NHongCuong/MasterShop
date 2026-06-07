@@ -19,9 +19,10 @@ public class UserConverter {
 		en.setNameUser(dto.getNameUser());
 		en.setPassword(dto.getPassword());
 		en.setPhone(dto.getPhone());
-		en.setRegtime(dto.getRegtime());
 		en.setSalt(dto.getSalt());
 		en.setVerify(dto.getVerify());
+		en.setCreatedAt(dto.getCreatedAt());
+		en.setUpdatedAt(dto.getUpdatedAt());
 		return en;
 	}
 	public UserDTO toDTO(UserEntity en)
@@ -37,9 +38,10 @@ public class UserConverter {
 		dto.setNameUser(en.getNameUser());
 		dto.setPassword(en.getPassword());
 		dto.setPhone(en.getPhone());
-		dto.setRegtime(en.getRegtime());
 		dto.setSalt(en.getSalt());
 		dto.setVerify(en.getVerify());
+		dto.setCreatedAt(en.getCreatedAt());
+		dto.setUpdatedAt(en.getUpdatedAt());
 		return dto;
 	}
 }

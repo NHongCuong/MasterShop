@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.sportshop.entity.UserStatusEntity;
 import com.sportshop.entity.UserTypeEntity;
+import java.util.Date;
 
 public class UserDTO {
 	public Long id;
@@ -14,9 +15,10 @@ public class UserDTO {
 	@JsonProperty(access = Access.WRITE_ONLY)
 	public String password;
 	public String verify;
-	public String regtime;
 	@JsonProperty(access = Access.WRITE_ONLY)
 	public String salt;
+	public Date createdAt;
+	public Date updatedAt;
 	
 	public UserTypeEntity userType;
 	
@@ -66,17 +68,23 @@ public class UserDTO {
 	public void setVerify(String verify) {
 		this.verify = verify;
 	}
-	public String getRegtime() {
-		return regtime;
-	}
-	public void setRegtime(String regtime) {
-		this.regtime = regtime;
-	}
 	public String getSalt() {
 		return salt;
 	}
 	public void setSalt(String salt) {
 		this.salt = salt;
+	}
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
+	public Date getUpdatedAt() {
+		return updatedAt;
+	}
+	public void setUpdatedAt(Date updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 	public UserTypeEntity getUserType() {
 		return userType;

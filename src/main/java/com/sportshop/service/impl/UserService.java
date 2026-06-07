@@ -10,7 +10,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.sportshop.converter.UserConverter;
 import com.sportshop.dto.UserDTO;
@@ -20,6 +19,7 @@ import com.sportshop.entity.UserTypeEntity;
 import com.sportshop.repository.UserRepository;
 import com.sportshop.response.AuthResponse;
 import com.sportshop.service.IUserService;
+import com.sportshop.service.UserPasswordService;
 @Service
 public class UserService implements IUserService{
 
@@ -27,6 +27,8 @@ public class UserService implements IUserService{
 	UserRepository userRepo;
 	@Autowired
 	UserConverter userConverter;
+	@Autowired
+	UserPasswordService userPasswordService;
 	@Override
 	public List<UserDTO> getAll() {
 		List<UserEntity> list = userRepo.findAll();
@@ -71,7 +73,7 @@ public class UserService implements IUserService{
 			dataStyle.setBorderRight(BorderStyle.THIN);
 
 			Row headerRow = sheet.createRow(0);
-			String[] headers = {"STT", "Tên", "SĐT", "Email", "Địa chỉ", "Loại tài khoản", "Trạng thái", "Thời gian"};
+			String[] headers = {"STT", "Tên", "SĐT", "Email", "Địa chỉ", "Loại tài khoản", "Trạng thái", "Ngày tạo", "Ngày sửa"};
 			for (int i = 0; i < headers.length; i++) {
 				Cell cell = headerRow.createCell(i);
 				cell.setCellValue(headers[i]);
@@ -92,7 +94,8 @@ public class UserService implements IUserService{
 				Cell c6 = row.createCell(6);
 				c6.setCellValue(dto.getUserStatus() != null && dto.getUserStatus().getName() != null ? dto.getUserStatus().getName() : "");
 				c6.setCellStyle(dataStyle);
-				Cell c7 = row.createCell(7); c7.setCellValue(dto.getRegtime() != null ? dto.getRegtime() : ""); c7.setCellStyle(dataStyle);
+				Cell c7 = row.createCell(7); c7.setCellValue(dto.getCreatedAt() != null ? dto.getCreatedAt().toString() : ""); c7.setCellStyle(dataStyle);
+				Cell c8 = row.createCell(8); c8.setCellValue(dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : ""); c8.setCellStyle(dataStyle);
 				rowNum++;
 			}
 
@@ -119,10 +122,8 @@ public class UserService implements IUserService{
 		Optional<UserEntity> userData = userRepo.findByEmail(userDTO.getEmail());
 		if(userData.isPresent())
 		{
-			//Check password
-			BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
 			UserEntity entity = userData.get();
-			if(bcrypt.matches(userDTO.getPassword(), entity.getPassword() ))
+			if(userPasswordService.matches(userDTO.getPassword(), entity.getSalt(), entity.getPassword()))
 			{
 				return new AuthResponse(200, "Login is successful");
 			}
@@ -139,10 +140,11 @@ public class UserService implements IUserService{
 			return new AuthResponse(400, "This email is existed");
 		}
 		else {
-			BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
-			String hash = bcrypt.encode(userDTO.getPassword());
+			String salt = userPasswordService.generateSalt();
+			String hash = userPasswordService.encode(userDTO.getPassword(), salt);
 			UserEntity entity = userConverter.toEntity(userDTO);
 			entity.setPassword(hash);
+			entity.setSalt(salt);
 			entity.setUserStatus(new UserStatusEntity(1L));
 			entity.setUserType(new UserTypeEntity(1L));
 			userRepo.save(entity);

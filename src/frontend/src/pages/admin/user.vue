@@ -65,10 +65,9 @@ const loadMetaData = async () => {
   }
 }
 
-const formatDateTime = () => {
-  const now = new Date()
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+const formatDisplayDate = (value?: string | Date | null) => {
+  if (!value) return '—'
+  return new Date(value).toLocaleString('vi-VN')
 }
 
 const openAddDialog = () => {
@@ -80,8 +79,6 @@ const openAddDialog = () => {
     address: '',
     password: '',
     verify: '',
-    regtime: formatDateTime(),
-    salt: Math.random().toString(36).substring(2, 8),
     userType: null,
     userStatus: null
   }
@@ -92,9 +89,7 @@ const openAddDialog = () => {
 const openEditDialog = (user: any) => {
   selectedUser.value = {
     ...user,
-    password: '',
-    regtime: formatDateTime(),
-    salt: Math.random().toString(36).substring(2, 8)
+    password: ''
   }
   editMode.value = true
   visibleDialog.value = true
@@ -121,7 +116,7 @@ const saveUser = async () => {
       toast.add({ severity: 'warn', summary: 'Thiếu thông tin', detail: 'Vui lòng nhập email!', life: 2000 })
       return
     }
-    if (!selectedUser.value.password) {
+    if (!editMode.value && !selectedUser.value.password) {
       toast.add({ severity: 'warn', summary: 'Thiếu thông tin', detail: 'Vui lòng nhập password!', life: 2000 })
       return
     }
@@ -152,8 +147,6 @@ const saveUser = async () => {
       address: selectedUser.value.address,
       password: selectedUser.value.password,
       verify: selectedUser.value.verify,
-      regtime: selectedUser.value.regtime,
-      salt: selectedUser.value.salt,
       userType: selectedUser.value.userType ? { id: selectedUser.value.userType.id } : null,
       userStatus: selectedUser.value.userStatus ? { id: selectedUser.value.userStatus.id } : null
     }
@@ -281,16 +274,17 @@ onMounted(() => {
             <th>Địa chỉ</th>
             <th style="width:150px">Loại tài khoản</th>
             <th style="width:130px">Trạng thái</th>
-            <th style="width:170px">Thời gian</th>
+            <th style="width:170px">Ngày tạo</th>
+            <th style="width:170px">Ngày sửa</th>
             <th style="width:120px">Thao tác</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+            <td colspan="10" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
           </tr>
           <tr v-else-if="userList.length === 0">
-            <td colspan="9" class="text-center py-5">Không tìm thấy dữ liệu</td>
+            <td colspan="10" class="text-center py-5">Không tìm thấy dữ liệu</td>
           </tr>
           <tr v-for="(user, idx) in userList" :key="user.id" class="u-row">
             <td class="text-center">{{ currentPage * pageSize + idx + 1 }}</td>
@@ -300,7 +294,8 @@ onMounted(() => {
             <td>{{ user.address || '—' }}</td>
             <td>{{ user.userType?.name || '—' }}</td>
             <td>{{ user.userStatus?.name || '—' }}</td>
-            <td class="text-center">{{ user.regtime || '—' }}</td>
+            <td class="text-center">{{ formatDisplayDate(user.createdAt) }}</td>
+            <td class="text-center">{{ formatDisplayDate(user.updatedAt) }}</td>
             <td class="text-center">
               <div class="u-actions">
                 <button class="u-action-btn u-edit" @click="openEditDialog(user)"><i class="fas fa-edit"></i></button>
@@ -345,9 +340,12 @@ onMounted(() => {
         <InputText v-model="selectedUser.nameUser" placeholder="Tên user" class="u-input" />
         <InputText v-model="selectedUser.phone" placeholder="Số điện thoại" class="u-input" />
         <InputText v-model="selectedUser.email" placeholder="Email" type="email" class="u-input" />
-        <InputText v-model="selectedUser.salt" placeholder="Salt" class="u-input" />
-        <InputText v-model="selectedUser.password" placeholder="Mật khẩu" type="password" class="u-input" />
-        <InputText v-model="selectedUser.regtime" placeholder="Regtime (YYYY-MM-DD HH:mm:ss)" class="u-input" />
+        <InputText
+          v-model="selectedUser.password"
+          :placeholder="editMode ? 'Mật khẩu mới (để trống nếu không đổi)' : 'Mật khẩu'"
+          type="password"
+          class="u-input"
+        />
         <InputText v-model="selectedUser.address" placeholder="Địa chỉ" class="u-input" />
         <Dropdown
           v-model="selectedUser.userType"
@@ -393,11 +391,12 @@ onMounted(() => {
 .u-search-box { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; width: 320px; }
 .u-search-box input { border: none; outline: none; flex: 1; font-size: 14px; }
 
-.u-table-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-.u-table { width: 100%; border-collapse: collapse; background: white; }
+.u-table-wrapper { border-radius: 12px; overflow-x: auto; overflow-y: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.u-table { width: 100%; min-width: 1180px; border-collapse: collapse; background: white; }
 .u-table thead { background: #f1f5f9; }
 .u-table th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; text-transform: uppercase; }
 .u-table td { padding: 14px 16px; border-top: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; }
+.u-table th, .u-table td { white-space: nowrap; }
 .u-row:hover { background: #f8fafc; }
 .u-badge { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
 

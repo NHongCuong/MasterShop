@@ -81,14 +81,14 @@ onMounted(() => {
                 </div>
               </div>
 
-              <!-- Reg Time -->
+              <!-- Created date -->
               <div class="col-md-6">
                 <div class="p-3 bg-light rounded shadow-sm h-100">
                   <div class="d-flex align-items-center mb-2">
                     <i class="fas fa-calendar-alt text-secondary me-2"></i>
                     <span class="text-muted small fw-bold text-uppercase">Ngày đăng ký</span>
                   </div>
-                  <div class="fw-bold fs-5">{{ state.user?.regtime ? new Date(state.user.regtime).toLocaleDateString() : 'Chưa rõ' }}</div>
+                  <div class="fw-bold fs-5">{{ state.user?.createdAt ? new Date(state.user.createdAt).toLocaleDateString() : 'Chưa rõ' }}</div>
                 </div>
               </div>
             </div>

@@ -19,7 +19,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.sportshop.config.JwtTokenUtils;
 import com.sportshop.dto.UserDTO;
@@ -27,6 +26,7 @@ import com.sportshop.response.AuthResponse;
 import com.sportshop.response.PageResponse;
 import com.sportshop.security.MyUserDetails;
 import com.sportshop.service.IUserService;
+import com.sportshop.service.UserPasswordService;
 import com.sportshop.service.impl.MyUserDetailsService;
 
 //@RequestMapping("/user")
@@ -47,6 +47,8 @@ public class UserController {
     private UserStatusRepository userstatusRepo;
     @Autowired
     private UserConverter userConverter;
+    @Autowired
+    private UserPasswordService userPasswordService;
    // @Autowired
    //private PasswordEncoder passwordEncoder;
 	@Autowired
@@ -149,14 +151,15 @@ public class UserController {
                 return new ResponseEntity<>("Email đã tồn tại!" , HttpStatus.BAD_GATEWAY);
             }
             // ✅ Mã hóa mật khẩu bằng BCryptPasswordEncoder (tạo trực tiếp)
-            BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
-            String hash = bcrypt.encode(userDTO.getPassword());
+            String salt = userPasswordService.generateSalt();
+            String hash = userPasswordService.encode(userDTO.getPassword(), salt);
 
             // ✅ Chuyển DTO sang Entity
             UserEntity entity = userConverter.toEntity(userDTO);
 
             // ✅ Gán mật khẩu đã mã hóa
             entity.setPassword(hash);
+            entity.setSalt(salt);
 
             // ✅ Lưu vào DB
             UserEntity savedUser = userRepository.save(entity);
@@ -184,22 +187,22 @@ public class UserController {
                 }
             }
             // ✅ Mã hóa mật khẩu bằng BCryptPasswordEncoder (tạo trực tiếp)
-            BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
-            String hash = bcrypt.encode(user.getPassword());
+            if (user.getPassword() != null && !user.getPassword().isBlank()) {
+                String salt = userPasswordService.generateSalt();
+                String hash = userPasswordService.encode(user.getPassword(), salt);
+                existing.setPassword(hash);
+                existing.setSalt(salt);
+            }
 
             // ✅ Chuyển DTO sang Entity
             //UserEntity entity = userConverter.toEntity(userDTO);
 
             // ✅ Gán mật khẩu đã mã hóa
-            existing.setPassword(hash);
-
             existing.setNameUser(user.getNameUser());
             existing.setPhone(user.getPhone());
             //existing.setPassword(user.getPassword());
             existing.setEmail(user.getEmail());
             existing.setAddress(user.getAddress());
-            existing.setRegtime(user.getRegtime());
-            existing.setSalt(user.getSalt());
             existing.setVerify(user.getVerify());
 
             if (user.getUserType() != null && user.getUserType().getId() != null) {
@@ -235,7 +238,10 @@ public class UserController {
 	public ResponseEntity<AuthResponse> login(@RequestBody UserDTO userDTO) throws Exception
 	{
         try {
-            _authenticate(userDTO.getEmail(), userDTO.getPassword());
+            AuthResponse authResult = userService.login(userDTO);
+            if (authResult.status != 200) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(authResult);
+            }
             final MyUserDetails userDetails = userDetailsService.loadUserByUsername(userDTO.getEmail());
             String token = jwtTokenUtils.generateToken(userDetails);
             UserDTO userInfo = userService.loadUserByEmail(userDTO.getEmail());
