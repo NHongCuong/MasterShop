@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { Product } from '../../interfaces/app';
 import Helper from '../../helper/helper';
 
 const route = useRoute();
+const router = useRouter();
 const products = ref<Product[]>([]);
 const loading = ref(false);
 
@@ -16,6 +17,7 @@ const sizes = ref<any[]>([]);
 
 // Selected Filters
 const selectedCategory = ref<string | null>(null);
+const searchKeyword = ref('');
 const minPrice = ref<number | null>(null);
 const maxPrice = ref<number | null>(null);
 const selectedColors = ref<number[]>([]);
@@ -49,6 +51,14 @@ const loadData = async () => {
 
 const filteredProducts = computed((): Product[] => {
     let result = [...products.value] as Product[];
+
+    if (searchKeyword.value) {
+        const kw = searchKeyword.value.toLowerCase();
+        result = result.filter(p =>
+            (p.name?.toLowerCase().includes(kw)) ||
+            (p.category?.name?.toLowerCase().includes(kw))
+        );
+    }
 
     if (selectedCategory.value) {
         result = result.filter(p => p.category?.name === selectedCategory.value);
@@ -97,10 +107,16 @@ const clearFilters = () => {
     selectedMaterials.value = [];
     selectedSizes.value = [];
     selectedCategory.value = null;
+    searchKeyword.value = '';
+    router.push('/products');
 };
 
 watch(() => route.query.category, (newCat) => {
     selectedCategory.value = newCat as string || null;
+}, { immediate: true });
+
+watch(() => route.query.search, (newSearch) => {
+    searchKeyword.value = typeof newSearch === 'string' ? newSearch.trim() : '';
 }, { immediate: true });
 
 const addToWishlist = (p: Product) => {
@@ -194,7 +210,8 @@ onMounted(() => {
                     <!-- Sorting Header -->
                     <div class="d-flex align-items-center justify-content-between mb-4 bg-white p-3 rounded shadow-sm border">
                         <div class="fw-bold">
-                            <span v-if="selectedCategory">Danh mục: <span class="text-primary">{{ selectedCategory }}</span></span>
+                            <span v-if="searchKeyword">Kết quả tìm kiếm: <span class="text-primary">"{{ searchKeyword }}"</span></span>
+                            <span v-else-if="selectedCategory">Danh mục: <span class="text-primary">{{ selectedCategory }}</span></span>
                             <span v-else>Tất cả sản phẩm</span>
                             <small class="text-muted ms-2">({{ filteredProducts.length }} sản phẩm)</small>
                         </div>

@@ -1,12 +1,71 @@
 <script setup lang="ts">
 import axios from 'axios';
-import {onMounted, ref} from 'vue';
-import {Category} from '../interfaces/app';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import {Category, Product} from '../interfaces/app';
 import {MyApp, state} from '../app/MyApp';
 import ContactWidget from '../components/ContactWidget.vue';
 import BackToTop from '../components/BackToTop.vue';
+import Helper from '../helper/helper';
 
+const route = useRoute();
+const router = useRouter();
 const categories = ref<Category[]>([]);
+const products = ref<Product[]>([]);
+const searchKeyword = ref('');
+const showSearchSuggestions = ref(false);
+let searchBlurTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const searchSuggestions = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+  if (!keyword) return [];
+
+  return products.value
+    .filter((product) =>
+      product.name?.toLowerCase().includes(keyword) ||
+      product.category?.name?.toLowerCase().includes(keyword)
+    )
+    .slice(0, 5);
+});
+
+const hasSearchSuggestions = computed(() => showSearchSuggestions.value && searchSuggestions.value.length > 0);
+
+watch(
+  () => route.query.search,
+  (val) => {
+    searchKeyword.value = typeof val === 'string' ? val : '';
+  },
+  { immediate: true }
+);
+
+const onSearch = () => {
+  const keyword = searchKeyword.value.trim();
+  showSearchSuggestions.value = false;
+  if (!keyword) {
+    router.push('/products');
+    return;
+  }
+  router.push({ path: '/products', query: { search: keyword } });
+};
+
+const onSearchFocus = () => {
+  if (searchBlurTimeout) {
+    clearTimeout(searchBlurTimeout);
+  }
+  showSearchSuggestions.value = true;
+};
+
+const onSearchBlur = () => {
+  searchBlurTimeout = setTimeout(() => {
+    showSearchSuggestions.value = false;
+  }, 150);
+};
+
+const goToProduct = (product: Product) => {
+  searchKeyword.value = product.name;
+  showSearchSuggestions.value = false;
+  router.push('/product/' + product.id);
+};
 
 const loadCategories = async () => {
   try {
@@ -14,6 +73,15 @@ const loadCategories = async () => {
     categories.value = res.data;
   } catch (err) {
     console.error("Lỗi tải danh mục:", err);
+  }
+}
+
+const loadProducts = async () => {
+  try {
+    const res = await axios.get("http://localhost:8081/product/all");
+    products.value = res.data;
+  } catch (err) {
+    console.error("Error loading products:", err);
   }
 }
 
@@ -26,6 +94,7 @@ onMounted(() => {
     MyApp.getInstance().updateCartCount();
   });
   loadCategories();
+  loadProducts();
 });
 </script>
 
@@ -44,11 +113,37 @@ onMounted(() => {
         </router-link>
 
         <!-- Search Bar -->
-        <div class="d-flex flex-grow-1 mx-5" style="max-width: 500px;">
+        <div class="search-area d-flex flex-grow-1 mx-5">
           <div class="input-group">
-            <input type="text" class="form-control border-0" placeholder="Tìm kiếm thương hiệu, sản phẩm..." style="height: 38px;">
-            <button class="btn border-0 px-3" type="button" style="background-color: #f1c40f; color: white;">
+            <input
+              v-model="searchKeyword"
+              type="text"
+              class="form-control border-0"
+              placeholder="Tìm kiếm thương hiệu, sản phẩm..."
+              style="height: 38px;"
+              autocomplete="off"
+              @focus="onSearchFocus"
+              @input="showSearchSuggestions = true"
+              @blur="onSearchBlur"
+              @keyup.enter="onSearch"
+            >
+            <button class="btn border-0 px-3" type="button" style="background-color: #f1c40f; color: white;" @click="onSearch">
               <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <div v-if="hasSearchSuggestions" class="search-suggestions shadow-sm">
+            <button
+              v-for="product in searchSuggestions"
+              :key="product.id"
+              type="button"
+              class="search-suggestion-item"
+              @mousedown.prevent="goToProduct(product)"
+            >
+              <span class="suggestion-image">
+                <img v-if="product.avatar" :src="Helper.GetImageUrl(product.avatar)" :alt="product.name">
+                <i v-else class="fas fa-search"></i>
+              </span>
+              <span class="suggestion-name">{{ product.name }}</span>
             </button>
           </div>
         </div>
@@ -139,6 +234,75 @@ onMounted(() => {
   line-height: 1.1;
 }
 
+.search-area {
+  max-width: 500px;
+  position: relative;
+  z-index: 1040;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-top: 0;
+  max-height: 325px;
+}
+
+.search-suggestion-item {
+  width: 100%;
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 0;
+  border-bottom: 1px solid #eeeeee;
+  background: #fff;
+  padding: 10px 18px 10px 28px;
+  text-align: left;
+  color: #111;
+  transition: background-color 0.2s ease;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: 0;
+}
+
+.search-suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+
+.suggestion-image {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c7c7c7;
+  font-size: 1rem;
+}
+
+.suggestion-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.suggestion-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #111;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .nav-link {
   transition: color 0.3s ease;
 }
@@ -181,5 +345,12 @@ onMounted(() => {
 
 .category-dropdown:hover .dropdown-toggle::after {
     transform: rotate(180deg);
+}
+
+@media (max-width: 991.98px) {
+  .search-area {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+  }
 }
 </style>
