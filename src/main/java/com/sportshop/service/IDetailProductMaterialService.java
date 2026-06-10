@@ -13,4 +13,5 @@ public interface IDetailProductMaterialService {
     void delete(Long idMaterial, Long idProduct);
     void save(DetailProductMaterialDTO dto);
     void update(Long oldIdMaterial, Long oldIdProduct, DetailProductMaterialDTO dto);
+    void importExcel(org.springframework.web.multipart.MultipartFile file) throws Exception;
 }

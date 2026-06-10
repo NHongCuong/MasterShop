@@ -16,4 +16,5 @@ public interface MaterialRepository extends JpaRepository<MaterialEntity, Long> 
     Page<MaterialEntity> findWithSearch(@Param("search") String search, Pageable pageable);
 
     boolean existsByNameMaterial(String nameMaterial);
+    java.util.Optional<MaterialEntity> findFirstByNameMaterial(String nameMaterial);
 }

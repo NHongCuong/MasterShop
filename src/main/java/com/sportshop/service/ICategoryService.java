@@ -13,4 +13,5 @@ public interface ICategoryService {
 	void update(Long id, CategoryDTO dto);
 	void delete(Long id);
 	byte[] exportToExcel() throws Exception;
+	void importExcel(org.springframework.web.multipart.MultipartFile file) throws Exception;
 }

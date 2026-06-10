@@ -113,13 +113,16 @@ const loadCategories = async () => {
 }
 
 const openAddDialog = () => {
+  resetImageState()
   selectedCategory.value = { id: null, name: '', icon: '' }
   editMode.value = false
   visibleDialog.value = true
 }
 
 const openEditDialog = (category: any) => {
+  resetImageState()
   selectedCategory.value = { ...category }
+  existingIconUrl.value = category.icon || ''
   editMode.value = true
   visibleDialog.value = true
 }
@@ -196,6 +199,35 @@ const exportExcel = async () => {
   }
 }
 
+// Import Excel
+const importFileInput = ref<HTMLInputElement | null>(null)
+const triggerImportInput = () => {
+  importFileInput.value?.click()
+}
+const handleImportExcel = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length) return
+  const file = input.files[0]
+  
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  loading.value = true
+  try {
+    await axios.post(`${CATEGORY_API}/import-excel`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập Excel thành công', life: 2000 })
+    loadCategories()
+  } catch (err: any) {
+    const msg = err.response?.data || 'Không thể nhập Excel'
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 2500 })
+  } finally {
+    loading.value = false
+    input.value = ''
+  }
+}
+
 const formatDate = (date: string | null) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('vi-VN', {
@@ -247,6 +279,10 @@ onMounted(() => loadCategories())
       <div class="cat-header-actions">
         <button class="cat-btn cat-btn-add" @click="openAddDialog">
           <i class="fas fa-plus"></i> Thêm danh mục
+        </button>
+        <input type="file" ref="importFileInput" hidden accept=".xlsx, .xls" @change="handleImportExcel">
+        <button class="cat-btn cat-btn-import" @click="triggerImportInput">
+          <i class="fas fa-file-import"></i> Nhập Excel
         </button>
         <button class="cat-btn cat-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Xuất Excel
@@ -421,6 +457,7 @@ onMounted(() => loadCategories())
 
 .cat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .cat-btn-add { background: #f59e0b; color: white; }
+.cat-btn-import { background: #6366f1; color: white; margin-left: 10px; }
 .cat-btn-export { background: #10b981; color: white; margin-left: 10px; }
 .cat-header-actions { display: flex; }
 

@@ -11,4 +11,5 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Page<ProductEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    java.util.Optional<ProductEntity> findFirstByName(String name);
 }

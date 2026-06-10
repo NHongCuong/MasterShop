@@ -16,6 +16,8 @@ import com.sportshop.dto.CategoryDTO;
 import com.sportshop.entity.CategoryEntity;
 import com.sportshop.repository.CategoryRepository;
 import com.sportshop.service.ICategoryService;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CategoryService implements ICategoryService {
@@ -48,8 +50,11 @@ public class CategoryService implements ICategoryService {
 
 	@Override
 	public void save(CategoryDTO dto) {
-		if (categoryRepo.existsByName(dto.getName())) {
-			throw new RuntimeException("Tên danh mục đã tồn tại");
+		List<CategoryEntity> existing = categoryRepo.findByName(dto.getName());
+		for (CategoryEntity e : existing) {
+			if (e.getName().equals(dto.getName())) {
+				throw new RuntimeException("Tên danh mục đã tồn tại");
+			}
 		}
 		CategoryEntity entity = categoryConverter.toEntity(dto);
 		categoryRepo.save(entity);
@@ -60,8 +65,11 @@ public class CategoryService implements ICategoryService {
 		CategoryEntity oldEntity = categoryRepo.findById(id).orElse(null);
 		if (oldEntity != null) {
 			if (!oldEntity.getName().equals(dto.getName())) {
-				if (categoryRepo.existsByName(dto.getName())) {
-					throw new RuntimeException("Tên danh mục đã tồn tại");
+				List<CategoryEntity> existing = categoryRepo.findByName(dto.getName());
+				for (CategoryEntity e : existing) {
+					if (e.getName().equals(dto.getName())) {
+						throw new RuntimeException("Tên danh mục đã tồn tại");
+					}
 				}
 			}
 			oldEntity.setName(dto.getName());
@@ -128,6 +136,48 @@ public class CategoryService implements ICategoryService {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			workbook.write(out);
 			return out.toByteArray();
+		}
+	}
+
+	@Override
+	@Transactional
+	public void importExcel(MultipartFile file) throws Exception {
+		try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+			Sheet sheet = workbook.getSheetAt(0);
+			for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+				Row row = sheet.getRow(i);
+				if (row == null) continue;
+
+				String name = getCellValueAsString(row.getCell(0)); // Column A: Tên danh mục
+				String icon = getCellValueAsString(row.getCell(1)); // Column B: Ảnh
+				if (name.isEmpty()) continue;
+
+				// Kiểm tra tồn tại chính xác (case-sensitive và accent-sensitive)
+				List<CategoryEntity> existing = categoryRepo.findByName(name);
+				boolean exists = false;
+				for (CategoryEntity e : existing) {
+					if (e.getName().equals(name)) {
+						exists = true;
+						break;
+					}
+				}
+
+				if (!exists) {
+					CategoryEntity entity = new CategoryEntity();
+					entity.setName(name);
+					entity.setIcon(icon);
+					categoryRepo.save(entity);
+				}
+			}
+		}
+	}
+
+	private String getCellValueAsString(Cell cell) {
+		if (cell == null) return "";
+		switch (cell.getCellType()) {
+			case STRING: return cell.getStringCellValue().trim();
+			case NUMERIC: return String.valueOf((long) cell.getNumericCellValue());
+			default: return "";
 		}
 	}
 }

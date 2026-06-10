@@ -231,6 +231,10 @@ onMounted(() => loadData());
                         <label>Người nhận khác</label>
                         <span>{{ selectedBill.orderbill?.receiverName || '—' }}</span>
                     </div>
+                    <div class="vc-info-item">
+                        <label>SĐT Người nhận</label>
+                        <span>{{ selectedBill.orderbill?.receiverPhone || '—' }}</span>
+                    </div>
                 </div>
 
                 <div class="vc-items-section">

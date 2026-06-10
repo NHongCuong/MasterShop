@@ -7,6 +7,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
+import Helper from '../../helper/helper';
 
 const API = 'http://localhost:8081/supplier';
 const toast = useToast();
@@ -111,6 +112,31 @@ const exportExcel = () => {
     window.location.href = `${API}/export-excel`;
 };
 
+const fileInput = ref<HTMLInputElement | null>(null);
+const importExcel = () => {
+    fileInput.value?.click();
+};
+
+const handleImport = async (event: any) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        await axios.post(`${API}/import-excel`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập dữ liệu Excel thành công', life: 2000 });
+        loadData();
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể nhập dữ liệu', life: 3000 });
+    } finally {
+        event.target.value = '';
+    }
+};
+
 const pages = computed(() => {
     const arr: number[] = [];
     for (let i = 0; i < totalPages.value; i++) arr.push(i);
@@ -146,6 +172,10 @@ onMounted(() => loadData());
             <div class="vc-header-actions">
                 <button class="vc-btn-add" @click="openAdd">
                     <i class="fas fa-plus me-2"></i>Thêm nhà cung cấp
+                </button>
+                <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls" @change="handleImport">
+                <button class="vc-btn-import" @click="importExcel">
+                    <i class="fas fa-file-import me-2"></i>Nhập Excel
                 </button>
                 <button class="vc-btn-export" @click="exportExcel">
                     <i class="fas fa-file-excel me-2"></i>Xuất Excel
@@ -189,6 +219,8 @@ onMounted(() => loadData());
                         <th>Email</th>
                         <th>Địa chỉ</th>
                         <th>Website</th>
+                        <th>Ngày tạo</th>
+                        <th>Ngày sửa</th>
                         <th style="width:120px">Thao tác</th>
                     </tr>
                 </thead>
@@ -202,6 +234,8 @@ onMounted(() => loadData());
                         <td>{{ item.email || '—' }}</td>
                         <td class="text-slate-500 italic">{{ item.address || '—' }}</td>
                         <td><a v-if="item.website" :href="item.website" target="_blank">{{ item.website }}</a><span v-else>—</span></td>
+                        <td>{{ item.createdAt ? Helper.DateFormat(item.createdAt) : '—' }}</td>
+                        <td>{{ item.updatedAt ? Helper.DateFormat(item.updatedAt) : '—' }}</td>
                         <td class="text-center">
                             <div class="vc-actions">
                                 <button class="vc-action-btn vc-edit" @click="openEdit(item)" title="Sửa">
@@ -214,7 +248,7 @@ onMounted(() => loadData());
                         </td>
                     </tr>
                     <tr v-if="list.length === 0 && !loading">
-                        <td colspan="7" class="text-center py-5 text-slate-400 italic">Không tìm thấy nhà cung cấp nào</td>
+                        <td colspan="9" class="text-center py-5 text-slate-400 italic">Không tìm thấy nhà cung cấp nào</td>
                     </tr>
                 </tbody>
             </table>
@@ -281,6 +315,9 @@ onMounted(() => loadData());
 
 .vc-btn-export { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .vc-btn-export:hover { background: #15803d; transform: translateY(-1px); }
+
+.vc-btn-import { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.vc-btn-import:hover { background: #d97706; transform: translateY(-1px); }
 
 .vc-toolbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
 .vc-toolbar-left, .vc-toolbar-right { display: flex; gap: 20px; align-items: center; }

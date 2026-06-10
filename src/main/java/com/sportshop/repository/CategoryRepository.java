@@ -16,4 +16,5 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
 	Page<CategoryEntity> findWithSearch(@Param("search") String search, Pageable pageable);
 
 	boolean existsByName(String name);
+	java.util.List<CategoryEntity> findByName(String name);
 }

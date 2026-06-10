@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @CrossOrigin
 @RestController
@@ -97,6 +98,17 @@ public class CategoryController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body("Lỗi khi xóa danh mục: " + e.getMessage());
+		}
+	}
+
+	@PostMapping("/import-excel")
+	public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
+		try {
+			categoryService.importExcel(file);
+			return ResponseEntity.ok("Nhập dữ liệu Excel thành công");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Lỗi khi nhập Excel: " + e.getMessage());
 		}
 	}
 

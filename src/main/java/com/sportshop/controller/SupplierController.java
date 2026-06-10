@@ -17,6 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 @CrossOrigin
 @RestController
@@ -52,6 +55,60 @@ public class SupplierController {
             return ResponseEntity.ok("Thêm nhà cung cấp thành công");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/import-excel")
+    public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) return ResponseEntity.badRequest().body("Vui lòng chọn file Excel");
+        
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+            
+            // Skip header if exists
+            if (rows.hasNext()) rows.next();
+            
+            List<SupplierEntity> newSuppliers = new ArrayList<>();
+            Long maxId = supplierRepo.findAll().stream().mapToLong(s -> s.getId()).max().orElse(0L);
+            
+            while (rows.hasNext()) {
+                Row currentRow = rows.next();
+                String name = getCellValueAsString(currentRow.getCell(1)); // Column 1: Tên
+                if (name == null || name.trim().isEmpty()) continue;
+                
+                SupplierEntity s = new SupplierEntity();
+                s.setId(++maxId);
+                s.setName(name);
+                s.setAddress(getCellValueAsString(currentRow.getCell(2)));
+                s.setPhone(getCellValueAsString(currentRow.getCell(3)));
+                s.setEmail(getCellValueAsString(currentRow.getCell(4)));
+                s.setWebsite(getCellValueAsString(currentRow.getCell(5)));
+                
+                newSuppliers.add(s);
+            }
+            
+            if (!newSuppliers.isEmpty()) {
+                supplierRepo.saveAll(newSuppliers);
+            }
+            
+            return ResponseEntity.ok("Đã nhập thành công " + newSuppliers.size() + " nhà cung cấp");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Lỗi khi xử lý file Excel: " + e.getMessage());
+        }
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        switch (cell.getCellType()) {
+            case STRING: return cell.getStringCellValue();
+            case NUMERIC: 
+                if (DateUtil.isCellDateFormatted(cell)) return cell.getDateCellValue().toString();
+                return String.valueOf((long)cell.getNumericCellValue());
+            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA: return cell.getCellFormula();
+            default: return "";
         }
     }
 
@@ -100,7 +157,7 @@ public class SupplierController {
         headerStyle.setBorderBottom(BorderStyle.THIN);
 
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"ID", "Tên nhà cung cấp", "Địa chỉ", "Số điện thoại", "Email", "Website"};
+        String[] headers = {"ID", "Tên nhà cung cấp", "Địa chỉ", "Số điện thoại", "Email", "Website", "Ngày tạo", "Ngày sửa"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -122,6 +179,8 @@ public class SupplierController {
             Cell c3 = row.createCell(3); c3.setCellValue(s.getPhone()); c3.setCellStyle(borderStyle);
             Cell c4 = row.createCell(4); c4.setCellValue(s.getEmail()); c4.setCellStyle(borderStyle);
             Cell c5 = row.createCell(5); c5.setCellValue(s.getWebsite()); c5.setCellStyle(borderStyle);
+            Cell c6 = row.createCell(6); c6.setCellValue(s.getCreatedAt() != null ? s.getCreatedAt().toString() : ""); c6.setCellStyle(borderStyle);
+            Cell c7 = row.createCell(7); c7.setCellValue(s.getUpdatedAt() != null ? s.getUpdatedAt().toString() : ""); c7.setCellStyle(borderStyle);
         }
 
         for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);

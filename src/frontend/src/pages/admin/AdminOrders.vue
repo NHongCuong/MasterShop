@@ -37,6 +37,38 @@ const currentPage = ref(0);
 const sortOption = ref('newest');
 const pageSizeOptions = [10, 20, 50, 100];
 
+const toNumber = (value: any) => Number(value) || 0;
+
+const getDiscountedProductPrice = (product: any) => {
+    const price = toNumber(product?.price);
+    const discountPercent = toNumber(product?.discountPercent);
+    if (discountPercent <= 0) return price;
+    return Math.round(price * (1 - discountPercent / 100));
+};
+
+const handleProductChange = (item: any) => {
+    item.price = getDiscountedProductPrice(item.product);
+};
+
+const billDisplay = computed(() => {
+    if (!currentBill.value) return null;
+    if (!isEditing.value) return currentBill.value;
+
+    const totalMoney = orderItems.value.reduce((sum, item) => {
+        return sum + (toNumber(item.product?.price) * toNumber(item.amount));
+    }, 0);
+    const totalMoneyaftersaleoff = orderItems.value.reduce((sum, item) => {
+        return sum + (toNumber(item.price) * toNumber(item.amount));
+    }, 0);
+
+    return {
+        ...currentBill.value,
+        totalMoney,
+        discount: Math.max(totalMoney - totalMoneyaftersaleoff, 0),
+        totalMoneyaftersaleoff
+    };
+});
+
 const loadMasterData = async () => {
     try {
         const [p, c, m, d] = await Promise.all([
@@ -117,8 +149,8 @@ const saveOrder = async () => {
         for(const item of orderItems.value) {
             await axios.post(`${API}/update-item/${item.id}`, {
                 product: item.product,
-                amount: item.amount,
-                price: item.price,
+                amount: toNumber(item.amount),
+                price: toNumber(item.price),
                 color: item.color,
                 material: item.material,
                 dimensions: item.dimensions
@@ -312,27 +344,27 @@ onMounted(() => {
                 <div class="vc-detail-info-card">
                     <div class="vc-info-grid">
                         <div class="vc-info-item">
-                            <label>Khách hàng:</label>
+                            <label>Khách hàng:&nbsp;</label>
                             <InputText v-if="isEditing" v-model="editOrder.customerName" class="vc-itx" />
                             <span v-else>{{ selectedOrder.customerName }}</span>
                         </div>
                         <div class="vc-info-item">
-                            <label>Số điện thoại:</label>
+                            <label>Số điện thoại:&nbsp;</label>
                             <InputText v-if="isEditing" v-model="editOrder.phone" class="vc-itx" />
                             <span v-else>{{ selectedOrder.phone }}</span>
                         </div>
                         <div class="vc-info-item">
-                            <label>Địa chỉ:</label>
+                            <label>Địa chỉ: &nbsp;</label>
                             <InputText v-if="isEditing" v-model="editOrder.addressO" class="vc-itx" />
                             <span v-else>{{ selectedOrder.addressO }}</span>
                         </div>
                         <div class="vc-info-item">
-                            <label>Người nhận khác:</label>
+                            <label>Người nhận khác:&nbsp;</label>
                             <InputText v-if="isEditing" v-model="editOrder.receiverName" class="vc-itx" />
                             <span v-else>{{ selectedOrder.receiverName || '—' }}</span>
                         </div>
                         <div class="vc-info-item">
-                            <label>SĐT người nhận:</label>
+                            <label>SĐT người nhận:&nbsp;</label>
                             <InputText v-if="isEditing" v-model="editOrder.receiverPhone" class="vc-itx" />
                             <span v-else>{{ selectedOrder.receiverPhone || '—' }}</span>
                         </div>
@@ -355,7 +387,7 @@ onMounted(() => {
                                     <div class="vc-it-flex">
                                         <div>
                                             <div class="vc-it-name" v-if="!isEditing">{{ it.product?.name }}</div>
-                                            <select v-else v-model="it.product" class="vc-it-sel-prod" @change="it.price = it.product.price">
+                                            <select v-else v-model="it.product" class="vc-it-sel-prod" @change="handleProductChange(it)">
                                                 <option v-for="p in masterProducts" :key="p.id" :value="p">{{ p.name }}</option>
                                             </select>
                                             
@@ -386,29 +418,29 @@ onMounted(() => {
                                 </td>
                                 <td class="text-center">
                                     <span v-if="!isEditing" class="vc-it-qty">{{ it.amount }}</span>
-                                    <input v-else type="number" v-model="it.amount" class="vc-it-input qty-input" />
+                                    <input v-else type="number" v-model.number="it.amount" class="vc-it-input qty-input" />
                                 </td>
                                 <td class="text-right">
                                     <span v-if="!isEditing" class="vc-it-price">{{ Helper.ToMoney(it.price) }}</span>
-                                    <input v-else type="number" v-model="it.price" class="vc-it-input price-input" />
+                                    <input v-else type="number" v-model.number="it.price" class="vc-it-input price-input" />
                                 </td>
                                 <td class="text-right font-bold text-blue-600">
                                     {{ Helper.ToMoney(it.amount * it.price) }}
                                 </td>
                             </tr>
                         </tbody>
-                        <tfoot v-if="currentBill">
+                        <tfoot v-if="billDisplay">
                             <tr class="bg-gray-50">
                                 <td colspan="3" class="text-right font-semibold py-2">Tổng tiền hàng:</td>
-                                <td class="text-right font-bold py-2">{{ Helper.ToMoney(currentBill.totalMoney) }}</td>
+                                <td class="text-right font-bold py-2">{{ Helper.ToMoney(billDisplay.totalMoney) }}</td>
                             </tr>
                             <tr class="bg-gray-50">
                                 <td colspan="3" class="text-right font-semibold py-2 text-green-600">Giảm giá:</td>
-                                <td class="text-right font-bold py-2 text-green-600">-{{ Helper.ToMoney(currentBill.discount || 0) }}</td>
+                                <td class="text-right font-bold py-2 text-green-600">-{{ Helper.ToMoney(billDisplay.discount || 0) }}</td>
                             </tr>
                             <tr class="bg-blue-50">
                                 <td colspan="3" class="text-right font-bold py-3 text-lg text-blue-700">Tổng thanh toán:</td>
-                                <td class="text-right font-bold py-3 text-lg text-blue-700">{{ Helper.ToMoney(currentBill.totalMoneyaftersaleoff) }}</td>
+                                <td class="text-right font-bold py-3 text-lg text-blue-700">{{ Helper.ToMoney(billDisplay.totalMoneyaftersaleoff) }}</td>
                             </tr>
                         </tfoot>
                     </table>

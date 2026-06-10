@@ -100,6 +100,41 @@ public class OrderController {
         return smRepo.findAll();
     }
 
+    private long getDiscountedProductPrice(ProductEntity product) {
+        if (product == null || product.getPrice() == null) return 0L;
+        long basePrice = product.getPrice();
+        Integer discountPercent = product.getDiscountPercent();
+        if (discountPercent != null && discountPercent > 0) {
+            return Math.round(basePrice * (1 - discountPercent / 100.0));
+        }
+        return basePrice;
+    }
+
+    private void recalculateBillForOrder(Long orderId) {
+        List<OderDetailEntity> allItems = orderDetailRepo.findByOrderId(orderId);
+        long totalMoney = 0;
+        long totalMoneyAfterSaleOff = 0;
+
+        for (OderDetailEntity od : allItems) {
+            long amount = od.getAmount() != null ? od.getAmount() : 0L;
+            ProductEntity product = od.getProduct();
+            long basePrice = product != null && product.getPrice() != null ? product.getPrice() : 0L;
+            long discountedPrice = od.getPrice() != null ? od.getPrice() : getDiscountedProductPrice(product);
+
+            totalMoney += basePrice * amount;
+            totalMoneyAfterSaleOff += discountedPrice * amount;
+        }
+
+        List<BillEntity> bills = billRepo.findByOrderbill_Id(orderId);
+        if (!bills.isEmpty()) {
+            BillEntity bill = bills.get(0);
+            bill.setTotalMoney(totalMoney);
+            bill.setDiscount(Math.max(totalMoney - totalMoneyAfterSaleOff, 0L));
+            bill.setTotalMoneyaftersaleoff(totalMoneyAfterSaleOff);
+            billRepo.save(bill);
+        }
+    }
+
     @PostMapping("/create")
     @Transactional
     @SuppressWarnings("unchecked")
@@ -305,26 +340,49 @@ public class OrderController {
             OderDetailEntity item = orderDetailRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết sản phẩm"));
             
             if (payload.containsKey("amount")) item.setAmount(Long.valueOf(payload.get("amount").toString()));
-            if (payload.containsKey("price")) item.setPrice(Long.valueOf(payload.get("price").toString()));
-            
+
+            boolean productChanged = false;
             if (payload.get("product") != null) {
                 Map<String, Object> prodMap = (Map<String, Object>) payload.get("product");
-                productRepo.findById(Long.valueOf(prodMap.get("id").toString())).ifPresent(item::setProduct);
+                Long productId = Long.valueOf(prodMap.get("id").toString());
+                ProductEntity product = productRepo.findById(productId)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+                productChanged = item.getProduct() == null || !productId.equals(item.getProduct().getId());
+                item.setProduct(product);
+                if (productChanged) {
+                    item.setPrice(getDiscountedProductPrice(product));
+                }
             }
 
-            if (payload.get("color") != null) {
-                Map<String, Object> colorMap = (Map<String, Object>) payload.get("color");
-                colorRepo.findById(Long.valueOf(colorMap.get("id").toString())).ifPresent(item::setColor);
+            if (!productChanged && payload.containsKey("price")) {
+                item.setPrice(Long.valueOf(payload.get("price").toString()));
+            }
+
+            if (payload.containsKey("color")) {
+                if (payload.get("color") == null) {
+                    item.setColor(null);
+                } else {
+                    Map<String, Object> colorMap = (Map<String, Object>) payload.get("color");
+                    colorRepo.findById(Long.valueOf(colorMap.get("id").toString())).ifPresent(item::setColor);
+                }
             }
             
-            if (payload.get("material") != null) {
-                Map<String, Object> matMap = (Map<String, Object>) payload.get("material");
-                materialRepo.findById(Long.valueOf(matMap.get("id").toString())).ifPresent(item::setMaterial);
+            if (payload.containsKey("material")) {
+                if (payload.get("material") == null) {
+                    item.setMaterial(null);
+                } else {
+                    Map<String, Object> matMap = (Map<String, Object>) payload.get("material");
+                    materialRepo.findById(Long.valueOf(matMap.get("id").toString())).ifPresent(item::setMaterial);
+                }
             }
             
-            if (payload.get("dimensions") != null) {
-                Map<String, Object> dimMap = (Map<String, Object>) payload.get("dimensions");
-                dimensionsRepo.findById(Long.valueOf(dimMap.get("id").toString())).ifPresent(item::setDimensions);
+            if (payload.containsKey("dimensions")) {
+                if (payload.get("dimensions") == null) {
+                    item.setDimensions(null);
+                } else {
+                    Map<String, Object> dimMap = (Map<String, Object>) payload.get("dimensions");
+                    dimensionsRepo.findById(Long.valueOf(dimMap.get("id").toString())).ifPresent(item::setDimensions);
+                }
             }
 
             orderDetailRepo.save(item);
@@ -337,24 +395,7 @@ public class OrderController {
             }
 
             // TÍNH LẠI TỔNG TIỀN CHO BILL
-            Long orderId = item.getOrder().getId();
-            List<OderDetailEntity> allItems = orderDetailRepo.findByOrderId(orderId);
-            long subTotal = 0;
-            for (OderDetailEntity od : allItems) {
-                subTotal += (od.getAmount() * od.getPrice());
-            }
-
-            List<BillEntity> bills = billRepo.findByOrderbill_Id(orderId);
-            if (!bills.isEmpty()) {
-                BillEntity bill = bills.get(0);
-                bill.setTotalMoney(subTotal);
-                
-                // Nếu có discount thì trừ đi
-                long discount = bill.getDiscount() != null ? bill.getDiscount() : 0;
-                bill.setTotalMoneyaftersaleoff(subTotal - discount);
-                
-                billRepo.save(bill);
-            }
+            recalculateBillForOrder(item.getOrder().getId());
 
             return ResponseEntity.ok("Cập nhật sản phẩm trong đơn hàng thành công");
         } catch (Exception e) {

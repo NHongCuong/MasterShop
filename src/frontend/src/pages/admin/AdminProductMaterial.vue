@@ -148,6 +148,32 @@ const exportExcel = async () => {
   }
 }
 
+// Import Excel
+const fileInput = ref<HTMLInputElement | null>(null)
+const importExcel = () => {
+  fileInput.value?.click()
+}
+const handleImport = async (event: any) => {
+  const file = event.target.files[0]
+  if (!file) return
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    loading.value = true
+    await axios.post(`${API_URL}/import-excel`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập Excel thành công', life: 2000 })
+    loadData()
+  } catch (err: any) {
+    const msg = err.response?.data || 'Import thất bại'
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 3000 })
+  } finally {
+    loading.value = false
+    event.target.value = ''
+  }
+}
+
 // Format date
 const formatDate = (date: string | null) => {
   if (!date) return '—'
@@ -213,6 +239,10 @@ onMounted(() => {
       <div class="pc-header-actions">
         <button class="pc-btn pc-btn-add" @click="openAdd">
           <i class="fas fa-plus"></i> Thêm mới
+        </button>
+        <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls" @change="handleImport">
+        <button class="pc-btn pc-btn-import" @click="importExcel">
+          <i class="fas fa-file-import"></i> Nhập Excel
         </button>
         <button class="pc-btn pc-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Export Excel
@@ -402,6 +432,15 @@ onMounted(() => {
 .pc-btn-export:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+.pc-btn-import {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+.pc-btn-import:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 .pc-btn-add {
   background: linear-gradient(135deg, #4f46e5, #6366f1);
