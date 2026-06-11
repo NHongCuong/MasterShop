@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.sportshop.entity.CategoryEntity;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
@@ -16,5 +17,5 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
 	Page<CategoryEntity> findWithSearch(@Param("search") String search, Pageable pageable);
 
 	boolean existsByName(String name);
-	java.util.List<CategoryEntity> findByName(String name);
+	Optional<CategoryEntity> findByName(String name);
 }

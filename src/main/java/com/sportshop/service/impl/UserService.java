@@ -20,6 +20,7 @@ import com.sportshop.repository.UserRepository;
 import com.sportshop.response.AuthResponse;
 import com.sportshop.service.IUserService;
 import com.sportshop.service.UserPasswordService;
+
 @Service
 public class UserService implements IUserService{
 
@@ -73,7 +74,7 @@ public class UserService implements IUserService{
 			dataStyle.setBorderRight(BorderStyle.THIN);
 
 			Row headerRow = sheet.createRow(0);
-			String[] headers = {"STT", "Tên", "SĐT", "Email", "Địa chỉ", "Loại tài khoản", "Trạng thái", "Ngày tạo", "Ngày sửa"};
+			String[] headers = {"Tên", "SĐT", "Email", "Địa chỉ", "Loại tài khoản", "Trạng thái", "Mật khẩu", "Ngày tạo", "Ngày sửa"};
 			for (int i = 0; i < headers.length; i++) {
 				Cell cell = headerRow.createCell(i);
 				cell.setCellValue(headers[i]);
@@ -83,17 +84,17 @@ public class UserService implements IUserService{
 			int rowNum = 1;
 			for (UserDTO dto : allData) {
 				Row row = sheet.createRow(rowNum);
-				Cell c0 = row.createCell(0); c0.setCellValue(rowNum); c0.setCellStyle(dataStyle);
-				Cell c1 = row.createCell(1); c1.setCellValue(dto.getNameUser() != null ? dto.getNameUser() : ""); c1.setCellStyle(dataStyle);
-				Cell c2 = row.createCell(2); c2.setCellValue(dto.getPhone() != null ? dto.getPhone() : ""); c2.setCellStyle(dataStyle);
-				Cell c3 = row.createCell(3); c3.setCellValue(dto.getEmail() != null ? dto.getEmail() : ""); c3.setCellStyle(dataStyle);
-				Cell c4 = row.createCell(4); c4.setCellValue(dto.getAddress() != null ? dto.getAddress() : ""); c4.setCellStyle(dataStyle);
+				Cell c0 = row.createCell(0); c0.setCellValue(dto.getNameUser() != null ? dto.getNameUser() : ""); c0.setCellStyle(dataStyle);
+				Cell c1 = row.createCell(1); c1.setCellValue(dto.getPhone() != null ? dto.getPhone() : ""); c1.setCellStyle(dataStyle);
+				Cell c2 = row.createCell(2); c2.setCellValue(dto.getEmail() != null ? dto.getEmail() : ""); c2.setCellStyle(dataStyle);
+				Cell c3 = row.createCell(3); c3.setCellValue(dto.getAddress() != null ? dto.getAddress() : ""); c3.setCellStyle(dataStyle);
+				Cell c4 = row.createCell(4);
+				c4.setCellValue(dto.getUserType() != null && dto.getUserType().getName() != null ? dto.getUserType().getName() : "");
+				c4.setCellStyle(dataStyle);
 				Cell c5 = row.createCell(5);
-				c5.setCellValue(dto.getUserType() != null && dto.getUserType().getName() != null ? dto.getUserType().getName() : "");
+				c5.setCellValue(dto.getUserStatus() != null && dto.getUserStatus().getName() != null ? dto.getUserStatus().getName() : "");
 				c5.setCellStyle(dataStyle);
-				Cell c6 = row.createCell(6);
-				c6.setCellValue(dto.getUserStatus() != null && dto.getUserStatus().getName() != null ? dto.getUserStatus().getName() : "");
-				c6.setCellStyle(dataStyle);
+				Cell c6 = row.createCell(6); c6.setCellValue(""); c6.setCellStyle(dataStyle); // Password
 				Cell c7 = row.createCell(7); c7.setCellValue(dto.getCreatedAt() != null ? dto.getCreatedAt().toString() : ""); c7.setCellStyle(dataStyle);
 				Cell c8 = row.createCell(8); c8.setCellValue(dto.getUpdatedAt() != null ? dto.getUpdatedAt().toString() : ""); c8.setCellStyle(dataStyle);
 				rowNum++;
@@ -151,7 +152,4 @@ public class UserService implements IUserService{
 			return new AuthResponse(200, "Signup is successful");
 		}
 	}
-	
-	
-	
 }

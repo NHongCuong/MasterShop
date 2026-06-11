@@ -50,11 +50,8 @@ public class CategoryService implements ICategoryService {
 
 	@Override
 	public void save(CategoryDTO dto) {
-		List<CategoryEntity> existing = categoryRepo.findByName(dto.getName());
-		for (CategoryEntity e : existing) {
-			if (e.getName().equals(dto.getName())) {
-				throw new RuntimeException("Tên danh mục đã tồn tại");
-			}
+		if (categoryRepo.findByName(dto.getName()).isPresent()) {
+			throw new RuntimeException("Tên danh mục đã tồn tại");
 		}
 		CategoryEntity entity = categoryConverter.toEntity(dto);
 		categoryRepo.save(entity);
@@ -65,11 +62,8 @@ public class CategoryService implements ICategoryService {
 		CategoryEntity oldEntity = categoryRepo.findById(id).orElse(null);
 		if (oldEntity != null) {
 			if (!oldEntity.getName().equals(dto.getName())) {
-				List<CategoryEntity> existing = categoryRepo.findByName(dto.getName());
-				for (CategoryEntity e : existing) {
-					if (e.getName().equals(dto.getName())) {
-						throw new RuntimeException("Tên danh mục đã tồn tại");
-					}
+				if (categoryRepo.findByName(dto.getName()).isPresent()) {
+					throw new RuntimeException("Tên danh mục đã tồn tại");
 				}
 			}
 			oldEntity.setName(dto.getName());
@@ -152,17 +146,7 @@ public class CategoryService implements ICategoryService {
 				String icon = getCellValueAsString(row.getCell(1)); // Column B: Ảnh
 				if (name.isEmpty()) continue;
 
-				// Kiểm tra tồn tại chính xác (case-sensitive và accent-sensitive)
-				List<CategoryEntity> existing = categoryRepo.findByName(name);
-				boolean exists = false;
-				for (CategoryEntity e : existing) {
-					if (e.getName().equals(name)) {
-						exists = true;
-						break;
-					}
-				}
-
-				if (!exists) {
+				if (categoryRepo.findByName(name).isEmpty()) {
 					CategoryEntity entity = new CategoryEntity();
 					entity.setName(name);
 					entity.setIcon(icon);

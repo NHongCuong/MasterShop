@@ -53,6 +53,12 @@ const uploadedImageUrls = ref<string[]>([])
 const isUploading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// ========== IMPORT STATE ==========
+const importFileRef = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
+
 // ========== LOAD DATA ==========
 const loadProducts = async () => {
     loading.value = true
@@ -69,15 +75,7 @@ const loadProducts = async () => {
         totalItems.value = res.data.totalElements || 0
         totalPages.value = res.data.totalPages || 0
     } catch {
-        // Fallback if paged API not yet implemented or error
-        try {
-            const res = await axios.get(`${PRODUCT_API}/all`)
-            productList.value = res.data
-            totalItems.value = res.data.length
-            totalPages.value = Math.ceil(res.data.length / pageSize.value)
-        } catch {
-            toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải sản phẩm', life: 2000 })
-        }
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải sản phẩm', life: 2000 })
     } finally {
         loading.value = false
     }
@@ -297,6 +295,42 @@ const exportExcel = async () => {
     }
 }
 
+// ========== IMPORT LOGIC ==========
+const triggerImportFile = () => importFileRef.value?.click()
+const onImportFileSelect = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+    const file = input.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    loading.value = true
+    try {
+        const res = await axios.post(`${PRODUCT_API}/preview-import`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        importPreviewList.value = res.data
+        visibleImportDialog.value = true
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+    } finally {
+        loading.value = false
+        input.value = ''
+    }
+}
+const confirmImport = async () => {
+    isConfirmingImport.value = true
+    try {
+        const res = await axios.post(`${PRODUCT_API}/confirm-import`, importPreviewList.value)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        visibleImportDialog.value = false
+        loadProducts()
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+    } finally {
+        isConfirmingImport.value = false
+    }
+}
+
 // ========== PAGINATION ==========
 const pages = computed(() => {
     const arr: number[] = []
@@ -341,6 +375,10 @@ onMounted(() => {
                 <button class="p-btn p-btn-add" @click="openAddDialog">
                     <i class="fas fa-plus"></i> Thêm sản phẩm
                 </button>
+                <button class="p-btn p-btn-import" @click="triggerImportFile">
+                    <i class="fas fa-file-import"></i> Nhập Excel
+                </button>
+                <input type="file" ref="importFileRef" hidden accept=".xlsx, .xls" @change="onImportFileSelect" />
                 <button class="p-btn p-btn-export" @click="exportExcel">
                     <i class="fas fa-file-excel"></i> Xuất Excel
                 </button>
@@ -362,6 +400,7 @@ onMounted(() => {
                         <option value="price_asc">Giá tăng dần</option>
                         <option value="price_desc">Giá giảm dần</option>
                         <option value="az">A-Z</option>
+                        <option value="za">Z-A</option>
                     </select>
                 </div>
             </div>
@@ -553,6 +592,74 @@ onMounted(() => {
             </template>
         </Dialog>
 
+        <!-- DIALOG REVIEW IMPORT -->
+        <Dialog v-model:visible="visibleImportDialog" modal class="p-import-dialog" :style="{ width: '90vw' }" header="📥 Nhập sản phẩm từ Excel">
+            <div class="p-import-review">
+                <div class="p-info-bar">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Xem trước <b>{{ importPreviewList.length }}</b> sản phẩm sẽ được nhập. Kiểm tra thông tin Danh mục/Nhà cung cấp/Voucher kỹ trước khi xác nhận.</span>
+                </div>
+                
+                <div class="p-import-table-wrapper">
+                    <table class="p-import-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px">STT</th>
+                                <th style="width: 80px">Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th style="width: 150px">Giá</th>
+                                <th style="width: 80px">Giảm (%)</th>
+                                <th style="width: 80px">Tồn kho</th>
+                                <th>Danh mục</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Voucher</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(prod, idx) in importPreviewList" :key="idx">
+                                <td class="text-center font-bold">{{ idx + 1 }}</td>
+                                <td class="text-center">
+                                    <img :src="Helper.GetImageUrl(prod.avatar)" alt="Preview" class="p-import-img-preview" />
+                                </td>
+                                <td class="p-import-name">{{ prod.name }}</td>
+                                <td class="font-bold text-blue-600">{{ Helper.ToMoney(prod.price) }}</td>
+                                <td class="text-center text-orange-500">{{ prod.discountPercent }}%</td>
+                                <td class="text-center font-bold">{{ prod.amount }}</td>
+                                <td>
+                                    <span v-if="prod.category?.id" class="p-import-tag-success">{{ prod.category.name }}</span>
+                                    <span v-else class="p-import-tag-error">{{ prod.category?.name || 'Mặc định' }}</span>
+                                </td>
+                                <td>
+                                    <span v-if="prod.supplier?.id" class="p-import-tag-success">{{ prod.supplier.name }}</span>
+                                    <span v-else class="p-import-tag-error">{{ prod.supplier?.name || 'Mặc định' }}</span>
+                                </td>
+                                <td>
+                                    <span v-if="prod.voucher?.id" class="p-import-tag-success">{{ prod.voucher.name }}</span>
+                                    <span v-else class="p-import-tag-error">{{ prod.voucher?.name || 'Trống' }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <template #footer>
+                <div class="p-modal-footer">
+                    <button class="p-footer-btn p-btn-cancel" @click="visibleImportDialog = false" :disabled="isConfirmingImport">
+                        <i class="fas fa-times mr-2"></i>Hủy bỏ
+                    </button>
+                    <button class="p-footer-btn p-btn-confirm-import" @click="confirmImport" :disabled="isConfirmingImport">
+                        <template v-if="isConfirmingImport">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>Đang nhập...
+                        </template>
+                        <template v-else>
+                            <i class="fas fa-check-circle mr-2"></i>Xác nhận nhập {{ importPreviewList.length }} sản phẩm
+                        </template>
+                    </button>
+                </div>
+            </template>
+        </Dialog>
+
         <!-- CHI TIẾT SẢN PHẨM -->
         <Dialog v-model:visible="showDetailDialog" modal class="p-detail-dialog" :style="{ width: '960px' }" header="Thông tin sản phẩm">
             <div v-if="detailLoading" class="text-center py-5">
@@ -592,9 +699,6 @@ onMounted(() => {
             </div>
             <template #footer>
                 <div class="p-modal-footer">
-                    <button class="p-footer-btn p-btn-export-detail" @click="exportExcel">
-                        <i class="fas fa-file-excel mr-2"></i>Export Sản Phẩm
-                    </button>
                     <button class="p-footer-btn p-btn-cancel" @click="showDetailDialog = false">
                         <i class="fas fa-times mr-2"></i>Đóng
                     </button>
@@ -608,13 +712,14 @@ onMounted(() => {
 .p-page { padding: 24px; font-family: 'Inter', sans-serif; background: #fdfdfd; }
 .p-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .p-header-left { display: flex; align-items: center; gap: 12px; }
-.p-icon { font-size: 32px; color: #3b82f6; }
+.p-icon { font-size: 32px; color: #f59e0b; }
 .p-header-left h2 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; }
 
-.p-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.p-btn-add { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
-.p-btn-export { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; margin-left: 12px; }
-.p-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+.p-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: white; }
+.p-btn-add { background: #f59e0b; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3); }
+.p-btn-import { background: #6366f1; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3); margin-left: 12px; }
+.p-btn-export { background: #10b981; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); margin-left: 12px; }
+.p-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); opacity: 0.95; }
 .p-header-actions { display: flex; }
 
 .p-toolbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -633,41 +738,16 @@ onMounted(() => {
   border: 1px solid #f1f5f9;
   background: white;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-  -webkit-overflow-scrolling: touch;
 }
-.p-table-wrapper::-webkit-scrollbar { height: 10px; }
-.p-table-wrapper::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 0 0 16px 16px; }
-.p-table-wrapper::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
-.p-table-wrapper::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .p-table { width: 100%; min-width: 1320px; border-collapse: collapse; }
 .p-table thead { background: #f8fafc; border-bottom: 2px solid #f1f5f9; }
 .p-table th { padding: 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
 .p-table td { padding: 16px; border-top: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; white-space: nowrap; }
-.p-table td:nth-child(3) { white-space: normal; min-width: 140px; max-width: 220px; }
 .p-row:hover { background: #fbfcfe; }
 .p-row-clickable { cursor: pointer; }
 .p-row-clickable:hover { background: #eff6ff !important; }
 
-.p-detail-body { padding: 8px 0; }
-.p-detail-top { display: grid; grid-template-columns: 320px 1fr; gap: 32px; margin-bottom: 24px; }
-.p-detail-image { background: #f8fafc; border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 360px; border: 1px solid #e2e8f0; }
-.p-detail-image img { max-width: 100%; max-height: 320px; object-fit: contain; }
-.p-detail-info { display: flex; flex-direction: column; gap: 10px; }
-.p-detail-row { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-.p-detail-row label { font-weight: 600; color: #64748b; }
-.p-detail-row span { color: #1e293b; }
-.p-detail-desc { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
-.p-detail-desc-title { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid #3b82f633; }
-.p-detail-desc p { margin: 0; line-height: 1.7; color: #475569; white-space: pre-wrap; }
-.p-btn-export-detail { background: #16a34a; color: #fff; }
-.p-btn-export-detail:hover { background: #15803d; }
-
-@media (max-width: 768px) {
-    .p-detail-top { grid-template-columns: 1fr; }
-}
-
-.p-table-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.p-date-cell { font-size: 12px; color: #64748b; white-space: nowrap; }
+.p-table-img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid #f1f5f9; }
 .p-name { font-weight: 700; color: #1e293b; }
 .p-badge-cat { background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; }
 .p-voucher-badge { background: #f0fdf4; color: #15803d; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; }
@@ -676,57 +756,56 @@ onMounted(() => {
 .p-action-btn { width: 36px; height: 36px; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 15px; }
 .p-edit { background: #fef9c3; color: #854d0e; }
 .p-delete { background: #fee2e2; color: #991b1b; }
-.p-edit:hover { background: #fde68a; scale: 1.1; }
-.p-delete:hover { background: #fecaca; scale: 1.1; }
 
 .p-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; font-size: 14px; color: #64748b; }
 .p-pagination { display: flex; gap: 8px; }
-.p-page-btn { padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-weight: 600; transition: 0.2s; }
-.p-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.p-page-active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); }
+.p-page-btn { padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-weight: 600; }
+.p-page-active { background: #3b82f6; color: white; border-color: #3b82f6; }
 
-/* DIALOG MODERN STYLES */
-.p-dialog-modern { border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-.p-form-container { display: grid; grid-template-cols: 1fr 320px; gap: 32px; padding: 20px; background: #fff; }
-.p-section-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid #3b82f633; display: flex; align-items: center; }
-.p-section-title::before { content: ''; width: 4px; height: 18px; background: #3b82f6; border-radius: 4px; margin-right: 10px; }
+/* IMPORT DIALOG STYLES */
+.p-import-dialog { border-radius: 16px; overflow: hidden; }
+.p-import-review { padding: 12px 24px 24px; }
+.p-info-bar { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.p-info-bar b { color: #1d4ed8; }
+.p-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 12px; overflow-x: auto; max-height: 550px; }
+.p-import-table { width: 100%; border-collapse: collapse; background: #fff; }
+.p-import-table th { position: sticky; top: 0; background: #f8fafc; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; white-space: nowrap; z-index: 10; }
+.p-import-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; }
+.p-import-img-preview { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; }
+.p-import-name { font-weight: 600; color: #1e293b; min-width: 250px; }
+.p-import-tag-success { background: #f0fdf4; color: #15803d; padding: 2px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; border: 1px solid #bbf7d0; }
+.p-import-tag-error { background: #fff1f2; color: #be123c; padding: 2px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; border: 1px solid #fecdd3; }
 
-.p-grid { display: grid; grid-template-cols: repeat(12, 1fr); gap: 16px; }
+/* DIALOG MODAL FOOTER */
+.p-modal-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+.p-footer-btn { display: flex; align-items: center; gap: 8px; padding: 10px 24px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.p-btn-cancel { background: #fff; color: #64748b; border: 1px solid #e2e8f0; }
+.p-btn-save { background: #f59e0b; color: #fff; }
+.p-btn-confirm-import { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3); }
+.p-btn-confirm-import:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4); }
+
+.p-dialog-modern { border-radius: 20px; overflow: hidden; }
+.p-form-container { display: grid; grid-template-columns: 1fr 320px; gap: 32px; padding: 20px; }
+.p-section-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-bottom: 2px solid #3b82f622; padding-bottom: 8px; }
+.p-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
 .p-col-6 { grid-column: span 6; }
 .p-col-12 { grid-column: span 12; }
-
-.p-field { display: flex; flex-direction: column; gap: 8px; }
-.p-field label { font-size: 13px; font-weight: 600; color: #64748b; display: flex; align-items: center; }
-.p-field label i { color: #3b82f6; width: 20px; }
-
-.p-input-premium, .p-dropdown-premium { border-radius: 12px !important; border: 1.5px solid #e2e8f0 !important; padding: 4px !important; transition: all 0.3s !important; background: #f8fafc !important; }
-.p-input-premium:focus-within, .p-dropdown-premium:focus-within { border-color: #3b82f6 !important; background: #fff !important; box-shadow: 0 0 0 4px #3b82f61a !important; }
-
+.p-field { display: flex; flex-direction: column; gap: 6px; }
+.p-field label { font-size: 13px; font-weight: 600; color: #64748b; }
+.p-input-premium, .p-dropdown-premium { border-radius: 10px !important; }
 .p-form-sidebar { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
-.p-upload-zone { border: 2px dashed #cbd5e1; border-radius: 16px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.3s; background: #fff; display: flex; flex-direction: column; gap: 8px; color: #64748b; }
-.p-upload-zone:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
-.p-upload-zone i { font-size: 32px; }
-.p-upload-zone span { font-weight: 700; font-size: 14px; }
-
-.p-image-preview-list { display: grid; grid-template-cols: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
-.p-preview-card { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 2px solid #fff; box-shadow: 0 4px 6px -1px #0000001a; }
+.p-upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.p-image-preview-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.p-preview-card { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
 .p-preview-card img { width: 100%; height: 100%; object-fit: cover; }
-.p-preview-new { border-color: #3b82f6; }
-
-.p-preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+.p-preview-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
 .p-preview-card:hover .p-preview-overlay { opacity: 1; }
-.p-remove-icon { background: #ef4444; color: #fff; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; }
+.p-main-badge { position: absolute; top: 4px; left: 4px; background: #3b82f6; color: #fff; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
 
-.p-main-badge { position: absolute; top: 8px; left: 8px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
-.p-image-hint { font-size: 11px; color: #94a3b8; margin-top: 16px; line-height: 1.5; }
-
-.p-modal-footer { display: flex; justify-content: flex-end; gap: 16px; padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
-.p-footer-btn { padding: 12px 28px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; transition: 0.3s; display: flex; align-items: center; }
-.p-btn-cancel { background: #fff; color: #64748b; border: 1px solid #e2e8f0; }
-.p-btn-cancel:hover { background: #f1f5f9; }
-.p-btn-save { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; box-shadow: 0 10px 15px -3px #3b82f64d; }
-.p-btn-save:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px #3b82f64d; }
-.p-btn-save:disabled { opacity: 0.7; transform: none; }
-.text-center { text-align: center; }
-.py-5 { padding: 40px 0; }
+.p-detail-top { display: grid; grid-template-columns: 300px 1fr; gap: 24px; margin-bottom: 20px; }
+.p-detail-image { background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
+.p-detail-image img { width: 100%; height: auto; border-radius: 8px; }
+.p-detail-info { display: flex; flex-direction: column; gap: 8px; }
+.p-detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; border-bottom: 1px solid #f1f5f9; padding: 4px 0; }
+.p-detail-row label { font-weight: 600; color: #64748b; }
 </style>

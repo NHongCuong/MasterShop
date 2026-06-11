@@ -21,11 +21,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -50,7 +55,6 @@ public class ProductController {
     @Autowired
     private ProductInventoryService productInventoryService;
 
-    // 🟢 API xem danh sách sản phẩm
     @GetMapping("/all")
     public ResponseEntity<?> getAllProducts() {
         try {
@@ -71,6 +75,7 @@ public class ProductController {
             if (sort.equals("price_asc")) sortObj = Sort.by("price").ascending();
             else if (sort.equals("price_desc")) sortObj = Sort.by("price").descending();
             else if (sort.equals("az")) sortObj = Sort.by("name").ascending();
+            else if (sort.equals("za")) sortObj = Sort.by("name").descending();
 
             Page<ProductEntity> result;
             if (search != null && !search.isEmpty()) {
@@ -84,58 +89,42 @@ public class ProductController {
         }
     }
 
-    // Lấy sản phẩm theo ID
     @GetMapping("/{id}")
     public ResponseEntity<ProductEntity> getProductById(@PathVariable("id") Long id) {
         ProductEntity productEntity = productService.getByID(id);
         return new ResponseEntity<>(productEntity, HttpStatus.OK);
     }
 
-    // 🟢 API thêm sản phẩm
     @PostMapping("/add")
     public ResponseEntity<?> addProduct(@RequestBody ProductEntity product) {
         try {
-            // Gán category (nếu có ID)
             if (product.getCategory() != null && product.getCategory().getId() != null) {
                 CategoryEntity cate = categoryRepo.findById(product.getCategory().getId()).orElse(null);
                 product.setCategory(cate);
-            } else {
-                // Nếu không có category, có thể gán null hoặc category mặc định
-                product.setCategory(null);
             }
 
-            // Gán supplier (nếu có ID)
             if (product.getSupplier() != null && product.getSupplier().getId() != null) {
                 SupplierEntity sup = supplierRepo.findById(product.getSupplier().getId()).orElse(null);
                 product.setSupplier(sup);
-            } else {
-                product.setSupplier(null);
             }
 
-            // Gán voucher (nếu có)
             if (product.getVoucher() != null && product.getVoucher().getId() != null) {
                 VoucherEntity vch = voucherRepo.findById(product.getVoucher().getId()).orElse(null);
                 product.setVoucher(vch);
-            } else {
-                product.setVoucher(null);
             }
 
-            // Gán các ảnh phụ
             if (product.getProductImages() != null) {
                 product.getProductImages().forEach(img -> img.setProduct(product));
             }
 
-            // Lưu sản phẩm
             ProductEntity saved = productRepo.save(product);
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseEntity<>("Lỗi khi thêm sản phẩm: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // 🟡 API sửa sản phẩm
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductEntity product) {
         try {
@@ -152,23 +141,19 @@ public class ProductController {
             existing.setDiscountPercent(product.getDiscountPercent());
 
             if (product.getCategory() != null && product.getCategory().getId() != null) {
-                CategoryEntity cate = categoryRepo.findById(product.getCategory().getId()).orElse(null);
-                existing.setCategory(cate);
+                existing.setCategory(categoryRepo.findById(product.getCategory().getId()).orElse(null));
             }
 
             if (product.getSupplier() != null && product.getSupplier().getId() != null) {
-                SupplierEntity sup = supplierRepo.findById(product.getSupplier().getId()).orElse(null);
-                existing.setSupplier(sup);
+                existing.setSupplier(supplierRepo.findById(product.getSupplier().getId()).orElse(null));
             }
 
             if (product.getVoucher() != null && product.getVoucher().getId() != null) {
-                VoucherEntity vch = voucherRepo.findById(product.getVoucher().getId()).orElse(null);
-                existing.setVoucher(vch);
+                existing.setVoucher(voucherRepo.findById(product.getVoucher().getId()).orElse(null));
             } else {
                 existing.setVoucher(null);
             }
 
-            // Cập nhật các ảnh phụ
             if (product.getProductImages() != null) {
                 existing.getProductImages().clear();
                 for (ProductImageEntity img : product.getProductImages()) {
@@ -182,7 +167,6 @@ public class ProductController {
             return new ResponseEntity<>(updated, HttpStatus.OK);
 
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseEntity<>("Lỗi khi cập nhật: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -216,7 +200,6 @@ public class ProductController {
         }
     }
 
-    // 🔴 API xóa sản phẩm
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
@@ -235,11 +218,11 @@ public class ProductController {
         response.setHeader(headerKey, headerValue);
 
         List<ProductEntity> listProducts = productRepo.findAll();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Products");
 
-        // Header style
         CellStyle headerStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setBold(true);
@@ -249,7 +232,7 @@ public class ProductController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"ID", "Tên sản phẩm", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp", "Ngày tạo", "Ngày sửa"};
+        String[] headers = {"STT", "Tên sản phẩm", "Ảnh", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp", "Voucher", "Ngày tạo", "Ngày sửa"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -258,29 +241,135 @@ public class ProductController {
 
         int rowCount = 1;
         for (ProductEntity prod : listProducts) {
-            Row row = sheet.createRow(rowCount++);
-            row.createCell(0).setCellValue(prod.getId());
+            Row row = sheet.createRow(rowCount);
+            row.createCell(0).setCellValue(rowCount);
             row.createCell(1).setCellValue(prod.getName());
-            row.createCell(2).setCellValue(prod.getDescription());
-            row.createCell(3).setCellValue(prod.getPrice() != null ? prod.getPrice() : 0);
-            row.createCell(4).setCellValue(prod.getDiscountPercent() != null ? prod.getDiscountPercent() : 0);
+            row.createCell(2).setCellValue(prod.getAvatar() != null ? prod.getAvatar() : "");
+            row.createCell(3).setCellValue(prod.getDescription());
+            row.createCell(4).setCellValue(prod.getPrice() != null ? prod.getPrice() : 0);
+            row.createCell(5).setCellValue(prod.getDiscountPercent() != null ? prod.getDiscountPercent() : 0);
             long stockIn = parseStockAmount(prod.getAmount());
             long sold = prod.getSoldQuantity() != null ? prod.getSoldQuantity() : 0;
-            row.createCell(5).setCellValue(stockIn);
-            row.createCell(6).setCellValue(sold);
-            row.createCell(7).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
-            row.createCell(8).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
-            row.createCell(9).setCellValue(prod.getCreatedAt() != null ? prod.getCreatedAt().toString() : "");
-            row.createCell(10).setCellValue(prod.getUpdatedAt() != null ? prod.getUpdatedAt().toString() : "");
+            row.createCell(6).setCellValue(stockIn);
+            row.createCell(7).setCellValue(sold);
+            row.createCell(8).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
+            row.createCell(9).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
+            row.createCell(10).setCellValue(prod.getVoucher() != null ? prod.getVoucher().getMaVoucher() : "");
+            row.createCell(11).setCellValue(prod.getCreatedAt() != null ? sdf.format(prod.getCreatedAt()) : "");
+            row.createCell(12).setCellValue(prod.getUpdatedAt() != null ? sdf.format(prod.getUpdatedAt()) : "");
+            rowCount++;
         }
 
-        // Auto size columns
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
 
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+    @PostMapping("/preview-import")
+    public ResponseEntity<?> previewImport(@RequestParam("file") MultipartFile file) {
+        try {
+            Workbook workbook = new XSSFWorkbook(file.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            List<Map<String, Object>> previewList = new ArrayList<>();
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                Map<String, Object> item = new HashMap<>();
+                // Row mapping adjusted for STT column at index 0
+                item.put("name", formatter.formatCellValue(row.getCell(1)));
+                item.put("avatar", formatter.formatCellValue(row.getCell(2)));
+                item.put("description", formatter.formatCellValue(row.getCell(3)));
+                
+                String priceStr = formatter.formatCellValue(row.getCell(4)).replaceAll("[^\\d.]", "");
+                item.put("price", priceStr.isEmpty() ? 0L : (long)Double.parseDouble(priceStr));
+                
+                String discountStr = formatter.formatCellValue(row.getCell(5)).replaceAll("[^\\d.]", "");
+                item.put("discountPercent", discountStr.isEmpty() ? 0 : (int)Double.parseDouble(discountStr));
+                
+                item.put("amount", formatter.formatCellValue(row.getCell(6)));
+                
+                String soldStr = formatter.formatCellValue(row.getCell(7)).replaceAll("[^\\d.]", "");
+                item.put("soldQuantity", soldStr.isEmpty() ? 0L : (long)Double.parseDouble(soldStr));
+
+                String categoryName = formatter.formatCellValue(row.getCell(8));
+                Map<String, Object> categoryMap = new HashMap<>();
+                categoryMap.put("name", categoryName);
+                if (!categoryName.isEmpty()) {
+                    Optional<CategoryEntity> cat = categoryRepo.findByName(categoryName);
+                    if (cat.isPresent()) categoryMap.put("id", cat.get().getId());
+                }
+                item.put("category", categoryMap);
+
+                String supplierName = formatter.formatCellValue(row.getCell(9));
+                Map<String, Object> supplierMap = new HashMap<>();
+                supplierMap.put("name", supplierName);
+                if (!supplierName.isEmpty()) {
+                    Optional<SupplierEntity> sup = supplierRepo.findByName(supplierName);
+                    if (sup.isPresent()) supplierMap.put("id", sup.get().getId());
+                }
+                item.put("supplier", supplierMap);
+
+                String voucherName = formatter.formatCellValue(row.getCell(10));
+                Map<String, Object> voucherMap = new HashMap<>();
+                voucherMap.put("name", voucherName);
+                if (!voucherName.isEmpty()) {
+                    Optional<VoucherEntity> vch = voucherRepo.findByMaVoucher(voucherName);
+                    if (vch.isPresent()) voucherMap.put("id", vch.get().getId());
+                }
+                item.put("voucher", voucherMap);
+
+                previewList.add(item);
+            }
+            workbook.close();
+            return ResponseEntity.ok(previewList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Lỗi preview: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @PostMapping("/confirm-import")
+    public ResponseEntity<?> confirmImport(@RequestBody List<Map<String, Object>> products) {
+        try {
+            int count = 0;
+            for (Map<String, Object> prodData : products) {
+                ProductEntity product = new ProductEntity();
+                product.setName((String) prodData.get("name"));
+                product.setAvatar((String) prodData.get("avatar"));
+                product.setDescription((String) prodData.get("description"));
+                product.setPrice(((Number) prodData.get("price")).longValue());
+                product.setDiscountPercent(((Number) prodData.get("discountPercent")).intValue());
+                product.setAmount(prodData.get("amount").toString());
+                product.setSoldQuantity(((Number) prodData.get("soldQuantity")).longValue());
+
+                Map<String, Object> catMap = (Map<String, Object>) prodData.get("category");
+                if (catMap != null && catMap.get("name") != null) {
+                    product.setCategory(categoryRepo.findByName((String) catMap.get("name")).orElse(null));
+                }
+                Map<String, Object> supMap = (Map<String, Object>) prodData.get("supplier");
+                if (supMap != null && supMap.get("name") != null) {
+                    product.setSupplier(supplierRepo.findByName((String) supMap.get("name")).orElse(null));
+                }
+                Map<String, Object> vchMap = (Map<String, Object>) prodData.get("voucher");
+                if (vchMap != null && vchMap.get("name") != null) {
+                    product.setVoucher(voucherRepo.findByMaVoucher((String) vchMap.get("name")).orElse(null));
+                }
+
+                productRepo.save(product);
+                count++;
+            }
+            return ResponseEntity.ok("Nhập thành công " + count + " sản phẩm!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Lỗi lưu dữ liệu: " + e.getMessage());
+        }
     }
 
     private long parseStockAmount(String amount) {
