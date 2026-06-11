@@ -30,6 +30,12 @@ const currentItem = ref({
   productId: null
 })
 
+// Import state
+const importFileRef = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
+
 // Filters
 const search = ref('')
 const pageSize = ref(10)
@@ -64,7 +70,8 @@ const loadData = async () => {
 const loadProducts = async () => {
   try {
     const res = await axios.get(BASE_PRODUCT_API)
-    productOptions.value = res.data.map((p: any) => ({ label: p.name, value: p.id }))
+    const productData = Array.isArray(res.data) ? res.data : (res.data.content || [])
+    productOptions.value = productData.map((p: any) => ({ label: p.name, value: p.id }))
   } catch (err) {
     console.error(err)
   }
@@ -135,6 +142,47 @@ const exportExcel = async () => {
   }
 }
 
+// Import Excel logic
+const triggerImportFile = () => importFileRef.value?.click()
+const onImportFileSelect = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+    const file = input.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    loading.value = true
+    try {
+        const res = await axios.post(`${API_URL}/preview-import`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        importPreviewList.value = res.data
+        visibleImportDialog.value = true
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+    } finally {
+        loading.value = false
+        input.value = ''
+    }
+}
+const confirmImport = async () => {
+    const validItems = importPreviewList.value.filter(x => x.isValid && !x.exists)
+    if (validItems.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu mới hợp lệ để nhập', life: 3000 })
+        return
+    }
+    isConfirmingImport.value = true
+    try {
+        const res = await axios.post(`${API_URL}/confirm-import`, validItems)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        visibleImportDialog.value = false
+        loadData()
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+    } finally {
+        isConfirmingImport.value = false
+    }
+}
+
 // Format date
 const formatDate = (date: string | null) => {
   if (!date) return '—'
@@ -187,6 +235,10 @@ onMounted(() => {
         <button class="pd-btn pd-btn-add" @click="openAdd">
           <i class="fas fa-plus"></i> Thêm kích cỡ
         </button>
+        <button class="pd-btn pd-btn-import" @click="triggerImportFile">
+          <i class="fas fa-file-import"></i> Nhập Excel
+        </button>
+        <input type="file" ref="importFileRef" hidden accept=".xlsx, .xls" @change="onImportFileSelect" />
         <button class="pd-btn pd-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Xuất Excel
         </button>
@@ -246,8 +298,8 @@ onMounted(() => {
             <td class="text-center">{{ formatDate(item.updatedAt) }}</td>
             <td class="text-center">
               <div class="pd-actions">
-                <button class="pd-action-btn pd-edit" @click="openEdit(item)"><i class="fas fa-edit"></i></button>
-                <button class="pd-action-btn pd-delete" @click="deleteItem(item.id)"><i class="fas fa-trash"></i></button>
+                <button class="pd-action-btn pd-edit" title="Sửa" @click="openEdit(item)"><i class="fas fa-edit"></i></button>
+                <button class="pd-action-btn pd-delete" title="Xóa" @click="deleteItem(item.id)"><i class="fas fa-trash"></i></button>
               </div>
             </td>
           </tr>
@@ -264,6 +316,7 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Dialog Thêm/Sửa -->
     <Dialog v-model:visible="displayDialog" :header="isEdit ? '✏️ Sửa kích cỡ' : '➕ Thêm kích cỡ mới'" :modal="true" class="pd-dialog" :style="{ width: '450px' }">
       <div class="pd-form">
         <div class="pd-field">
@@ -282,6 +335,57 @@ onMounted(() => {
         </div>
       </template>
     </Dialog>
+
+    <!-- Dialog Review Import -->
+    <Dialog v-model:visible="visibleImportDialog" modal class="pd-import-dialog" :style="{ width: '800px' }" header="📥 Nhập kích cỡ sản phẩm">
+        <div class="pd-import-review">
+            <div class="pd-info-bar">
+                <i class="fas fa-info-circle"></i>
+                <span>Xem trước <b>{{ importPreviewList.length }}</b> mục. Hệ thống sẽ tự động tìm ID dựa trên tên và kiểm tra tồn tại.</span>
+            </div>
+            
+            <div class="pd-import-table-wrapper">
+                <table class="pd-import-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px">STT</th>
+                            <th>Tên kích cỡ</th>
+                            <th>Tên sản phẩm</th>
+                            <th style="width: 250px">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, idx) in importPreviewList" :key="idx">
+                            <td class="text-center font-bold">{{ idx + 1 }}</td>
+                            <td class="font-semibold">{{ item.nameD }}</td>
+                            <td>{{ item.productName }}</td>
+                            <td class="text-center">
+                                <span v-if="!item.isValid" class="p-tag-error">{{ item.errors }}</span>
+                                <span v-else-if="item.exists" class="p-tag-warn">Đã tồn tại</span>
+                                <span v-else class="p-tag-new">Mới</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="pd-modal-footer">
+                <button class="pd-footer-btn pd-btn-cancel" @click="visibleImportDialog = false" :disabled="isConfirmingImport">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <button class="pd-footer-btn pd-btn-confirm-import" @click="confirmImport" :disabled="isConfirmingImport">
+                    <template v-if="isConfirmingImport">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Đang nhập...
+                    </template>
+                    <template v-else>
+                        <i class="fas fa-check-circle mr-2"></i>Xác nhận nhập
+                    </template>
+                </button>
+            </div>
+        </template>
+    </Dialog>
   </div>
 </template>
 
@@ -292,10 +396,11 @@ onMounted(() => {
 .pd-icon { font-size: 28px; color: #3b82f6; }
 .pd-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
 
-.pd-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.pd-btn-add { background: #3b82f6; color: white; }
-.pd-btn-export { background: #10b981; color: white; margin-left: 10px; }
-.pd-header-actions { display: flex; }
+.pd-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; }
+.pd-btn-add { background: #3b82f6; }
+.pd-btn-import { background: #6366f1; }
+.pd-btn-export { background: #10b981; }
+.pd-header-actions { display: flex; gap: 10px; }
 
 .pd-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
 .pd-toolbar-left { display: flex; gap: 20px; }
@@ -316,8 +421,6 @@ onMounted(() => {
 .pd-action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .pd-edit { background: #fef3c7; color: #92400e; }
 .pd-delete { background: #fee2e2; color: #991b1b; }
-.pd-edit:hover { background: #fde68a; }
-.pd-delete:hover { background: #fecaca; }
 
 .pd-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 14px; color: #64748b; }
 .pd-pagination { display: flex; gap: 6px; }
@@ -326,10 +429,25 @@ onMounted(() => {
 .text-center { text-align: center; }
 .pd-empty { text-align: center; padding: 40px; color: #94a3b8; }
 
+/* Import Review Styles */
+.pd-import-review { padding: 10px 20px 20px; }
+.pd-info-bar { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.pd-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 10px; overflow: auto; max-height: 400px; }
+.pd-import-table { width: 100%; border-collapse: collapse; }
+.pd-import-table th { background: #f8fafc; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; text-align: left; }
+.pd-import-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-error { background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+.pd-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 0; }
+.pd-footer-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; }
+.pd-btn-cancel { background: #f1f5f9; color: #475569; }
+.pd-btn-confirm-import { background: #6366f1; color: white; }
+
 .pd-form { display: flex; flex-direction: column; gap: 16px; padding: 10px 0; }
 .pd-field { display: flex; flex-direction: column; gap: 6px; }
 .pd-field label { font-size: 14px; font-weight: 600; color: #475569; }
 .pd-dropdown, .pd-input { width: 100%; border-radius: 8px; }
-.pd-dialog-footer { display: flex; justify-content: flex-end; gap: 10px; }
-.pd-save-btn { border-radius: 8px; padding: 8px 20px; }
 </style>

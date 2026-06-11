@@ -1,5 +1,7 @@
 package com.sportshop.controller;
 
+import com.sportshop.entity.ColorEntity;
+import com.sportshop.repository.ColorRepository;
 import com.sportshop.service.IColorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -21,6 +30,9 @@ import org.springframework.http.MediaType;
 public class ColorController {
     @Autowired
     private IColorService colorService;
+
+    @Autowired
+    private ColorRepository colorRepository;
 
     @GetMapping("/all-public")
     public ResponseEntity<?> getAllPublic() {
@@ -33,12 +45,6 @@ public class ColorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "newest") String sort) {
-        // If it's a simple call without params, return all DTOs for backward compatibility
-        if (search == null && page == 0 && size == 10) {
-             // Check if it's actually a paginated request from admin or just a list request
-             // To be safe, if 'size' is 10 and no other params, we check if it's from the old frontend
-        }
-        
         try {
             Sort sortObj;
             switch (sort) {
@@ -105,6 +111,74 @@ public class ColorController {
             return new ResponseEntity<>(data, headers, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/preview-import")
+    public ResponseEntity<?> previewImport(@RequestParam("file") MultipartFile file) {
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            List<Map<String, Object>> previewList = new ArrayList<>();
+
+            // Dynamic header search
+            int nameColIndex = -1;
+            Row headerRow = sheet.getRow(0);
+            if (headerRow != null) {
+                for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+                    String head = formatter.formatCellValue(headerRow.getCell(c)).trim().toLowerCase();
+                    if (head.contains("tên màu") || head.contains("name") || head.contains("color")) {
+                        nameColIndex = c;
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback to index 2 if not found (matching system export)
+            if (nameColIndex == -1) nameColIndex = 2;
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                String nameColor = formatter.formatCellValue(row.getCell(nameColIndex)).trim();
+                if (nameColor.isEmpty() && nameColIndex != 0) {
+                    // Try index 0 if index 2 is empty and it wasn't index 0 already
+                    nameColor = formatter.formatCellValue(row.getCell(0)).trim();
+                }
+                
+                if (nameColor.isEmpty()) continue;
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("nameColor", nameColor);
+                item.put("exists", colorRepository.existsByNameColor(nameColor));
+                previewList.add(item);
+            }
+            return ResponseEntity.ok(previewList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Lỗi đọc file: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/confirm-import")
+    public ResponseEntity<?> confirmImport(@RequestBody List<Map<String, Object>> colors) {
+        try {
+            int count = 0;
+            for (Map<String, Object> colorData : colors) {
+                String name = (String) colorData.get("nameColor");
+                if (name == null || name.isEmpty()) continue;
+
+                if (!colorRepository.existsByNameColor(name)) {
+                    ColorEntity entity = new ColorEntity();
+                    entity.setNameColor(name);
+                    colorRepository.save(entity);
+                    count++;
+                }
+            }
+            return ResponseEntity.ok("Đã nhập thành công " + count + " màu sắc mới!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Lỗi lưu dữ liệu: " + e.getMessage());
         }
     }
 }

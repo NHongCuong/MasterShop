@@ -16,4 +16,5 @@ public interface SupplierRepository extends JpaRepository<SupplierEntity, Long>{
     Page<SupplierEntity> findBySearch(String search, Pageable pageable);
 
     Optional<SupplierEntity> findByName(String name);
+    boolean existsByName(String name);
 }

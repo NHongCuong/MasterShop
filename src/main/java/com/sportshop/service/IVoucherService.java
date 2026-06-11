@@ -14,4 +14,5 @@ public interface IVoucherService {
     void save(VoucherDTO dto);
     void update(Long id, VoucherDTO dto);
     void delete(Long id);
+    byte[] exportToExcel() throws Exception;
 }

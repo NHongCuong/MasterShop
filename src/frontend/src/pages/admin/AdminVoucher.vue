@@ -25,6 +25,12 @@ const currentPage = ref(0)
 const sortOption = ref('newest')
 const pageSizeOptions = [10, 20, 50, 100]
 
+// Import state
+const fileInput = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
+
 const loadData = async () => {
   loading.value = true
   try {
@@ -93,6 +99,63 @@ const save = async () => {
   }
 }
 
+const exportExcel = async () => {
+  try {
+    const res = await axios.get(`${API}/export-excel`, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'vouchers.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Đã tải file Excel', life: 2000 })
+  } catch {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Xuất Excel thất bại', life: 2000 })
+  }
+}
+
+// Import logic
+const triggerImportInput = () => fileInput.value?.click()
+const handleImportFileSelect = async (event: any) => {
+  const file = event.target.files[0]
+  if (!file) return
+  const formData = new FormData()
+  formData.append('file', file)
+  loading.value = true
+  try {
+    const res = await axios.post(`${API}/preview-import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    importPreviewList.value = res.data
+    visibleImportDialog.value = true
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+  } finally {
+    loading.value = false
+    event.target.value = ''
+  }
+}
+const confirmImport = async () => {
+  const validItems = importPreviewList.value.filter(x => x.isValid && !x.exists)
+  if (validItems.length === 0) {
+    toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có voucher mới hợp lệ để nhập', life: 3000 })
+    return
+  }
+  isConfirmingImport.value = true
+  try {
+    const res = await axios.post(`${API}/confirm-import`, validItems)
+    toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+    visibleImportDialog.value = false
+    loadData()
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+  } finally {
+    isConfirmingImport.value = false
+  }
+}
+
 const formatDate = (date: string | null) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('vi-VN', {
@@ -138,6 +201,13 @@ onMounted(() => loadData())
       <div class="vc-header-actions">
         <button class="vc-btn vc-btn-add" @click="openAdd">
           <i class="fas fa-plus"></i> Thêm voucher
+        </button>
+        <button class="vc-btn vc-btn-import" @click="triggerImportInput">
+          <i class="fas fa-file-import"></i> Nhập Excel
+        </button>
+        <input type="file" ref="fileInput" hidden accept=".xlsx, .xls" @change="handleImportFileSelect">
+        <button class="vc-btn vc-btn-export" @click="exportExcel">
+          <i class="fas fa-file-excel"></i> Xuất Excel
         </button>
       </div>
     </div>
@@ -200,8 +270,8 @@ onMounted(() => loadData())
             <td class="text-center">{{ formatDate(item.updatedAt) }}</td>
             <td class="text-center">
               <div class="vc-actions">
-                <button class="vc-action-btn vc-edit" @click="openEdit(item)"><i class="fas fa-edit"></i></button>
-                <button class="vc-action-btn vc-delete" @click="deleteItem(item.id)"><i class="fas fa-trash"></i></button>
+                <button class="vc-action-btn vc-edit" title="Sửa" @click="openEdit(item)"><i class="fas fa-edit"></i></button>
+                <button class="vc-action-btn vc-delete" title="Xóa" @click="deleteItem(item.id)"><i class="fas fa-trash"></i></button>
               </div>
             </td>
           </tr>
@@ -228,6 +298,7 @@ onMounted(() => loadData())
       </div>
     </div>
 
+    <!-- Dialog Thêm/Sửa -->
     <Dialog
       v-model:visible="visibleDialog"
       :header="editMode ? '✏️ Sửa Voucher' : '➕ Thêm Voucher Mới'"
@@ -258,6 +329,45 @@ onMounted(() => loadData())
         </div>
       </template>
     </Dialog>
+
+    <!-- Dialog Review Import -->
+    <Dialog v-model:visible="visibleImportDialog" modal class="vc-import-dialog" :style="{ width: '700px' }" header="📥 Nhập Voucher từ Excel">
+      <div class="vc-import-review">
+        <div class="vc-info-banner">
+          <i class="fas fa-info-circle"></i>
+          <span>Hệ thống nhận diện mã voucher và tỷ lệ giảm giá từ file Excel.</span>
+        </div>
+        <div class="vc-import-table-wrapper">
+          <table class="vc-import-table">
+            <thead>
+              <tr>
+                <th style="width: 60px">STT</th>
+                <th>Mã Voucher</th>
+                <th style="width: 150px">Giảm giá (%)</th>
+                <th style="width: 150px">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, idx) in importPreviewList" :key="idx">
+                <td class="text-center font-bold">{{ idx + 1 }}</td>
+                <td class="font-semibold">{{ item.maVoucher }}</td>
+                <td class="text-center">{{ item.discountPercent }}%</td>
+                <td class="text-center">
+                  <span v-if="item.exists" class="p-tag-warn">Đã tồn tại</span>
+                  <span v-else class="p-tag-new">Mới</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-content-end gap-2 py-2">
+          <Button label="Hủy" icon="pi pi-times" class="p-button-text p-button-secondary" @click="visibleImportDialog = false" :disabled="isConfirmingImport" />
+          <Button label="Xác nhận nhập" icon="pi pi-check" class="p-button-primary" @click="confirmImport" :loading="isConfirmingImport" />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -267,10 +377,12 @@ onMounted(() => loadData())
 .vc-header-left { display: flex; align-items: center; gap: 12px; }
 .vc-icon { font-size: 28px; color: #f59e0b; }
 .vc-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
-.vc-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.vc-btn-add { background: #f59e0b; color: white; }
-.vc-btn-add:hover { background: #d97706; }
-.vc-header-actions { display: flex; }
+
+.vc-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; }
+.vc-btn-add { background: #f59e0b; }
+.vc-btn-import { background: #6366f1; }
+.vc-btn-export { background: #10b981; }
+.vc-header-actions { display: flex; gap: 10px; }
 
 .vc-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
 .vc-toolbar-left { display: flex; gap: 20px; }
@@ -292,18 +404,23 @@ onMounted(() => loadData())
 .vc-action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .vc-edit { background: #fef3c7; color: #92400e; }
 .vc-delete { background: #fee2e2; color: #991b1b; }
-.vc-edit:hover { background: #fde68a; }
-.vc-delete:hover { background: #fecaca; }
 
 .vc-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 14px; color: #64748b; }
 .vc-pagination { display: flex; gap: 6px; }
 .vc-page-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; }
-.vc-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .vc-page-active { background: #f59e0b; color: white; border-color: #f59e0b; }
 .text-center { text-align: center; }
-.text-muted { color: #94a3b8; }
-.text-danger { color: #ef4444; }
-.py-5 { padding: 20px 0; }
+
+/* Import Styles */
+.vc-import-review { padding: 10px 20px; }
+.vc-info-banner { background: #ecfdfe; border: 1px solid #a5f3fc; color: #0e7490; padding: 12px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.vc-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+.vc-import-table { width: 100%; border-collapse: collapse; }
+.vc-import-table th { background: #f8fafc; padding: 10px; font-size: 11px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+.vc-import-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
 
 .vc-form { display: flex; flex-direction: column; gap: 16px; padding: 10px 0; }
 .vc-field { display: flex; flex-direction: column; gap: 6px; }

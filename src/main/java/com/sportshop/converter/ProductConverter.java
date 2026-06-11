@@ -17,6 +17,7 @@ public class ProductConverter {
 		en.setName(dto.getName());
 		en.setPrice(dto.getPrice());
 		en.setSupplier(dto.getSupplier());
+		en.setWarranty(dto.getWarranty());
 		
 		return en;
 	}
@@ -31,6 +32,7 @@ public class ProductConverter {
 		dto.setName(en.getName());
 		dto.setPrice(en.getPrice());
 		dto.setSupplier(en.getSupplier());
+		dto.setWarranty(en.getWarranty());
 		return dto;
 	}
 }

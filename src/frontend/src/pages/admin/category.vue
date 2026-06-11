@@ -33,6 +33,12 @@ const existingIconUrl = ref('')
 const isUploading = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// Import state
+const importFileInput = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
+
 const resetImageState = () => {
   selectedFile.value = null
   previewUrl.value = ''
@@ -199,33 +205,45 @@ const exportExcel = async () => {
   }
 }
 
-// Import Excel
-const importFileInput = ref<HTMLInputElement | null>(null)
-const triggerImportInput = () => {
-  importFileInput.value?.click()
+// Import Excel logic
+const triggerImportInput = () => importFileInput.value?.click()
+const handleImportFileSelect = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+    const file = input.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    loading.value = true
+    try {
+        const res = await axios.post(`${CATEGORY_API}/preview-import`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        importPreviewList.value = res.data
+        visibleImportDialog.value = true
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+    } finally {
+        loading.value = false
+        input.value = ''
+    }
 }
-const handleImportExcel = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (!input.files?.length) return
-  const file = input.files[0]
-  
-  const formData = new FormData()
-  formData.append('file', file)
-  
-  loading.value = true
-  try {
-    await axios.post(`${CATEGORY_API}/import-excel`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập Excel thành công', life: 2000 })
-    loadCategories()
-  } catch (err: any) {
-    const msg = err.response?.data || 'Không thể nhập Excel'
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 2500 })
-  } finally {
-    loading.value = false
-    input.value = ''
-  }
+const confirmImport = async () => {
+    const validItems = importPreviewList.value.filter(x => x.isValid && !x.exists)
+    if (validItems.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu mới hợp lệ để nhập', life: 3000 })
+        return
+    }
+    isConfirmingImport.value = true
+    try {
+        const res = await axios.post(`${CATEGORY_API}/confirm-import`, validItems)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        visibleImportDialog.value = false
+        loadCategories()
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+    } finally {
+        isConfirmingImport.value = false
+    }
 }
 
 const formatDate = (date: string | null) => {
@@ -280,10 +298,10 @@ onMounted(() => loadCategories())
         <button class="cat-btn cat-btn-add" @click="openAddDialog">
           <i class="fas fa-plus"></i> Thêm danh mục
         </button>
-        <input type="file" ref="importFileInput" hidden accept=".xlsx, .xls" @change="handleImportExcel">
         <button class="cat-btn cat-btn-import" @click="triggerImportInput">
           <i class="fas fa-file-import"></i> Nhập Excel
         </button>
+        <input type="file" ref="importFileInput" hidden accept=".xlsx, .xls" @change="handleImportFileSelect">
         <button class="cat-btn cat-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Xuất Excel
         </button>
@@ -353,8 +371,8 @@ onMounted(() => loadCategories())
             <td class="text-center">{{ formatDate(item.updatedAt) }}</td>
             <td class="text-center">
               <div class="cat-actions">
-                <button class="cat-action-btn cat-edit" @click="openEditDialog(item)"><i class="fas fa-edit"></i></button>
-                <button class="cat-action-btn cat-delete" @click="deleteCategory(item.id)"><i class="fas fa-trash"></i></button>
+                <button class="cat-action-btn cat-edit" title="Sửa" @click="openEditDialog(item)"><i class="fas fa-edit"></i></button>
+                <button class="cat-action-btn cat-delete" title="Xóa" @click="deleteCategory(item.id)"><i class="fas fa-trash"></i></button>
               </div>
             </td>
           </tr>
@@ -384,6 +402,7 @@ onMounted(() => loadCategories())
       </div>
     </div>
 
+    <!-- Dialog Thêm/Sửa -->
     <Dialog
       v-model:visible="visibleDialog"
       :header="editMode ? '✏️ Sửa danh mục' : '➕ Thêm danh mục mới'"
@@ -445,6 +464,56 @@ onMounted(() => loadCategories())
         </div>
       </template>
     </Dialog>
+
+    <!-- Dialog Review Import -->
+    <Dialog v-model:visible="visibleImportDialog" modal class="cat-import-dialog" :style="{ width: '700px' }" header="📥 Nhập danh mục từ Excel">
+        <div class="cat-import-review">
+            <div class="cat-info-bar">
+                <i class="fas fa-info-circle"></i>
+                <span>Xem trước <b>{{ importPreviewList.length }}</b> danh mục. Hệ thống sẽ bỏ qua các danh mục trùng tên.</span>
+            </div>
+            
+            <div class="cat-import-table-wrapper">
+                <table class="cat-import-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">STT</th>
+                            <th>Tên danh mục</th>
+                            <th>Ảnh/Icon</th>
+                            <th style="width: 150px">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, idx) in importPreviewList" :key="idx">
+                            <td class="text-center font-bold">{{ idx + 1 }}</td>
+                            <td class="font-semibold">{{ item.name }}</td>
+                            <td>{{ item.icon || '—' }}</td>
+                            <td class="text-center">
+                                <span v-if="item.exists" class="p-tag-warn">Đã tồn tại</span>
+                                <span v-else class="p-tag-new">Mới</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="cat-modal-footer">
+                <button class="cat-footer-btn cat-btn-cancel" @click="visibleImportDialog = false" :disabled="isConfirmingImport">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <button class="cat-footer-btn cat-btn-confirm-import" @click="confirmImport" :disabled="isConfirmingImport">
+                    <template v-if="isConfirmingImport">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Đang nhập...
+                    </template>
+                    <template v-else>
+                        <i class="fas fa-check-circle mr-2"></i>Xác nhận nhập
+                    </template>
+                </button>
+            </div>
+        </template>
+    </Dialog>
   </div>
 </template>
 
@@ -455,11 +524,11 @@ onMounted(() => loadCategories())
 .cat-icon { font-size: 28px; color: #f59e0b; }
 .cat-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
 
-.cat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.cat-btn-add { background: #f59e0b; color: white; }
-.cat-btn-import { background: #6366f1; color: white; margin-left: 10px; }
-.cat-btn-export { background: #10b981; color: white; margin-left: 10px; }
-.cat-header-actions { display: flex; }
+.cat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; }
+.cat-btn-add { background: #f59e0b; }
+.cat-btn-import { background: #6366f1; }
+.cat-btn-export { background: #10b981; }
+.cat-header-actions { display: flex; gap: 10px; }
 
 .cat-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
 .cat-toolbar-left { display: flex; gap: 20px; }
@@ -478,36 +547,38 @@ onMounted(() => loadCategories())
 .cat-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
 
 .cat-actions { display: flex; gap: 8px; justify-content: center; }
-.cat-action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.cat-action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .cat-edit { background: #fef3c7; color: #92400e; }
-.cat-delete { background: #fee2e2; color: #991b1b; }
-.cat-edit:hover { background: #fde68a; }
-.cat-delete:hover { background: #fecaca; }
+.cat-delete { background: #fee2e2; color: #dc2626; }
 
 .cat-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 14px; color: #64748b; }
 .cat-pagination { display: flex; gap: 6px; }
 .cat-page-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; }
-.cat-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .cat-page-active { background: #f59e0b; color: white; border-color: #f59e0b; }
 .text-center { text-align: center; }
-.py-5 { padding: 20px 0; }
+
+/* Import Review Styles */
+.cat-import-review { padding: 10px 20px 20px; }
+.cat-info-bar { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.cat-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 10px; overflow: auto; max-height: 400px; }
+.cat-import-table { width: 100%; border-collapse: collapse; }
+.cat-import-table th { background: #f8fafc; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; text-align: left; }
+.cat-import-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+.cat-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 0; }
+.cat-footer-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; }
+.cat-btn-cancel { background: #f1f5f9; color: #475569; }
+.cat-btn-confirm-import { background: #6366f1; color: white; }
 
 .cat-form { display: flex; flex-direction: column; gap: 16px; padding: 10px 0; }
 .cat-field { display: flex; flex-direction: column; gap: 6px; }
 .cat-field label { font-size: 14px; font-weight: 600; color: #475569; }
-.cat-input { width: 100%; border-radius: 8px; }
 .cat-upload-section { display: flex; flex-direction: column; gap: 12px; }
 .cat-image-preview { position: relative; display: inline-block; width: fit-content; }
-.cat-image-preview img { max-width: 160px; max-height: 160px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; display: block; }
-.cat-remove-img { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border: none; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.cat-img-badge { position: absolute; bottom: 6px; left: 6px; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-.cat-img-badge.new { background: #dbeafe; color: #1d4ed8; }
-.cat-img-badge.saved { background: #d1fae5; color: #065f46; }
-.cat-upload-area { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: 0.2s; background: #f8fafc; }
-.cat-upload-area:hover { border-color: #f59e0b; background: #fffbeb; }
-.cat-upload-area i { font-size: 2rem; color: #f59e0b; }
-.cat-upload-area p { margin: 8px 0 4px; font-size: 14px; color: #475569; font-weight: 500; }
-.cat-upload-hint { font-size: 12px; color: #94a3b8; }
-.cat-dialog-footer { display: flex; justify-content: flex-end; gap: 10px; }
-.cat-save-btn { border-radius: 8px; padding: 8px 20px; }
+.cat-image-preview img { max-width: 160px; border-radius: 8px; border: 1px solid #e2e8f0; }
+.cat-remove-img { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.cat-upload-area { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; background: #f8fafc; }
 </style>

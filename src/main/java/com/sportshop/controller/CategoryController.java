@@ -1,6 +1,8 @@
 package com.sportshop.controller;
 
 import com.sportshop.dto.CategoryDTO;
+import com.sportshop.entity.CategoryEntity;
+import com.sportshop.repository.CategoryRepository;
 import com.sportshop.response.PageResponse;
 import com.sportshop.service.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -21,6 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class CategoryController {
 	@Autowired
 	ICategoryService categoryService;
+
+	@Autowired
+	CategoryRepository categoryRepository;
 
 	@GetMapping("/all")
 	public ResponseEntity<?> getAll(
@@ -98,6 +109,72 @@ public class CategoryController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body("Lỗi khi xóa danh mục: " + e.getMessage());
+		}
+	}
+
+	@PostMapping("/preview-import")
+	public ResponseEntity<?> previewImport(@RequestParam("file") MultipartFile file) {
+		try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+			Sheet sheet = workbook.getSheetAt(0);
+			DataFormatter formatter = new DataFormatter();
+			List<Map<String, Object>> previewList = new ArrayList<>();
+
+			// Find column indices
+			int nameCol = -1, iconCol = -1;
+			Row headerRow = sheet.getRow(0);
+			if (headerRow != null) {
+				for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+					String head = formatter.formatCellValue(headerRow.getCell(c)).trim().toLowerCase();
+					if (head.contains("tên") || head.contains("category") || head.contains("danh mục")) nameCol = c;
+					if (head.contains("ảnh") || head.contains("icon") || head.contains("image")) iconCol = c;
+				}
+			}
+			if (nameCol == -1) nameCol = 1;
+
+			for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+				Row row = sheet.getRow(i);
+				if (row == null) continue;
+
+				String name = formatter.formatCellValue(row.getCell(nameCol)).trim();
+				String icon = (iconCol != -1) ? formatter.formatCellValue(row.getCell(iconCol)).trim() : "";
+
+				if (name.isEmpty()) continue;
+
+				Map<String, Object> item = new HashMap<>();
+				item.put("name", name);
+				item.put("icon", icon);
+				item.put("exists", categoryRepository.existsByName(name));
+				item.put("isValid", true);
+
+				previewList.add(item);
+			}
+			return ResponseEntity.ok(previewList);
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Lỗi đọc file: " + e.getMessage());
+		}
+	}
+
+	@PostMapping("/confirm-import")
+	public ResponseEntity<?> confirmImport(@RequestBody List<Map<String, Object>> items) {
+		try {
+			int count = 0;
+			for (Map<String, Object> mapData : items) {
+				Boolean isValid = (Boolean) mapData.get("isValid");
+				Boolean exists = (Boolean) mapData.get("exists");
+				if (isValid != null && isValid && (exists == null || !exists)) {
+					String name = (String) mapData.get("name");
+					String icon = (String) mapData.get("icon");
+
+					CategoryEntity entity = new CategoryEntity();
+					entity.setName(name);
+					entity.setIcon(icon);
+					categoryRepository.save(entity);
+					count++;
+				}
+			}
+			return ResponseEntity.ok("Đã nhập thành công " + count + " danh mục!");
+		} catch (Exception e) {
+			return ResponseEntity.status(500).body("Lỗi lưu dữ liệu: " + e.getMessage());
 		}
 	}
 

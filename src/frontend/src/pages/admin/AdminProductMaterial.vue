@@ -9,8 +9,6 @@ import Button from 'primevue/button'
 
 const toast = useToast()
 const API_URL = 'http://localhost:8081/admin/product-material'
-const BASE_MATERIAL_API = 'http://localhost:8081/material/all'
-const BASE_PRODUCT_API = 'http://localhost:8081/product/all'
 
 // Data
 const items = ref<any[]>([])
@@ -30,6 +28,12 @@ const currentItem = ref({
   idMaterial: null,
   idProduct: null
 })
+
+// Import state
+const importFileRef = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
 
 // Filters
 const search = ref('')
@@ -148,30 +152,45 @@ const exportExcel = async () => {
   }
 }
 
-// Import Excel
-const fileInput = ref<HTMLInputElement | null>(null)
-const importExcel = () => {
-  fileInput.value?.click()
-}
-const handleImport = async (event: any) => {
-  const file = event.target.files[0]
-  if (!file) return
-  const formData = new FormData()
-  formData.append('file', file)
-  try {
+// Import Excel logic
+const triggerImportFile = () => importFileRef.value?.click()
+const onImportFileSelect = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+    const file = input.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
     loading.value = true
-    await axios.post(`${API_URL}/import-excel`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập Excel thành công', life: 2000 })
-    loadData()
-  } catch (err: any) {
-    const msg = err.response?.data || 'Import thất bại'
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: msg, life: 3000 })
-  } finally {
-    loading.value = false
-    event.target.value = ''
-  }
+    try {
+        const res = await axios.post(`${API_URL}/preview-import`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        importPreviewList.value = res.data
+        visibleImportDialog.value = true
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+    } finally {
+        loading.value = false
+        input.value = ''
+    }
+}
+const confirmImport = async () => {
+    const validItems = importPreviewList.value.filter(x => x.isValid && !x.exists)
+    if (validItems.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu mới hợp lệ để nhập', life: 3000 })
+        return
+    }
+    isConfirmingImport.value = true
+    try {
+        const res = await axios.post(`${API_URL}/confirm-import`, validItems)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        visibleImportDialog.value = false
+        loadData()
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+    } finally {
+        isConfirmingImport.value = false
+    }
 }
 
 // Format date
@@ -240,10 +259,10 @@ onMounted(() => {
         <button class="pc-btn pc-btn-add" @click="openAdd">
           <i class="fas fa-plus"></i> Thêm mới
         </button>
-        <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls" @change="handleImport">
-        <button class="pc-btn pc-btn-import" @click="importExcel">
+        <button class="pc-btn pc-btn-import" @click="triggerImportFile">
           <i class="fas fa-file-import"></i> Nhập Excel
         </button>
+        <input type="file" ref="importFileRef" hidden accept=".xlsx, .xls" @change="onImportFileSelect" />
         <button class="pc-btn pc-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Export Excel
         </button>
@@ -353,7 +372,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Dialog -->
+    <!-- Dialog Thêm/Sửa -->
     <Dialog v-model:visible="displayDialog" :header="isEdit ? '✏️ Chỉnh sửa Product Material' : '➕ Thêm mới Product Material'" 
             :modal="true" class="pc-dialog" :style="{ width: '500px' }">
       <div class="pc-form">
@@ -375,6 +394,57 @@ onMounted(() => {
                   class="p-button-primary pc-save-btn" @click="saveItem" :loading="loading" />
         </div>
       </template>
+    </Dialog>
+
+    <!-- Dialog Preview Import -->
+    <Dialog v-model:visible="visibleImportDialog" modal class="pc-import-dialog" :style="{ width: '800px' }" header="📥 Nhập liên kết Sản phẩm - Nguyên liệu">
+        <div class="pc-import-review">
+            <div class="pc-info-bar">
+                <i class="fas fa-info-circle"></i>
+                <span>Xem trước <b>{{ importPreviewList.length }}</b> sản phẩm nguyên liệu sẽ được nhập. Hệ thống sẽ tự động bỏ qua màu đã tồn tại.</span>
+            </div>
+            
+            <div class="pc-import-table-wrapper">
+                <table class="pc-import-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">STT</th>
+                            <th>Tên nguyên liệu</th>
+                            <th>Tên sản phẩm</th>
+                            <th style="width: 200px">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item, idx) in importPreviewList" :key="idx">
+                            <td class="text-center font-bold">{{ idx + 1 }}</td>
+                            <td class="font-semibold">{{ item.materialName }}</td>
+                            <td>{{ item.productName }}</td>
+                            <td class="text-center">
+                                <span v-if="!item.isValid" class="p-tag-error">{{ item.errors }}</span>
+                                <span v-else-if="item.exists" class="p-tag-warn">Đã tồn tại</span>
+                                <span v-else class="p-tag-new">Mới</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="pc-modal-footer">
+                <button class="pc-footer-btn pc-btn-cancel" @click="visibleImportDialog = false" :disabled="isConfirmingImport">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <button class="pc-footer-btn pc-btn-confirm-import" @click="confirmImport" :disabled="isConfirmingImport">
+                    <template v-if="isConfirmingImport">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Đang nhập...
+                    </template>
+                    <template v-else>
+                        <i class="fas fa-check-circle mr-2"></i>Xác nhận nhập
+                    </template>
+                </button>
+            </div>
+        </template>
     </Dialog>
   </div>
 </template>
@@ -423,33 +493,23 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  color: white;
 }
 .pc-btn-export {
   background: linear-gradient(135deg, #059669, #10b981);
-  color: white;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
-.pc-btn-export:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
 .pc-btn-import {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  color: white;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-}
-.pc-btn-import:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    background: #6366f1;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 .pc-btn-add {
   background: linear-gradient(135deg, #4f46e5, #6366f1);
-  color: white;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
-.pc-btn-add:hover {
+.pc-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  opacity: 0.95;
 }
 .pc-header-actions {
   display: flex;
@@ -494,11 +554,6 @@ onMounted(() => {
   color: #334155;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s;
-}
-.pc-select-group select:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 .pc-search-box {
   display: flex;
@@ -509,15 +564,6 @@ onMounted(() => {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   min-width: 280px;
-  transition: border-color 0.2s;
-}
-.pc-search-box:focus-within {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-.pc-search-box i {
-  color: #94a3b8;
-  font-size: 14px;
 }
 .pc-search-box input {
   border: none;
@@ -525,7 +571,6 @@ onMounted(() => {
   font-size: 13px;
   color: #334155;
   flex: 1;
-  background: transparent;
 }
 
 /* Table */
@@ -533,7 +578,6 @@ onMounted(() => {
   overflow-x: auto;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 .pc-table {
   width: 100%;
@@ -550,182 +594,57 @@ onMounted(() => {
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
 }
 .pc-table tbody td {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
   color: #334155;
 }
-.pc-row {
-  transition: background 0.15s;
-}
-.pc-row:hover {
-  background: #f1f5f9;
-}
-.pc-row:nth-child(even) {
-  background: #fafbfc;
-}
-.pc-row:nth-child(even):hover {
-  background: #f1f5f9;
-}
-.text-center {
-  text-align: center;
-}
-.pc-empty {
-  text-align: center;
-  padding: 48px 16px !important;
-  color: #94a3b8;
-  font-size: 15px;
-}
-.pc-empty i {
-  margin-right: 8px;
-  font-size: 18px;
-}
+.pc-row:hover { background: #f1f5f9; }
+.text-center { text-align: center; }
 
 /* Badge */
 .pc-color-badge {
   display: inline-block;
   padding: 4px 12px;
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  background: #ede9fe;
   color: #5b21b6;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
+  border: 1px solid #ddd6fe;
 }
 
-/* Actions */
-.pc-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-.pc-action-btn {
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-.pc-action-edit {
-  background: #fef3c7;
-  color: #b45309;
-}
-.pc-action-edit:hover {
-  background: #fde68a;
-  transform: scale(1.1);
-}
-.pc-action-delete {
-  background: #fee2e2;
-  color: #dc2626;
-}
-.pc-action-delete:hover {
-  background: #fecaca;
-  transform: scale(1.1);
-}
+/* Import Dialog Styles */
+.pc-import-review { padding: 10px 20px 20px; }
+.pc-info-bar { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.pc-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 10px; overflow: auto; max-height: 400px; }
+.pc-import-table { width: 100%; border-collapse: collapse; }
+.pc-import-table th { background: #f8fafc; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; text-align: left; }
+.pc-import-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-/* Pagination */
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-error { background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+.pc-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 0; }
+.pc-footer-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; }
+.pc-btn-cancel { background: #f1f5f9; color: #475569; }
+.pc-btn-confirm-import { background: #6366f1; color: white; }
+
 .pc-pagination-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 16px;
-  padding: 12px 0;
 }
-.pc-pagination-info {
-  color: #64748b;
-  font-size: 13px;
-}
-.pc-pagination {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.pc-page-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  color: #475569;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.pc-page-btn:hover:not(:disabled):not(.pc-page-active) {
-  background: #f1f5f9;
-  border-color: #6366f1;
-  color: #6366f1;
-}
-.pc-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.pc-page-active {
-  background: linear-gradient(135deg, #4f46e5, #6366f1);
-  color: white;
-  border-color: #4f46e5;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
-}
+.pc-pagination { display: flex; gap: 4px; }
+.pc-page-btn { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; }
+.pc-page-active { background: #6366f1; color: white; }
 
-/* Dialog & Form Styles */
-:deep(.pc-dialog) {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-:deep(.p-dialog-header) {
-  background: #f8fafc;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-:deep(.p-dialog-content) {
-  padding: 24px !important;
-}
-:deep(.p-dialog-footer) {
-  padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
-}
-.pc-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.pc-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.pc-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-}
-.pc-dropdown {
-  width: 100%;
-  border-radius: 8px;
-  border-color: #cbd5e1;
-}
-.pc-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-.pc-save-btn {
-  padding: 8px 24px;
-  border-radius: 8px;
-}
+/* Actions */
+.pc-actions { display: flex; justify-content: center; gap: 6px; }
+.pc-action-btn { width: 34px; height: 34px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pc-action-edit { background: #fef3c7; color: #b45309; }
+.pc-action-delete { background: #fee2e2; color: #dc2626; }
 </style>

@@ -21,6 +21,12 @@ const displayDialog = ref(false)
 const isEdit = ref(false)
 const currentItem = ref({ id: null, nameMaterial: '' })
 
+// Import state
+const importFileRef = ref<HTMLInputElement | null>(null)
+const importPreviewList = ref<any[]>([])
+const visibleImportDialog = ref(false)
+const isConfirmingImport = ref(false)
+
 // Filters
 const search = ref('')
 const pageSize = ref(10)
@@ -117,6 +123,42 @@ const exportExcel = async () => {
   }
 }
 
+// Import Excel logic
+const triggerImportFile = () => importFileRef.value?.click()
+const onImportFileSelect = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+    const file = input.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+    loading.value = true
+    try {
+        const res = await axios.post(`${API_URL}/preview-import`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        importPreviewList.value = res.data
+        visibleImportDialog.value = true
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 })
+    } finally {
+        loading.value = false
+        input.value = ''
+    }
+}
+const confirmImport = async () => {
+    isConfirmingImport.value = true
+    try {
+        const res = await axios.post(`${API_URL}/confirm-import`, importPreviewList.value)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        visibleImportDialog.value = false
+        loadData()
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 })
+    } finally {
+        isConfirmingImport.value = false
+    }
+}
+
 // Format date
 const formatDate = (date: string | null) => {
   if (!date) return '—'
@@ -167,6 +209,10 @@ onMounted(() => {
         <button class="m-btn m-btn-add" @click="openAdd">
           <i class="fas fa-plus"></i> Thêm nguyên liệu
         </button>
+        <button class="m-btn m-btn-import" @click="triggerImportFile">
+          <i class="fas fa-file-import"></i> Nhập Excel
+        </button>
+        <input type="file" ref="importFileRef" hidden accept=".xlsx, .xls" @change="onImportFileSelect" />
         <button class="m-btn m-btn-export" @click="exportExcel">
           <i class="fas fa-file-excel"></i> Xuất Excel
         </button>
@@ -244,6 +290,7 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- DIALOG THÊM/SỬA -->
     <Dialog v-model:visible="displayDialog" :header="isEdit ? '✏️ Sửa nguyên liệu' : '➕ Thêm nguyên liệu mới'" :modal="true" class="m-dialog" :style="{ width: '400px' }">
       <div class="m-form">
         <div class="m-field">
@@ -258,6 +305,54 @@ onMounted(() => {
         </div>
       </template>
     </Dialog>
+
+    <!-- DIALOG REVIEW IMPORT -->
+    <Dialog v-model:visible="visibleImportDialog" modal class="p-import-dialog" :style="{ width: '600px' }" header="📥 Nhập chất liệu từ Excel">
+        <div class="m-import-review">
+            <div class="p-info-bar">
+                <i class="fas fa-info-circle"></i>
+                <span>Xem trước <b>{{ importPreviewList.length }}</b> chất liệu sẽ được nhập. Hệ thống sẽ tự động bỏ qua chất liệu đã tồn tại.</span>
+            </div>
+            
+            <div class="p-import-table-wrapper">
+                <table class="p-import-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px">STT</th>
+                            <th>Tên chất liệu</th>
+                            <th style="width: 150px">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(mat, idx) in importPreviewList" :key="idx">
+                            <td class="text-center font-bold">{{ idx + 1 }}</td>
+                            <td class="font-semibold text-gray-800">{{ mat.nameMaterial }}</td>
+                            <td class="text-center">
+                                <span v-if="mat.exists" class="p-tag-warn">Đã tồn tại</span>
+                                <span v-else class="p-tag-new">Mới</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <template #footer>
+            <div class="p-modal-footer">
+                <button class="p-footer-btn p-btn-cancel" @click="visibleImportDialog = false" :disabled="isConfirmingImport">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <button class="p-footer-btn p-btn-confirm-import" @click="confirmImport" :disabled="isConfirmingImport">
+                    <template v-if="isConfirmingImport">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Đang nhập...
+                    </template>
+                    <template v-else>
+                        <i class="fas fa-check-circle mr-2"></i>Xác nhận nhập
+                    </template>
+                </button>
+            </div>
+        </template>
+    </Dialog>
   </div>
 </template>
 
@@ -268,9 +363,11 @@ onMounted(() => {
 .m-icon { font-size: 28px; color: #f59e0b; }
 .m-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
 
-.m-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.m-btn-add { background: #f59e0b; color: white; }
-.m-btn-export { background: #10b981; color: white; margin-left: 10px; }
+.m-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; }
+.m-btn-add { background: #f59e0b; }
+.m-btn-import { background: #6366f1; margin-left: 10px; }
+.m-btn-export { background: #10b981; margin-left: 10px; }
+.m-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 .m-header-actions { display: flex; }
 
 .m-toolbar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
@@ -286,20 +383,33 @@ onMounted(() => {
 .m-table th { padding: 14px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; text-transform: uppercase; }
 .m-table td { padding: 14px 16px; border-top: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; }
 .m-row:hover { background: #f8fafc; }
-.m-badge { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; }
+.m-badge { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #fde68a; }
 
 .m-actions { display: flex; gap: 8px; justify-content: center; }
 .m-action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .m-edit { background: #fef3c7; color: #92400e; }
 .m-delete { background: #fee2e2; color: #991b1b; }
-.m-edit:hover { background: #fde68a; }
-.m-delete:hover { background: #fecaca; }
 
 .m-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 14px; color: #64748b; }
 .m-pagination { display: flex; gap: 6px; }
 .m-page-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; cursor: pointer; }
 .m-page-active { background: #f59e0b; color: white; border-color: #f59e0b; }
 .text-center { text-align: center; }
+
+/* IMPORT DIALOG */
+.m-import-review { padding: 10px 20px 20px; }
+.p-info-bar { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.p-import-table-wrapper { border: 1px solid #e2e8f0; border-radius: 10px; overflow: auto; max-height: 400px; }
+.p-import-table { width: 100%; border-collapse: collapse; }
+.p-import-table th { background: #f8fafc; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+.p-import-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+
+.p-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 0; }
+.p-footer-btn { padding: 8px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; }
+.p-btn-cancel { background: #f1f5f9; color: #475569; }
+.p-btn-confirm-import { background: #6366f1; color: white; }
 
 .m-form { display: flex; flex-direction: column; gap: 16px; padding: 10px 0; }
 .m-field { display: flex; flex-direction: column; gap: 6px; }

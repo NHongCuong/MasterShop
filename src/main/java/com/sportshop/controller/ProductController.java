@@ -139,6 +139,7 @@ public class ProductController {
             existing.setAvatar(product.getAvatar());
             existing.setAmount(product.getAmount());
             existing.setDiscountPercent(product.getDiscountPercent());
+            existing.setWarranty(product.getWarranty());
 
             if (product.getCategory() != null && product.getCategory().getId() != null) {
                 existing.setCategory(categoryRepo.findById(product.getCategory().getId()).orElse(null));
@@ -232,7 +233,7 @@ public class ProductController {
         headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"STT", "Tên sản phẩm", "Ảnh", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp", "Voucher", "Ngày tạo", "Ngày sửa"};
+        String[] headers = {"STT", "Tên sản phẩm", "Ảnh", "Mô tả", "Giá", "Giảm giá (%)", "Tồn kho", "Đã bán", "Danh mục", "Nhà cung cấp", "Voucher", "Bảo hành", "Ngày tạo", "Ngày sửa"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -255,8 +256,9 @@ public class ProductController {
             row.createCell(8).setCellValue(prod.getCategory() != null ? prod.getCategory().getName() : "");
             row.createCell(9).setCellValue(prod.getSupplier() != null ? prod.getSupplier().getName() : "");
             row.createCell(10).setCellValue(prod.getVoucher() != null ? prod.getVoucher().getMaVoucher() : "");
-            row.createCell(11).setCellValue(prod.getCreatedAt() != null ? sdf.format(prod.getCreatedAt()) : "");
-            row.createCell(12).setCellValue(prod.getUpdatedAt() != null ? sdf.format(prod.getUpdatedAt()) : "");
+            row.createCell(11).setCellValue(prod.getWarranty() != null ? prod.getWarranty() : "");
+            row.createCell(12).setCellValue(prod.getCreatedAt() != null ? sdf.format(prod.getCreatedAt()) : "");
+            row.createCell(13).setCellValue(prod.getUpdatedAt() != null ? sdf.format(prod.getUpdatedAt()) : "");
             rowCount++;
         }
 
@@ -324,6 +326,8 @@ public class ProductController {
                 }
                 item.put("voucher", voucherMap);
 
+                item.put("warranty", formatter.formatCellValue(row.getCell(11)));
+
                 previewList.add(item);
             }
             workbook.close();
@@ -348,6 +352,7 @@ public class ProductController {
                 product.setDiscountPercent(((Number) prodData.get("discountPercent")).intValue());
                 product.setAmount(prodData.get("amount").toString());
                 product.setSoldQuantity(((Number) prodData.get("soldQuantity")).longValue());
+                product.setWarranty(prodData.get("warranty") != null ? prodData.get("warranty").toString() : "");
 
                 Map<String, Object> catMap = (Map<String, Object>) prodData.get("category");
                 if (catMap != null && catMap.get("name") != null) {

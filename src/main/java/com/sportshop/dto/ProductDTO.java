@@ -12,6 +12,7 @@ public class ProductDTO {
 	private String amount;
 	private CategoryEntity category;
 	private SupplierEntity supplier;
+	private String warranty;
 
 //    public ProductDTO(Long id, String name, String description, Long price, String avatar, String amount, CategoryEntity category, SupplierEntity supplier) {
 //        this.id =id;
@@ -76,6 +77,12 @@ public class ProductDTO {
 	}
 	public void setSupplier(SupplierEntity supplier) {
 		this.supplier = supplier;
+	}
+	public String getWarranty() {
+		return warranty;
+	}
+	public void setWarranty(String warranty) {
+		this.warranty = warranty;
 	}
 
     public void setPublished(boolean b) {

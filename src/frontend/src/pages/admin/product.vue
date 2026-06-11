@@ -157,6 +157,7 @@ const openAddDialog = async () => {
         avatar: '',
         amount: 0,
         discountPercent: 0,
+        warranty: '',
         category: null,
         supplier: null,
         voucher: null
@@ -205,6 +206,7 @@ const saveProduct = async () => {
             avatar: avatarUrl,
             amount: selectedProduct.value.amount,
             discountPercent: selectedProduct.value.discountPercent,
+            warranty: selectedProduct.value.warranty || '',
             category: selectedProduct.value.category ? { id: selectedProduct.value.category.id } : null,
             supplier: selectedProduct.value.supplier ? { id: selectedProduct.value.supplier.id } : null,
             voucher: selectedProduct.value.voucher ? { id: selectedProduct.value.voucher.id } : null,
@@ -425,6 +427,7 @@ onMounted(() => {
                         <th style="width:80px">Tồn kho</th>
                         <th style="width:90px">Đã bán</th>
                         <th>Voucher</th>
+                        <th style="width:120px">Bảo hành</th>
                         <th style="width:150px">Ngày tạo</th>
                         <th style="width:150px">Ngày sửa</th>
                         <th style="width:120px">Thao tác</th>
@@ -432,10 +435,10 @@ onMounted(() => {
                 </thead>
                 <tbody>
                     <tr v-if="loading">
-                        <td colspan="12" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                        <td colspan="13" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
                     </tr>
                     <tr v-else-if="productList.length === 0">
-                        <td colspan="12" class="text-center py-5">Không tìm thấy sản phẩm</td>
+                        <td colspan="13" class="text-center py-5">Không tìm thấy sản phẩm</td>
                     </tr>
                     <tr v-for="p in productList" :key="p.id" class="p-row p-row-clickable" @click="viewProductDetail(p)">
                         <td class="text-center">{{ p.id }}</td>
@@ -464,6 +467,12 @@ onMounted(() => {
                                 <i class="fas fa-ticket-alt mr-1"></i>{{ p.voucher.maVoucher }}
                             </span>
                             <span v-else class="text-gray-400 italic">Trống</span>
+                        </td>
+                        <td>
+                            <span v-if="p.warranty" class="p-warranty-badge">
+                                <i class="fas fa-shield-alt mr-1"></i>{{ p.warranty }}
+                            </span>
+                            <span v-else class="text-gray-400 italic">—</span>
                         </td>
                         <td class="p-date-cell">{{ Helper.DateFormat(p.createdAt) }}</td>
                         <td class="p-date-cell">{{ Helper.DateFormat(p.updatedAt) }}</td>
@@ -517,15 +526,19 @@ onMounted(() => {
 
                         <div class="p-col-6 p-field">
                             <label><i class="fas fa-coins mr-2"></i>Giá bán (VNĐ)</label>
-                            <InputNumber v-model="selectedProduct.price" class="p-input-premium" mode="currency" currency="VND" locale="vi-VN" />
+                            <InputNumber v-model="selectedProduct.price" class="p-input-premium" inputClass="p-input-premium" mode="currency" currency="VND" locale="vi-VN" style="width: 100%" />
                         </div>
                         <div class="p-col-6 p-field">
                             <label><i class="fas fa-archive mr-2"></i>Số lượng nhập kho</label>
-                            <InputNumber v-model="selectedProduct.amount" class="p-input-premium" />
+                            <InputNumber v-model="selectedProduct.amount" class="p-input-premium" inputClass="p-input-premium" style="width: 100%" />
                         </div>
                         <div class="p-col-6 p-field">
                             <label><i class="fas fa-percentage mr-2"></i>Giảm giá (%)</label>
-                            <InputNumber v-model="selectedProduct.discountPercent" class="p-input-premium" :min="0" :max="100" />
+                            <InputNumber v-model="selectedProduct.discountPercent" class="p-input-premium" inputClass="p-input-premium" :min="0" :max="100" style="width: 100%" />
+                        </div>
+                        <div class="p-col-6 p-field">
+                            <label><i class="fas fa-shield-alt mr-2"></i>Bảo hành</label>
+                            <InputText v-model="selectedProduct.warranty" class="p-input-premium" placeholder="VD: 12 tháng, 2 năm..." style="width: 100%" />
                         </div>
 
                         <div class="p-col-12 p-field">
@@ -613,6 +626,7 @@ onMounted(() => {
                                 <th>Danh mục</th>
                                 <th>Nhà cung cấp</th>
                                 <th>Voucher</th>
+                                <th>Bảo hành</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -637,6 +651,7 @@ onMounted(() => {
                                     <span v-if="prod.voucher?.id" class="p-import-tag-success">{{ prod.voucher.name }}</span>
                                     <span v-else class="p-import-tag-error">{{ prod.voucher?.name || 'Trống' }}</span>
                                 </td>
+                                <td>{{ prod.warranty || '—' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -688,6 +703,7 @@ onMounted(() => {
                         <div class="p-detail-row"><label>Chất liệu:</label><span>{{ detailMaterials.length ? detailMaterials.join(', ') : '—' }}</span></div>
                         <div class="p-detail-row"><label>Kích cỡ:</label><span>{{ detailDimensions.length ? detailDimensions.join(', ') : '—' }}</span></div>
                         <div class="p-detail-row"><label>Mã voucher:</label><span>{{ detailProduct.voucher?.maVoucher || '—' }}</span></div>
+                        <div class="p-detail-row"><label>Bảo hành:</label><span>{{ detailProduct.warranty || '—' }}</span></div>
                         <div class="p-detail-row"><label>Ngày tạo:</label><span>{{ Helper.DateFormat(detailProduct.createdAt) }}</span></div>
                         <div class="p-detail-row"><label>Ngày sửa:</label><span>{{ Helper.DateFormat(detailProduct.updatedAt) }}</span></div>
                     </div>
@@ -791,8 +807,22 @@ onMounted(() => {
 .p-col-6 { grid-column: span 6; }
 .p-col-12 { grid-column: span 12; }
 .p-field { display: flex; flex-direction: column; gap: 6px; }
-.p-field label { font-size: 13px; font-weight: 600; color: #64748b; }
-.p-input-premium, .p-dropdown-premium { border-radius: 10px !important; }
+.p-field label { font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; align-items: center; }
+.p-input-premium, .p-dropdown-premium, .p-textarea { 
+    width: 100%; 
+    border-radius: 10px !important; 
+    border: 1px solid #cbd5e1 !important;
+    transition: all 0.2s ease;
+    background: #fff !important;
+}
+.p-input-premium:focus, .p-dropdown-premium:focus-within, .p-textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+    background: #fff !important;
+}
+:deep(.p-inputnumber), :deep(.p-inputnumber-input) { width: 100% !important; border-radius: 10px !important; }
+:deep(.p-dropdown-label) { padding: 10px 12px !important; }
+:deep(.p-inputtext) { padding: 10px 12px !important; }
 .p-form-sidebar { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
 .p-upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: #fff; display: flex; flex-direction: column; gap: 8px; }
 .p-image-preview-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
@@ -808,4 +838,6 @@ onMounted(() => {
 .p-detail-info { display: flex; flex-direction: column; gap: 8px; }
 .p-detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; border-bottom: 1px solid #f1f5f9; padding: 4px 0; }
 .p-detail-row label { font-weight: 600; color: #64748b; }
+
+.p-warranty-badge { background: #ede9fe; color: #6d28d9; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; border: 1px solid #c4b5fd; display: inline-flex; align-items: center; }
 </style>

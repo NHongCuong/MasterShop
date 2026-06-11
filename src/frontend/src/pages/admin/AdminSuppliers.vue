@@ -34,6 +34,12 @@ const supplierForm = ref({
     website: ''
 });
 
+// Import state
+const fileInput = ref<HTMLInputElement | null>(null);
+const importPreviewList = ref<any[]>([]);
+const visibleImportDialog = ref(false);
+const isConfirmingImport = ref(false);
+
 const loadData = async () => {
     loading.value = true;
     try {
@@ -112,39 +118,61 @@ const exportExcel = () => {
     window.location.href = `${API}/export-excel`;
 };
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const importExcel = () => {
-    fileInput.value?.click();
-};
-
-const handleImport = async (event: any) => {
+// Import Excel with Review logic
+const importExcel = () => fileInput.value?.click();
+const handleImportFileSelect = async (event: any) => {
     const file = event.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append('file', file);
+    loading.value = true;
 
     try {
-        await axios.post(`${API}/import-excel`, formData, {
+        const res = await axios.post(`${API}/preview-import`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
-        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Nhập dữ liệu Excel thành công', life: 2000 });
+        importPreviewList.value = res.data;
+        visibleImportDialog.value = true;
+    } catch (err: any) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể đọc file Excel', life: 3000 });
+    } finally {
+        loading.value = false;
+        event.target.value = '';
+    }
+};
+
+const confirmImport = async () => {
+    const validItems = importPreviewList.value.filter(x => x.isValid && !x.exists);
+    if (validItems.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Không có dữ liệu mới hợp lệ để nhập', life: 3000 });
+        return;
+    }
+    isConfirmingImport.value = true;
+    try {
+        const res = await axios.post(`${API}/confirm-import`, validItems);
+        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 });
+        visibleImportDialog.value = false;
         loadData();
     } catch (err: any) {
-        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Không thể nhập dữ liệu', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: err.response?.data || 'Import thất bại', life: 3000 });
     } finally {
-        event.target.value = '';
+        isConfirmingImport.value = false;
     }
 };
 
 const pages = computed(() => {
     const arr: number[] = [];
-    for (let i = 0; i < totalPages.value; i++) arr.push(i);
+    const max = 5;
+    let start = Math.max(0, currentPage.value - 2);
+    let end = Math.min(totalPages.value, start + max);
+    if (end - start < max) start = Math.max(0, end - max);
+    for (let i = start; i < end; i++) arr.push(i);
     return arr;
 });
 
 const goToPage = (p: number) => {
-    currentPage.value = p;
+    if (p >= 0 && p < totalPages.value) currentPage.value = p;
 };
 
 watch([pageSize, sortOption, currentPage], () => loadData());
@@ -173,7 +201,7 @@ onMounted(() => loadData());
                 <button class="vc-btn-add" @click="openAdd">
                     <i class="fas fa-plus me-2"></i>Thêm nhà cung cấp
                 </button>
-                <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls" @change="handleImport">
+                <input type="file" ref="fileInput" style="display: none" accept=".xlsx, .xls" @change="handleImportFileSelect">
                 <button class="vc-btn-import" @click="importExcel">
                     <i class="fas fa-file-import me-2"></i>Nhập Excel
                 </button>
@@ -213,7 +241,7 @@ onMounted(() => loadData());
             <table class="vc-table">
                 <thead>
                     <tr>
-                        <th style="width:80px">ID</th>
+                        <th style="width:80px">STT</th>
                         <th>Tên nhà cung cấp</th>
                         <th>Số điện thoại</th>
                         <th>Email</th>
@@ -225,8 +253,8 @@ onMounted(() => loadData());
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in list" :key="item.id">
-                        <td class="text-center font-bold text-slate-500">#{{ item.id }}</td>
+                    <tr v-for="(item, idx) in list" :key="item.id">
+                        <td class="text-center font-bold text-slate-500">{{ currentPage * pageSize + idx + 1 }}</td>
                         <td>
                             <div class="font-bold text-slate-700">{{ item.name }}</div>
                         </td>
@@ -250,6 +278,9 @@ onMounted(() => loadData());
                     <tr v-if="list.length === 0 && !loading">
                         <td colspan="9" class="text-center py-5 text-slate-400 italic">Không tìm thấy nhà cung cấp nào</td>
                     </tr>
+                    <tr v-if="loading">
+                        <td colspan="9" class="text-center py-5"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -271,6 +302,7 @@ onMounted(() => loadData());
             </div>
         </div>
 
+        <!-- Dialog Thêm/Sửa -->
         <Dialog v-model:visible="visibleDialog" modal :header="editMode ? 'Chỉnh sửa nhà cung cấp' : 'Thêm nhà cung cấp mới'" :style="{ width: '500px' }">
             <div class="p-fluid">
                 <div class="field mb-3">
@@ -295,8 +327,53 @@ onMounted(() => loadData());
                 </div>
             </div>
             <template #footer>
-                <Button label="Hủy" icon="pi pi-times" class="p-button-text" :disabled="saving" @click="visibleDialog = false" />
-                <Button label="Lưu lại" icon="pi pi-check" class="p-button-primary" :loading="saving" @click="saveSupplier" />
+                <div class="flex justify-content-end gap-2">
+                    <Button label="Hủy" icon="pi pi-times" class="p-button-text p-button-secondary" :disabled="saving" @click="visibleDialog = false" />
+                    <Button label="Lưu lại" icon="pi pi-check" class="p-button-primary" :loading="saving" @click="saveSupplier" />
+                </div>
+            </template>
+        </Dialog>
+
+        <!-- Dialog Review Import -->
+        <Dialog v-model:visible="visibleImportDialog" modal header="📥 Xác nhận nhập Nhà cung cấp từ Excel" :style="{ width: '850px' }">
+            <div class="import-review-container">
+                <div class="info-banner mb-3 p-3 border-round bg-blue-50 text-blue-800 flex align-items-center gap-2">
+                    <i class="fas fa-info-circle text-xl"></i>
+                    <span>Hệ thống đã bỏ qua cột ID để tự động tạo ID mới. Vui lòng kiểm tra dữ liệu trước khi xác nhận.</span>
+                </div>
+
+                <div class="table-wrapper border-1 border-slate-200 border-round overflow-hidden">
+                    <table class="w-full" style="border-collapse: collapse;">
+                        <thead class="bg-slate-50 border-bottom-1 border-slate-200">
+                            <tr>
+                                <th class="p-3 text-left text-xs font-bold text-slate-500 uppercase">STT</th>
+                                <th class="p-3 text-left text-xs font-bold text-slate-500 uppercase">Tên</th>
+                                <th class="p-3 text-left text-xs font-bold text-slate-500 uppercase">SĐT</th>
+                                <th class="p-3 text-left text-xs font-bold text-slate-500 uppercase">Email</th>
+                                <th class="p-3 text-left text-xs font-bold text-slate-500 uppercase">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, idx) in importPreviewList" :key="idx" class="border-bottom-1 border-slate-100 hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-400">{{ idx + 1 }}</td>
+                                <td class="p-3 font-semibold text-slate-700">{{ item.name }}</td>
+                                <td class="p-3 text-slate-600">{{ item.phone || '—' }}</td>
+                                <td class="p-3 text-slate-600">{{ item.email || '—' }}</td>
+                                <td class="p-3">
+                                    <span v-if="item.exists" class="p-tag-warn">Đã tồn tại</span>
+                                    <span v-else class="p-tag-new">Mới</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex justify-content-end gap-2 py-2">
+                    <Button label="Hủy bỏ" icon="pi pi-times" class="p-button-text p-button-secondary" :disabled="isConfirmingImport" @click="visibleImportDialog = false" />
+                    <Button label="Xác nhận nhập" icon="pi pi-check" class="p-button-success" :loading="isConfirmingImport" @click="confirmImport" />
+                </div>
             </template>
         </Dialog>
     </div>
@@ -310,42 +387,45 @@ onMounted(() => loadData());
 .vc-icon { font-size: 28px; color: #3b82f6; }
 .vc-header-left h2 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
 
-.vc-btn-add { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.vc-btn-add:hover { background: #2563eb; transform: translateY(-1px); }
-
-.vc-btn-export { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.vc-btn-export:hover { background: #15803d; transform: translateY(-1px); }
-
-.vc-btn-import { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.vc-btn-import:hover { background: #d97706; transform: translateY(-1px); }
+.vc-btn-add, .vc-btn-import, .vc-btn-export { border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; display: flex; align-items: center; }
+.vc-btn-add { background: #3b82f6; }
+.vc-btn-import { background: #f59e0b; }
+.vc-btn-export { background: #16a34a; }
+.vc-btn-add:hover, .vc-btn-import:hover, .vc-btn-export:hover { transform: translateY(-1px); filter: brightness(0.9); }
 
 .vc-toolbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
 .vc-toolbar-left, .vc-toolbar-right { display: flex; gap: 20px; align-items: center; }
-
 .vc-select-group { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #64748b; }
-.vc-select-group select { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; cursor: pointer; }
+.vc-select-group select { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; }
 
 .vc-search-box { position: relative; width: 300px; }
 .vc-search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-.vc-search-box input { width: 100%; padding: 8px 12px 8px 36px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.2s; }
-.vc-search-box input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.vc-search-box input { width: 100%; padding: 8px 12px 8px 36px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; }
 
 .vc-table-container { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
 .vc-table { width: 100%; border-collapse: collapse; }
-.vc-table th { background: #f8fafc; padding: 14px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+.vc-table th { background: #f8fafc; padding: 14px; text-align: left; font-size: 13px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; }
 .vc-table td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
 .vc-table tr:hover { background: #f8fafc; }
 
 .vc-actions { display: flex; gap: 8px; justify-content: center; }
 .vc-action-btn { width: 32px; height: 32px; border-radius: 6px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
 .vc-edit { background: #fef3c7; color: #d97706; }
-.vc-edit:hover { background: #fde68a; }
 .vc-delete { background: #fee2e2; color: #dc2626; }
-.vc-delete:hover { background: #fecaca; }
 
 .vc-pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
 .vc-page-info { font-size: 14px; color: #64748b; }
 .vc-pagination { display: flex; gap: 6px; }
 .vc-page-btn { padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; }
 .vc-page-active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.italic { font-style: italic; }
+
+.p-tag-new { background: #f0fdf4; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.p-tag-warn { background: #fffbeb; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+.table-wrapper { max-height: 400px; overflow-y: auto; }
 </style>

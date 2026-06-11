@@ -25,7 +25,7 @@ public class ProductEntity {
 	@Column(name = "Name_Product")
 	private String name;
 
-	@Column(name = "Description")
+	@Column(name = "Description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "Price")
@@ -50,6 +50,9 @@ public class ProductEntity {
 	@Column(name = "updated_at")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updatedAt;
+
+	@Column(name = "Warranty")
+	private String warranty;
 
 	@PrePersist
 	protected void onCreate() {
