@@ -295,6 +295,13 @@ onMounted(() => {
           </li>
           
           <li class="nav-item">
+            <router-link to="/admin/contact" active-class="active" class="nav-link">
+              <i class="nav-icon fas fa-envelope"></i>
+              <p>Tin nhắn liên hệ</p>
+            </router-link>
+          </li>
+          
+          <li class="nav-item">
             <a href="#" class="nav-link" @click="() => { MyApp.getInstance().clearState(); $router.push('/admin-login'); }">
               <i class="nav-icon fas fa-sign-out-alt"></i>
               <p>Đăng xuất</p>

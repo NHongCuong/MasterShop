@@ -187,6 +187,12 @@ export default [
                 meta: { title: 'Nhà cung cấp' }
             },
             {
+                path: 'contact',
+                name: 'adminContact',
+                component: () => import('./pages/admin/AdminContact.vue'),
+                meta: { title: 'Tin nhắn liên hệ' }
+            },
+            {
                 path: 'bills',
                 name: 'adminBills',
                 component: () => import('./pages/admin/AdminBills.vue'),

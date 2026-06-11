@@ -44,6 +44,9 @@ public class UserEntity {
     @Column
     private String salt;
 
+    @Column
+    private String avatar;
+
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;

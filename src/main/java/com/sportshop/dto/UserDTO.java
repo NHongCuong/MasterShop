@@ -19,6 +19,14 @@ public class UserDTO {
 	public String salt;
 	public Date createdAt;
 	public Date updatedAt;
+	public String avatar;
+	
+	public String getAvatar() {
+		return avatar;
+	}
+	public void setAvatar(String avatar) {
+		this.avatar = avatar;
+	}
 	
 	public UserTypeEntity userType;
 	

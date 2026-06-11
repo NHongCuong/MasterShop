@@ -28,6 +28,7 @@ export interface User {
     salt?: string; // This property is marked as WRITE_ONLY
     userStatus: UserStatus;
     userType: UserType;
+    avatar?: string;
 }
 
 export interface Category {

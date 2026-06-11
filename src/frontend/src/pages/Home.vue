@@ -209,7 +209,7 @@ onMounted(() => {
             <router-link class="nav-link text-white fw-bold px-3" style="font-size: 0.85rem;" to="/guides">HƯỚNG DẪN / REVIEW</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link text-white fw-bold px-3" style="font-size: 0.85rem;" to="/about">VỀ CHÚNG TÔI</router-link>
+            <router-link class="nav-link text-white fw-bold px-3" style="font-size: 0.85rem;" to="/contact">VỀ CHÚNG TÔI</router-link>
           </li>
         </ul>
       </div>

@@ -47,6 +47,20 @@ public class BillController {
         }
     }
 
+    @GetMapping("/my-bills")
+    public PageResponse<BillEntity> myBills(
+            @RequestParam String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createDate,desc") String sort) {
+        
+        String[] sortParts = sort.split(",");
+        Sort sortObj = Sort.by(sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, sortParts[0]);
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+        
+        return PageResponse.of(billRepo.findByEmail(email, pageable));
+    }
+
     @GetMapping("/order/{orderId}")
     public List<BillEntity> getByOrderId(@PathVariable Long orderId) {
         return billRepo.findByOrderbill_Id(orderId);

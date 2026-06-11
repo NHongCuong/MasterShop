@@ -1,5 +1,6 @@
 package com.sportshop.controller;
 
+import java.util.Map;
 import java.util.Optional;
 import com.sportshop.converter.UserConverter;
 import com.sportshop.entity.*;
@@ -204,6 +205,7 @@ public class UserController {
             existing.setEmail(user.getEmail());
             existing.setAddress(user.getAddress());
             existing.setVerify(user.getVerify());
+            existing.setAvatar(user.getAvatar());
 
             if (user.getUserType() != null && user.getUserType().getId() != null) {
                 UserTypeEntity usertype = usertypeRepo.findById(user.getUserType().getId()).orElse(null);
@@ -224,6 +226,31 @@ public class UserController {
         }
     }
     // 🔴 API xóa user
+    @PutMapping("/change-password/{id}")
+    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> passwords) {
+        try {
+            String newPassword = passwords.get("newPassword");
+            
+            UserEntity user = userRepository.findById(id).orElse(null);
+            if (user == null) {
+                return new ResponseEntity<>("Không tìm thấy người dùng", HttpStatus.NOT_FOUND);
+            }
+            
+            // Generate new salt and encode
+            String newSalt = userPasswordService.generateSalt();
+            String newHash = userPasswordService.encode(newPassword, newSalt);
+            
+            user.setPassword(newHash);
+            user.setSalt(newSalt);
+            
+            userRepository.save(user);
+            return ResponseEntity.ok("Đổi mật khẩu thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi: " + e.getMessage());
+        }
+    }
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {

@@ -23,6 +23,7 @@ public class UserConverter {
 		en.setVerify(dto.getVerify());
 		en.setCreatedAt(dto.getCreatedAt());
 		en.setUpdatedAt(dto.getUpdatedAt());
+		en.setAvatar(dto.getAvatar());
 		return en;
 	}
 	public UserDTO toDTO(UserEntity en)
@@ -42,6 +43,7 @@ public class UserConverter {
 		dto.setVerify(en.getVerify());
 		dto.setCreatedAt(en.getCreatedAt());
 		dto.setUpdatedAt(en.getUpdatedAt());
+		dto.setAvatar(en.getAvatar());
 		return dto;
 	}
 }
