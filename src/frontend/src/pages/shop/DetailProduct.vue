@@ -304,10 +304,11 @@ async function buyNow() {
               </h3>
             </div>
             <span class="badge bg-success">Còn hàng: {{ myProduct.amount }}</span>
+            <span v-if="myProduct.warranty" class="badge bg-info ms-2">
+              <i class="fas fa-shield-alt me-1"></i>Bảo hành: {{ myProduct.warranty }}
+            </span>
           </div>
           
-          <p class="text-muted mb-4">{{ myProduct.description }}</p>
-
           <div class="row g-3 mb-4">
             <div class="col-md-4">
               <label class="form-label fw-bold">Màu sắc</label>
@@ -338,10 +339,17 @@ async function buyNow() {
           </div>
 
           <div class="border-top pt-4">
-            <div class="d-flex align-items-center gap-4 text-muted small">
+            <div class="d-flex align-items-center gap-4 text-muted small mb-3">
               <span><i class="fas fa-truck me-1"></i> Giao hàng toàn quốc</span>
               <span><i class="fas fa-undo me-1"></i> Đổi trả trong 7 ngày</span>
               <span><i class="fas fa-shield-alt me-1"></i> Bảo hành chính hãng</span>
+            </div>
+            
+            <div v-if="myProduct.description" class="product-description mt-4">
+              <h5 class="fw-bold mb-3">Mô tả sản phẩm</h5>
+              <p class="text-muted" style="white-space: pre-line; line-height: 1.6;">
+                {{ myProduct.description }}
+              </p>
             </div>
           </div>
         </div>

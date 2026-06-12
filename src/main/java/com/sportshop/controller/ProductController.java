@@ -284,7 +284,8 @@ public class ProductController {
 
                 Map<String, Object> item = new HashMap<>();
                 // Row mapping adjusted for STT column at index 0
-                item.put("name", formatter.formatCellValue(row.getCell(1)));
+                String productName = formatter.formatCellValue(row.getCell(1));
+                item.put("name", productName);
                 item.put("avatar", formatter.formatCellValue(row.getCell(2)));
                 item.put("description", formatter.formatCellValue(row.getCell(3)));
                 
@@ -327,6 +328,10 @@ public class ProductController {
                 item.put("voucher", voucherMap);
 
                 item.put("warranty", formatter.formatCellValue(row.getCell(11)));
+
+                // Check if product exists
+                boolean exists = productRepo.findFirstByName(productName).isPresent();
+                item.put("isExisting", exists);
 
                 previewList.add(item);
             }

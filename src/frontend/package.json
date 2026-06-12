@@ -17,6 +17,7 @@
     "html2pdf.js": "^0.14.0",
     "primeicons": "^7.0.0",
     "primevue": "^3.53.1",
+    "socket.io-client": "^4.8.3",
     "sweetalert2": "^11.10.7",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5"

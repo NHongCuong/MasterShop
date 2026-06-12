@@ -64,6 +64,7 @@ export interface Product {
     "amount": number,
     "soldQuantity"?: number,
     "discountPercent"?: number,
+    "warranty"?: string,
     "supplier": Supplier,
     "category": Category,
     "voucher"?: Voucher | null,

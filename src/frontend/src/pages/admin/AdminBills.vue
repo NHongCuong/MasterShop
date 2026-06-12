@@ -334,6 +334,7 @@ onMounted(() => loadData());
                                 <th class="text-center">SL</th>
                                 <th class="text-end">Đơn giá</th>
                                 <th class="text-end">Thành tiền</th>
+                                <th class="text-center">Bảo hành</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -349,26 +350,29 @@ onMounted(() => loadData());
                                 <td class="text-center">{{ it.amount }}</td>
                                 <td class="text-end">{{ Helper.ToMoney(it.price) }}</td>
                                 <td class="text-end font-bold">{{ Helper.ToMoney(it.amount * it.price) }}</td>
+                                <td class="text-center">
+                                    <span class="vattr vat-dim">{{ it.product?.warranty || '—' }}</span>
+                                </td>
                             </tr>
                             <tr v-if="orderItems.length === 0 && !itemsLoading">
-                                <td colspan="4" class="text-center text-slate-400 py-4">Không có sản phẩm</td>
+                                <td colspan="5" class="text-center text-slate-400 py-4">Không có sản phẩm</td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3" class="text-end font-semibold">Tổng tiền hàng:</td>
+                                <td colspan="4" class="text-end font-semibold">Tổng tiền hàng:</td>
                                 <td class="text-end font-bold">{{ Helper.ToMoney(selectedBill.totalMoney) }}</td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end font-semibold text-red-500">Giảm giá:</td>
+                                <td colspan="4" class="text-end font-semibold text-red-500">Giảm giá:</td>
                                 <td class="text-end font-bold text-red-500">- {{ Helper.ToMoney(selectedBill.discount || 0) }}</td>
                             </tr>
                             <tr v-if="selectedBill.vatAmount">
-                                <td colspan="3" class="text-end font-semibold">VAT ({{ selectedBill.vatRate || 0 }}%):</td>
+                                <td colspan="4" class="text-end font-semibold">VAT ({{ selectedBill.vatRate || 0 }}%):</td>
                                 <td class="text-end font-bold">{{ Helper.ToMoney(selectedBill.vatAmount) }}</td>
                             </tr>
                             <tr class="vc-total-row">
-                                <td colspan="3" class="text-end font-bold">Tổng thanh toán:</td>
+                                <td colspan="4" class="text-end font-bold">Tổng thanh toán:</td>
                                 <td class="text-end font-bold text-blue-600">{{ Helper.ToMoney(selectedBill.totalMoneyaftersaleoff) }}</td>
                             </tr>
                         </tfoot>
@@ -478,7 +482,7 @@ onMounted(() => loadData());
                                 <td style="text-align: center;">{{ it.amount }}</td>
                                 <td style="text-align: right;">{{ Helper.ToMoney(it.price) }}</td>
                                 <td style="text-align: right;">{{ Helper.ToMoney(it.amount * it.price) }}</td>
-                                <td style="text-align: center; font-size: 11px;">Không bảo hành</td>
+                                <td style="text-align: center; font-size: 11px;">{{ it.product?.warranty || 'Không bảo hành' }}</td>
                             </tr>
                             <tr v-if="printOrderItems.length === 0">
                                 <td colspan="6" class="text-center text-slate-400 py-4">Không có sản phẩm</td>

@@ -320,10 +320,19 @@ const onImportFileSelect = async (event: Event) => {
     }
 }
 const confirmImport = async () => {
+    // Chỉ nhập những sản phẩm CHƯA tồn tại
+    const newItems = importPreviewList.value.filter(it => !it.isExisting)
+    
+    if (newItems.length === 0) {
+        toast.add({ severity: 'warn', summary: 'Thông báo', detail: 'Tất cả sản phẩm đã tồn tại trong hệ thống. Không có gì để nhập mới.', life: 4000 })
+        visibleImportDialog.value = false
+        return
+    }
+
     isConfirmingImport.value = true
     try {
-        const res = await axios.post(`${PRODUCT_API}/confirm-import`, importPreviewList.value)
-        toast.add({ severity: 'success', summary: 'Thành công', detail: res.data, life: 2500 })
+        const res = await axios.post(`${PRODUCT_API}/confirm-import`, newItems)
+        toast.add({ severity: 'success', summary: 'Thành công', detail: `Đã nhập mới ${newItems.length} sản phẩm.`, life: 3000 })
         visibleImportDialog.value = false
         loadProducts()
     } catch (err: any) {
@@ -627,6 +636,7 @@ onMounted(() => {
                                 <th>Nhà cung cấp</th>
                                 <th>Voucher</th>
                                 <th>Bảo hành</th>
+                                <th style="width: 120px">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -652,6 +662,14 @@ onMounted(() => {
                                     <span v-else class="p-import-tag-error">{{ prod.voucher?.name || 'Trống' }}</span>
                                 </td>
                                 <td>{{ prod.warranty || '—' }}</td>
+                                <td class="text-center">
+                                    <span v-if="prod.isExisting" class="p-import-tag-error">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> Đã tồn tại
+                                    </span>
+                                    <span v-else class="p-import-tag-success">
+                                        <i class="fas fa-check-circle mr-1"></i> Có thể nhập
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
