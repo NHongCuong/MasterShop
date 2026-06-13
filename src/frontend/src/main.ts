@@ -15,6 +15,13 @@ const app = createApp(App);
 const router = createRouter({
     routes: Routes,
     history: createWebHistory(),
+    scrollBehavior(_to, _from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        } else {
+            return { top: 0, behavior: 'smooth' };
+        }
+    }
 });
 router.afterEach((to:any) => {
     // Sử dụng tiêu đề từ meta nếu nó tồn tại, nếu không thì sử dụng một tiêu đề mặc định
