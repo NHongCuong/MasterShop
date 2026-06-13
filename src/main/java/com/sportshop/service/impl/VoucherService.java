@@ -56,7 +56,7 @@ public class VoucherService implements IVoucherService {
 
     @Override
     public VoucherDTO getByCode(String maVoucher) {
-        return toDTO(voucherRepo.findByMaVoucher(maVoucher).orElse(null));
+        return toDTO(voucherRepo.findFirstByMaVoucher(maVoucher).orElse(null));
     }
 
     @Override

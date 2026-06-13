@@ -73,8 +73,14 @@ export default [
             {
                 path: '/guides',
                 name: 'guides',
-                component: () => import('./pages/shop/ShopHome.vue'),
-                meta: { title: 'Hướng dẫn' }
+                component: () => import('./pages/shop/Review.vue'),
+                meta: { title: 'Hướng dẫn / Review' }
+            },
+            {
+                path: '/guide/:slug',
+                name: 'guideDetail',
+                component: () => import('./pages/shop/ReviewDetail.vue'),
+                meta: { title: 'Chi tiết bài viết' }
             },
             {
                 path: '/about',
@@ -197,6 +203,30 @@ export default [
                 name: 'adminBills',
                 component: () => import('./pages/admin/AdminBills.vue'),
                 meta: { title: 'Quản lý Hóa đơn' }
+            },
+            {
+                path: 'wishlists',
+                name: 'adminWishlists',
+                component: () => import('./pages/admin/AdminWishlists.vue'),
+                meta: { title: 'Ưa thích' }
+            },
+            {
+                path: 'post',
+                name: 'adminPost',
+                component: () => import('./pages/admin/AdminPost.vue'),
+                meta: { title: 'Bài viết' }
+            },
+            {
+                path: 'post/create',
+                name: 'adminPostCreate',
+                component: () => import('./pages/admin/AdminPostForm.vue'),
+                meta: { title: 'Thêm bài viết' }
+            },
+            {
+                path: 'post/edit/:id',
+                name: 'adminPostEdit',
+                component: () => import('./pages/admin/AdminPostForm.vue'),
+                meta: { title: 'Sửa bài viết' }
             }
         ]
     }

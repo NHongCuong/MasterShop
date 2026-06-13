@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import { Product } from '../../interfaces/app';
 import Helper from '../../helper/helper';
+import { state, MyApp } from '../../app/MyApp';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,6 +25,21 @@ const selectedColors = ref<number[]>([]);
 const selectedMaterials = ref<number[]>([]);
 const selectedSizes = ref<string[]>([]);
 const sortOrder = ref('newest');
+const wishlisted = ref<Record<number, boolean>>({});
+
+const loadWishlists = async () => {
+    await MyApp.getInstance().authenticate();
+    if (state.isAuthenticated && state.user?.id) {
+        try {
+            const res = await axios.get(`http://localhost:8081/wishlist/user/${state.user.id}`);
+            res.data.forEach((item: any) => {
+                if (item.product?.id) {
+                    wishlisted.value[item.product.id] = true;
+                }
+            });
+        } catch (err) {}
+    }
+};
 
 const loadData = async () => {
     loading.value = true;
@@ -119,8 +135,24 @@ watch(() => route.query.search, (newSearch) => {
     searchKeyword.value = typeof newSearch === 'string' ? newSearch.trim() : '';
 }, { immediate: true });
 
-const addToWishlist = (p: Product) => {
-    alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+const addToWishlist = async (p: Product) => {
+    if (!state.isAuthenticated || !state.user?.id) {
+        alert("Vui lòng đăng nhập để sử dụng tính năng Ưa thích!");
+        return;
+    }
+    try {
+        const payload = { userId: state.user.id, productId: p.id };
+        const res = await axios.post(`http://localhost:8081/wishlist/toggle`, payload);
+        if (res.data.status === 'added') {
+            wishlisted.value[p.id] = true;
+            alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+        } else {
+            wishlisted.value[p.id] = false;
+            alert(`Đã gỡ "${p.name}" khỏi danh sách yêu thích!`);
+        }
+    } catch (err) {
+        alert("Lỗi khi cập nhật danh sách ưa thích");
+    }
 };
 
 const shareProduct = (p: Product) => {
@@ -131,6 +163,7 @@ const shareProduct = (p: Product) => {
 
 onMounted(() => {
     loadData();
+    loadWishlists();
 });
 </script>
 
@@ -252,7 +285,7 @@ onMounted(() => {
                                             <!-- Cụm nút Wishlist & Share -->
                                             <div class="product-side-actions">
                                                 <button class="side-btn" @click.stop.prevent="addToWishlist(p)" title="Yêu thích">
-                                                    <i class="far fa-heart"></i>
+                                                    <i :class="wishlisted[p.id] ? 'fas fa-heart text-danger' : 'far fa-heart'"></i>
                                                 </button>
                                                 <button class="side-btn" @click.stop.prevent="shareProduct(p)" title="Chia sẻ">
                                                     <i class="fas fa-share-alt"></i>
@@ -405,7 +438,7 @@ onMounted(() => {
 
 .product-side-actions {
     position: absolute;
-    right: -50px;
+    right: 15px;
     top: 15px;
     display: flex;
     flex-direction: column;

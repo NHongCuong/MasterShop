@@ -19,5 +19,5 @@ public interface VoucherRepository extends JpaRepository<VoucherEntity, Long> {
 
     boolean existsByMaVoucher(String maVoucher);
 
-    Optional<VoucherEntity> findByMaVoucher(String maVoucher);
+    Optional<VoucherEntity> findFirstByMaVoucher(String maVoucher);
 }

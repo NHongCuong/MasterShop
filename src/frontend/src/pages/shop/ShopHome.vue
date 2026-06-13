@@ -3,6 +3,7 @@ import axios from 'axios';
 import {Category, Product} from '../../interfaces/app';
 import {onMounted, ref, watch, onUnmounted} from 'vue';
 import {useRoute} from 'vue-router';
+import { state, MyApp } from '../../app/MyApp';
 import Helper from '../../helper/helper';
 import '../../shop.css';
 
@@ -14,6 +15,21 @@ const categories = ref<Category[]>([]);
 const products = ref<Product[]>([]);
 const filteredProducts = ref<Product[]>([]);
 const categoryScrollRef = ref<HTMLElement | null>(null);
+const wishlisted = ref<Record<number, boolean>>({});
+
+const loadWishlists = async () => {
+    await MyApp.getInstance().authenticate();
+    if (state.isAuthenticated && state.user?.id) {
+        try {
+            const res = await axios.get(`http://localhost:8081/wishlist/user/${state.user.id}`);
+            res.data.forEach((item: any) => {
+                if (item.product?.id) {
+                    wishlisted.value[item.product.id] = true;
+                }
+            });
+        } catch (err) {}
+    }
+};
 
 function showSlides(n: number) {
   const slides = document.getElementsByClassName("mySlides") as HTMLCollectionOf<HTMLElement>;
@@ -82,8 +98,24 @@ function scrollCategories(direction: 'left' | 'right') {
   }
 }
 
-const addToWishlist = (p: Product) => {
-  alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+const addToWishlist = async (p: Product) => {
+    if (!state.isAuthenticated || !state.user?.id) {
+        alert("Vui lòng đăng nhập để sử dụng tính năng Ưa thích!");
+        return;
+    }
+    try {
+        const payload = { userId: state.user.id, productId: p.id };
+        const res = await axios.post(`http://localhost:8081/wishlist/toggle`, payload);
+        if (res.data.status === 'added') {
+            wishlisted.value[p.id] = true;
+            alert(`Đã thêm "${p.name}" vào danh sách yêu thích!`);
+        } else {
+            wishlisted.value[p.id] = false;
+            alert(`Đã gỡ "${p.name}" khỏi danh sách yêu thích!`);
+        }
+    } catch (err) {
+        alert("Lỗi khi cập nhật danh sách ưa thích");
+    }
 };
 
 const shareProduct = (p: Product) => {
@@ -113,6 +145,7 @@ onMounted(() => {
   startAutoSlide();
   loadCategory();
   loadProduct();
+  loadWishlists();
 });
 
 onUnmounted(() => {
@@ -200,7 +233,7 @@ onUnmounted(() => {
                 <img :src="Helper.GetImageUrl(pr.avatar)" :alt="pr.name" class="img-fluid">
                 <div class="product-side-actions">
                   <button class="side-btn" @click.stop.prevent="addToWishlist(pr)" title="Yêu thích">
-                    <i class="far fa-heart"></i>
+                    <i :class="wishlisted[pr.id] ? 'fas fa-heart text-danger' : 'far fa-heart'"></i>
                   </button>
                   <button class="side-btn" @click.stop.prevent="shareProduct(pr)" title="Chia sẻ">
                     <i class="fas fa-share-alt"></i>
@@ -373,7 +406,7 @@ onUnmounted(() => {
 
 .product-side-actions {
   position: absolute;
-  right: -50px;
+  right: 15px;
   top: 15px;
   display: flex;
   flex-direction: column;

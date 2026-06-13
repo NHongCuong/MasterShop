@@ -304,7 +304,7 @@ public class ProductController {
                 Map<String, Object> categoryMap = new HashMap<>();
                 categoryMap.put("name", categoryName);
                 if (!categoryName.isEmpty()) {
-                    Optional<CategoryEntity> cat = categoryRepo.findByName(categoryName);
+                    Optional<CategoryEntity> cat = categoryRepo.findFirstByName(categoryName);
                     if (cat.isPresent()) categoryMap.put("id", cat.get().getId());
                 }
                 item.put("category", categoryMap);
@@ -313,7 +313,7 @@ public class ProductController {
                 Map<String, Object> supplierMap = new HashMap<>();
                 supplierMap.put("name", supplierName);
                 if (!supplierName.isEmpty()) {
-                    Optional<SupplierEntity> sup = supplierRepo.findByName(supplierName);
+                    Optional<SupplierEntity> sup = supplierRepo.findFirstByName(supplierName);
                     if (sup.isPresent()) supplierMap.put("id", sup.get().getId());
                 }
                 item.put("supplier", supplierMap);
@@ -322,7 +322,7 @@ public class ProductController {
                 Map<String, Object> voucherMap = new HashMap<>();
                 voucherMap.put("name", voucherName);
                 if (!voucherName.isEmpty()) {
-                    Optional<VoucherEntity> vch = voucherRepo.findByMaVoucher(voucherName);
+                    Optional<VoucherEntity> vch = voucherRepo.findFirstByMaVoucher(voucherName);
                     if (vch.isPresent()) voucherMap.put("id", vch.get().getId());
                 }
                 item.put("voucher", voucherMap);
@@ -361,15 +361,15 @@ public class ProductController {
 
                 Map<String, Object> catMap = (Map<String, Object>) prodData.get("category");
                 if (catMap != null && catMap.get("name") != null) {
-                    product.setCategory(categoryRepo.findByName((String) catMap.get("name")).orElse(null));
+                    product.setCategory(categoryRepo.findFirstByName((String) catMap.get("name")).orElse(null));
                 }
                 Map<String, Object> supMap = (Map<String, Object>) prodData.get("supplier");
                 if (supMap != null && supMap.get("name") != null) {
-                    product.setSupplier(supplierRepo.findByName((String) supMap.get("name")).orElse(null));
+                    product.setSupplier(supplierRepo.findFirstByName((String) supMap.get("name")).orElse(null));
                 }
                 Map<String, Object> vchMap = (Map<String, Object>) prodData.get("voucher");
                 if (vchMap != null && vchMap.get("name") != null) {
-                    product.setVoucher(voucherRepo.findByMaVoucher((String) vchMap.get("name")).orElse(null));
+                    product.setVoucher(voucherRepo.findFirstByMaVoucher((String) vchMap.get("name")).orElse(null));
                 }
 
                 productRepo.save(product);

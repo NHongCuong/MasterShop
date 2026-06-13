@@ -15,6 +15,6 @@ public interface SupplierRepository extends JpaRepository<SupplierEntity, Long>{
            "OR lower(s.phone) LIKE lower(concat('%', :search, '%'))")
     Page<SupplierEntity> findBySearch(String search, Pageable pageable);
 
-    Optional<SupplierEntity> findByName(String name);
+    Optional<SupplierEntity> findFirstByName(String name);
     boolean existsByName(String name);
 }

@@ -172,7 +172,7 @@ public class OrderController {
             long totalAfterSale = 0;
             String voucherCode = (String) payload.get("voucherCode");
             VoucherEntity appliedVoucher = (voucherCode != null && !voucherCode.trim().isEmpty()) 
-                    ? voucherRepo.findByMaVoucher(voucherCode.trim()).orElse(null) : null;
+                    ? voucherRepo.findFirstByMaVoucher(voucherCode.trim()).orElse(null) : null;
 
             if (payload.containsKey("cartItems") && payload.get("cartItems") instanceof List) {
                 // Use items from payload (for Buy Now or Selective Checkout)

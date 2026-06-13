@@ -50,7 +50,7 @@ public class CategoryService implements ICategoryService {
 
 	@Override
 	public void save(CategoryDTO dto) {
-		if (categoryRepo.findByName(dto.getName()).isPresent()) {
+		if (categoryRepo.findFirstByName(dto.getName()).isPresent()) {
 			throw new RuntimeException("Tên danh mục đã tồn tại");
 		}
 		CategoryEntity entity = categoryConverter.toEntity(dto);
@@ -62,7 +62,7 @@ public class CategoryService implements ICategoryService {
 		CategoryEntity oldEntity = categoryRepo.findById(id).orElse(null);
 		if (oldEntity != null) {
 			if (!oldEntity.getName().equals(dto.getName())) {
-				if (categoryRepo.findByName(dto.getName()).isPresent()) {
+				if (categoryRepo.findFirstByName(dto.getName()).isPresent()) {
 					throw new RuntimeException("Tên danh mục đã tồn tại");
 				}
 			}
@@ -146,7 +146,7 @@ public class CategoryService implements ICategoryService {
 				String icon = getCellValueAsString(row.getCell(1)); // Column B: Ảnh
 				if (name.isEmpty()) continue;
 
-				if (categoryRepo.findByName(name).isEmpty()) {
+				if (categoryRepo.findFirstByName(name).isEmpty()) {
 					CategoryEntity entity = new CategoryEntity();
 					entity.setName(name);
 					entity.setIcon(icon);
