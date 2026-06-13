@@ -100,8 +100,10 @@ onMounted(() => {
 
 <template>
   <div class="main-wrapper">
-    <!-- Header Top -->
-    <div class="header-top py-2" style="background-color: #9adbf6;">
+    <!-- Sticky Header Wrapper -->
+    <div style="position: sticky; top: 0; z-index: 1040;">
+      <!-- Header Top -->
+      <div class="header-top py-2" style="background-color: #9adbf6;">
       <div class="container d-flex align-items-center justify-content-between">
         <!-- Logo -->
         <router-link to="/" class="navbar-brand d-flex align-items-center">
@@ -214,6 +216,7 @@ onMounted(() => {
         </ul>
       </div>
     </nav>
+    </div> <!-- // Sticky Header Wrapper -->
 
     <!-- Main Content -->
     <div class="content-body">
