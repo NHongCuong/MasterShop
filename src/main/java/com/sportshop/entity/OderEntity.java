@@ -58,6 +58,10 @@ public class OderEntity {
     @JoinColumn(name="ID_SM")
     private ShipMethodEntity shipMethod;
 
+    @ManyToOne
+    @JoinColumn(name="ID_User")
+    private UserEntity user;
+
     @OneToMany(mappedBy = "orderbill")
     @JsonIgnore
     private List<BillEntity> osderbill;

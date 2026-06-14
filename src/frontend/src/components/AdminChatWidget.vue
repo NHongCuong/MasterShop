@@ -1,52 +1,61 @@
 <template>
-  <div class="admin-chat-widget shadow-lg">
-    <div class="chat-header">
-      <div class="header-info">
-        <img v-if="selectedUser" :src="selectedUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'" class="avatar" />
-        <div class="status-info">
-          <span class="name">{{ selectedUser ? selectedUser.name : 'Chưa chọn khách hàng' }}</span>
-          <span class="status" v-if="selectedUser"><i class="pi pi-circle-fill online-icon"></i> 1 khách hàng đang online</span>
-        </div>
-      </div>
-      <div class="header-actions">
-        <i class="pi pi-ellipsis-v"></i>
-        <i class="pi pi-times" @click="$emit('close')"></i>
-      </div>
-    </div>
-    
-    <div class="user-selector p-2">
-      <select v-model="selectedUserId" class="form-select form-select-sm" @change="handleUserChange">
-        <option value="">-- Chọn khách hàng --</option>
-        <option v-for="user in onlineUsers" :key="user.id" :value="user.id">
-          {{ user.name }} ({{ user.email }})
-        </option>
-      </select>
+  <div class="admin-chat-container">
+    <!-- Floating Toggle Button -->
+    <div v-if="!isOpen" class="chat-toggle-btn shadow-lg" @click="toggleChat">
+      <i class="pi pi-comments"></i>
+      <span v-if="totalUnread > 0" class="badge-count">{{ totalUnread }}</span>
     </div>
 
-    <div class="chat-messages" ref="messageContainer">
-      <div v-if="!selectedUserId" class="no-chat">
-        Chưa có tin nhắn nào
-      </div>
-      <div v-else v-for="(msg, index) in filteredMessages" :key="index" :class="['message', msg.from === 'admin' ? 'sent' : 'received']">
-        <div class="message-content">
-          {{ msg.message }}
+    <!-- Main Chat Window -->
+    <div v-else class="admin-chat-widget shadow-lg">
+      <div class="chat-header" @click="toggleChat" style="cursor: pointer;">
+        <div class="header-info">
+          <img v-if="selectedUser" :src="selectedUser.avatar || 'https://www.w3schools.com/howto/img_avatar.png'" class="avatar" />
+          <div class="status-info">
+            <span class="name">{{ selectedUser ? selectedUser.name : 'CSKH MasterShop' }}</span>
+            <span class="status" v-if="selectedUser"><i class="pi pi-circle-fill online-icon"></i> Đang chat</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <i class="pi pi-minus"></i>
+          <i class="pi pi-times" @click.stop="() => { isOpen = false; state.selectedChatUserId = null; }"></i>
         </div>
       </div>
-    </div>
-    
-    <div class="chat-input-area">
-      <input 
-        v-model="newMessage" 
-        type="text" 
-        placeholder="Nhập tin nhắn..." 
-        @keyup.enter="sendMessage"
-        :disabled="!selectedUserId"
-      />
-      <div class="input-actions">
-        <i class="pi pi-face-smile"></i>
-        <button @click="sendMessage" :disabled="!newMessage.trim() || !selectedUserId">
-          <i class="pi pi-send"></i>
-        </button>
+      
+      <div class="user-selector p-2">
+        <select v-model="selectedUserId" class="form-select form-select-sm" @change="handleUserChange">
+          <option value="">-- Chọn khách hàng --</option>
+          <option v-for="user in onlineUsers" :key="user.id" :value="user.id">
+            {{ user.name }} {{ unreadPerUser[user.id] ? `(${unreadPerUser[user.id]})` : '' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="chat-messages" ref="messageContainer">
+        <div v-if="!selectedUserId" class="no-chat">
+          Vui lòng chọn khách hàng để bắt đầu
+        </div>
+        <div v-else v-for="(msg, index) in filteredMessages" :key="index" :class="['message', msg.from.toString() === 'admin' ? 'sent' : 'received']">
+          <div class="message-content">
+            {{ msg.message }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="chat-input-area">
+        <input 
+          v-model="newMessage" 
+          type="text" 
+          placeholder="Nhập tin nhắn..." 
+          @keyup.enter="sendMessage"
+          :disabled="!selectedUserId"
+        />
+        <div class="input-actions">
+          <i class="pi pi-face-smile"></i>
+          <button @click="sendMessage" :disabled="!newMessage.trim() || !selectedUserId">
+            <i class="pi pi-send"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -60,12 +69,30 @@ import { state } from '../app/MyApp';
 const props = defineProps(['initialUserId']);
 const emit = defineEmits(['close']);
 
+const isOpen = ref(false);
+const unreadPerUser = ref({});
+const totalUnread = computed(() => {
+    return Object.values(unreadPerUser.value).reduce((a, b) => a + b, 0);
+});
+
 const selectedUserId = ref(props.initialUserId || '');
 const newMessage = ref('');
 const allMessages = ref([]);
 const onlineUsers = ref([]);
 const messageContainer = ref(null);
 const socket = ref(null);
+
+const toggleChat = () => {
+    isOpen.value = !isOpen.value;
+    if (isOpen.value && selectedUserId.value) {
+        unreadPerUser.value[selectedUserId.value] = 0;
+        scrollToBottom();
+    }
+    // Reset global state if closing so clicking the same user again triggers the watch
+    if (!isOpen.value) {
+        state.selectedChatUserId = null;
+    }
+};
 
 const selectedUser = computed(() => {
   return onlineUsers.value.find(u => u.id === selectedUserId.value);
@@ -134,6 +161,15 @@ onMounted(() => {
 
   socket.value.on('receive_message', (data) => {
     allMessages.value.push(data);
+    
+    // Notification logic
+    const fromId = data.from.toString();
+    if (fromId !== 'admin') {
+        if (!isOpen.value || selectedUserId.value.toString() !== fromId) {
+            unreadPerUser.value[fromId] = (unreadPerUser.value[fromId] || 0) + 1;
+        }
+    }
+    
     scrollToBottom();
   });
 
@@ -167,12 +203,56 @@ watch(filteredMessages, () => {
 watch(() => props.initialUserId, (newId) => {
   if (newId) {
     selectedUserId.value = newId;
+    isOpen.value = true;
     handleUserChange();
   }
 });
 </script>
 
 <style scoped>
+.admin-chat-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.chat-toggle-btn {
+  width: 60px;
+  height: 60px;
+  background-color: #f1b42f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.3s;
+}
+
+.chat-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+.badge-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff4757;
+  color: white;
+  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
+}
+
 .admin-chat-widget {
   width: 350px;
   height: 500px;
@@ -181,10 +261,7 @@ watch(() => props.initialUserId, (newId) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  z-index: 9999;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
 .chat-header {

@@ -29,6 +29,9 @@ public class OrderController {
     private OderRepository orderRepo;
 
     @Autowired
+    private UserRepository userRepo;
+
+    @Autowired
     private BillRepository billRepo;
 
     @Autowired
@@ -164,6 +167,8 @@ public class OrderController {
             if (smMap != null && smMap.get("id") != null) {
                 smRepo.findById(Long.valueOf(smMap.get("id").toString())).ifPresent(order::setShipMethod);
             }
+
+            userRepo.findById(userId).ifPresent(order::setUser);
 
             order = orderRepo.save(order);
 

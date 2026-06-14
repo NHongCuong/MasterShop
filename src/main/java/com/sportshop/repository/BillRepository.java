@@ -26,4 +26,7 @@ public interface BillRepository extends JpaRepository<BillEntity, Long> {
 
     @Query("SELECT b FROM BillEntity b WHERE b.orderbill.email = :email")
     Page<BillEntity> findByEmail(@Param("email") String email, Pageable pageable);
+
+    @Query("SELECT b FROM BillEntity b WHERE (b.orderbill.user.id = :userId OR b.orderbill.email = :email)")
+    Page<BillEntity> findByUserIdOrEmail(@Param("userId") Long userId, @Param("email") String email, Pageable pageable);
 }

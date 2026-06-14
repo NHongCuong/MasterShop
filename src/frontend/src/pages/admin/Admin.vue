@@ -3,6 +3,7 @@ import {MyApp, state} from '../../app/MyApp';
 import {onMounted} from 'vue';
 import BackToTop from '../../components/BackToTop.vue';
 import Helper from '../../helper/helper';
+import AdminChatWidget from '../../components/AdminChatWidget.vue';
 
 onMounted(() => {
   MyApp.getInstance().authenticate();
@@ -365,6 +366,7 @@ onMounted(() => {
   </footer>
 
   <BackToTop />
+  <AdminChatWidget v-if="state.isAuthenticated" :initialUserId="state.selectedChatUserId" />
 </template>
 
 <style scoped>

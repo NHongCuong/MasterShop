@@ -96,6 +96,7 @@ const loadOrders = async () => {
     const res = await axios.get('http://localhost:8081/bill/my-bills', {
       params: {
         email: state.user.email,
+        userId: state.user.id,
         page: currentPage.value,
         size: pageSize.value,
         sort: sortOption.value

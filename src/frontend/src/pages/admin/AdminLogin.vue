@@ -19,7 +19,7 @@ const SubmitForm = async (event: Event) => {
     try {
         const res = await axios.post('http://localhost:8081/login', form);
         if (res.data.token) {
-            localStorage.setItem("token", res.data.token);
+            localStorage.setItem("admin_token", res.data.token);
             
             // Xác thực và kiểm tra vai trò
             await MyApp.getInstance().authenticate();

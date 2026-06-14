@@ -56,8 +56,9 @@
       </div>
     </div>
 
-    <!-- Admin Chat Widget -->
-    <AdminChatWidget v-if="showChat" :initialUserId="selectedUserId" @close="showChat = false" />
+    <div v-if="onlineUsers.length === 0">
+      <!-- ... -->
+    </div>
   </div>
 </template>
 
@@ -69,17 +70,17 @@ import AdminChatWidget from '../../components/AdminChatWidget.vue';
 
 const onlineUsers = ref([]);
 const socket = ref(null);
-const showChat = ref(false);
-const selectedUserId = ref('');
 
 const formatDate = (date) => {
   if (!date) return '--';
-  return new Date(date).toLocaleDateString();
+  return new Date(date).toLocaleString();
 };
 
 const openChat = (userId) => {
-  selectedUserId.value = userId;
-  showChat.value = true;
+  state.selectedChatUserId = null;
+  setTimeout(() => {
+    state.selectedChatUserId = userId;
+  }, 0);
 };
 
 onMounted(() => {

@@ -4,10 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import jakarta.servlet.http.HttpServletResponse;
-import com.sportshop.entity.BillEntity;
-import com.sportshop.repository.BillRepository;
-import com.sportshop.entity.OderDetailEntity;
-import com.sportshop.repository.OderDetailRepository;
+import com.sportshop.repository.*;
+import com.sportshop.entity.*;
 import com.sportshop.response.PageResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -24,6 +22,12 @@ public class BillController {
 
     @Autowired
     private BillRepository billRepo;
+
+    @Autowired
+    private OderRepository orderRepo;
+
+    @Autowired
+    private UserRepository userRepo;
 
     @Autowired
     private OderDetailRepository orderDetailRepo;
@@ -45,6 +49,37 @@ public class BillController {
         } else {
             return PageResponse.of(billRepo.findBySearch(search, pageable));
         }
+    }
+
+    @GetMapping("/my-bills")
+    public PageResponse<BillEntity> getMyBills(
+            @RequestParam String email,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
+
+        String[] sortParts = sort.split(",");
+        Sort sortObj = Sort.by(sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortParts[0]);
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+
+        if (userId != null) {
+            // Tự động cập nhật ID_User cho các đơn hàng cũ có cùng email nhưng chưa được
+            // gán User
+            List<OderEntity> unlinkedOrders = orderRepo.findByEmail(email);
+            UserEntity currentUser = userRepo.findById(userId).orElse(null);
+            if (currentUser != null) {
+                for (OderEntity o : unlinkedOrders) {
+                    if (o.getUser() == null) {
+                        o.setUser(currentUser);
+                        orderRepo.save(o);
+                    }
+                }
+            }
+            return PageResponse.of(billRepo.findByUserIdOrEmail(userId, email, pageable));
+        }
+        return PageResponse.of(billRepo.findByEmail(email, pageable));
     }
 
     @GetMapping("/order/{orderId}")

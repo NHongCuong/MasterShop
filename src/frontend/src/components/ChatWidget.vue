@@ -1,7 +1,8 @@
 <template>
-  <div class="chat-widget">
-    <div v-if="!isOpen" class="chat-button" @click="toggleChat">
+  <div v-if="state.isAuthenticated" class="chat-widget">
+    <div v-if="!isOpen" class="chat-button shadow-lg" @click="toggleChat">
       <i class="pi pi-comments"></i>
+      <span v-if="unreadCount > 0" class="badge-count">{{ unreadCount }}</span>
     </div>
     
     <div v-else class="chat-window shadow-lg">
@@ -54,14 +55,36 @@ import { io } from 'socket.io-client';
 import { state } from '../app/MyApp';
 
 const isOpen = ref(false);
+const unreadCount = ref(0);
 const newMessage = ref('');
 const messages = ref([]);
 const messageContainer = ref(null);
 const socket = ref(null);
+const loginToSocket = () => {
+    if (state.isAuthenticated && state.user && socket.value && socket.value.connected) {
+        socket.value.emit('login', {
+            id: state.user.id.toString(),
+            name: state.user.nameUser,
+            email: state.user.email,
+            phone: state.user.phone,
+            avatar: state.user.avatar,
+            address: state.user.address,
+            createdAt: state.user.createdAt,
+            role: state.user.userType?.name || 'user'
+        });
+        
+        // Also request history
+        socket.value.emit('get_history', {
+            user1: state.user.id.toString(),
+            user2: 'admin'
+        });
+    }
+};
 
 const toggleChat = () => {
   isOpen.value = !isOpen.value;
   if (isOpen.value) {
+    unreadCount.value = 0;
     scrollToBottom();
   }
 };
@@ -88,55 +111,50 @@ const sendMessage = () => {
   scrollToBottom();
 };
 
-const loginToSocket = () => {
-    if (state.isAuthenticated && state.user && socket.value?.connected) {
-        socket.value.emit('login', {
-            id: state.user.id.toString(),
-            name: state.user.nameUser,
-            email: state.user.email,
-            phone: state.user.phone,
-            avatar: state.user.avatar,
-            address: state.user.address,
-            createdAt: state.user.createdAt,
-            role: state.user.userType?.name || 'user'
+const initSocket = () => {
+    if (!socket.value) {
+        socket.value = io('http://localhost:9092');
+        
+        socket.value.on('connect', () => {
+            loginToSocket();
         });
+
+        socket.value.on('receive_message', (data) => {
+            messages.value.push(data);
+            if (!isOpen.value && data.from.toString() === 'admin') {
+                unreadCount.value++;
+            }
+            scrollToBottom();
+        });
+
+        socket.value.on('history_response', (history) => {
+            messages.value = history.map(m => ({
+                from: m.fromUser,
+                to: m.toUser,
+                message: m.content,
+                timestamp: m.createdAt
+            }));
+            scrollToBottom();
+        });
+    } else if (!socket.value.connected) {
+        socket.value.connect();
     }
 };
 
 onMounted(() => {
-  socket.value = io('http://localhost:9092');
-
-  socket.value.on('connect', () => {
-    loginToSocket();
-    
-    // Request history
-    if (state.user?.id) {
-        socket.value.emit('get_history', {
-            user1: state.user.id.toString(),
-            user2: 'admin'
-        });
+    if (state.isAuthenticated) {
+        initSocket();
     }
-  });
-
-  socket.value.on('receive_message', (data) => {
-    messages.value.push(data);
-    scrollToBottom();
-  });
-
-  socket.value.on('history_response', (history) => {
-    messages.value = history.map(m => ({
-        from: m.fromUser,
-        to: m.toUser,
-        message: m.content,
-        timestamp: m.createdAt
-    }));
-    scrollToBottom();
-  });
 });
 
-watch(() => state.user, (newVal) => {
-    if (newVal && state.isAuthenticated) {
+watch([() => state.user, () => state.isAuthenticated], ([user, auth]) => {
+    if (auth && user) {
+        initSocket();
         loginToSocket();
+    } else if (!auth) {
+        if (socket.value) {
+            socket.value.disconnect();
+        }
     }
 }, { immediate: true });
 
@@ -173,6 +191,24 @@ watch(messages, () => {
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: transform 0.3s;
+  position: relative;
+}
+
+.badge-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff4757;
+  color: white;
+  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
 }
 
 .chat-button:hover {

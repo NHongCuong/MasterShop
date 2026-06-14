@@ -1,6 +1,7 @@
 package com.sportshop.repository;
 
 import com.sportshop.entity.OderEntity;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,6 @@ public interface OderRepository extends JpaRepository<OderEntity, Long> {
            "OR o.phone LIKE %:search% " +
            "OR CAST(o.id AS string) LIKE %:search%)")
     Page<OderEntity> findWithSearch(@Param("search") String search, Pageable pageable);
+
+    List<OderEntity> findByEmail(String email);
 }

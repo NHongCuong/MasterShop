@@ -7,13 +7,15 @@ interface GlobalState {
     user: User | null;
     cartCount: number;
     generalImages: Record<string, string>;
+    selectedChatUserId: string | null;
 }
 
 export const state = reactive<GlobalState>({
     isAuthenticated: false,
     user: null,
     cartCount: 0,
-    generalImages: {}
+    generalImages: {},
+    selectedChatUserId: null
 });
 
 export class MyApp {
@@ -21,7 +23,10 @@ export class MyApp {
     private constructor() {}
 
     async authenticate() {
-        const token = localStorage.getItem("token");
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const tokenKey = isAdminRoute ? "admin_token" : "token";
+        const token = localStorage.getItem(tokenKey);
+        
         if (!token) {
             state.isAuthenticated = false;
             state.user = null;
@@ -77,7 +82,13 @@ export class MyApp {
         state.isAuthenticated = false;
         state.user = null;
         state.cartCount = 0;
-        localStorage.removeItem("token");
+        
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        if (isAdminRoute) {
+            localStorage.removeItem("admin_token");
+        } else {
+            localStorage.removeItem("token");
+        }
     }
 
     public static getInstance() {
