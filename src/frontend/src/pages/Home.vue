@@ -6,6 +6,7 @@ import {Category, Product} from '../interfaces/app';
 import {MyApp, state} from '../app/MyApp';
 import ContactWidget from '../components/ContactWidget.vue';
 import BackToTop from '../components/BackToTop.vue';
+import ChatWidget from '../components/ChatWidget.vue';
 import Helper from '../helper/helper';
 
 const route = useRoute();
@@ -224,6 +225,7 @@ onMounted(() => {
     </div>
 
     <BackToTop :bottom="96" />
+    <ChatWidget />
     <ContactWidget />
   </div>
 </template>

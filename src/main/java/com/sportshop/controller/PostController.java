@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -105,6 +104,7 @@ public class PostController {
     }
 
     @PostMapping("/admin/create")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<?> createFromMap(@RequestBody Map<String, Object> payload) {
         try {
             PostEntity post = new PostEntity();
@@ -134,6 +134,7 @@ public class PostController {
     }
 
     @PutMapping("/admin/update/{id}")
+    @SuppressWarnings("unchecked")
     public ResponseEntity<?> updateFromMap(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
         try {
             PostEntity post = postRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));

@@ -333,6 +333,13 @@ onMounted(() => {
               <p>Tin nhắn liên hệ</p>
             </router-link>
           </li>
+
+          <li class="nav-item">
+            <router-link to="/admin/customer-care" active-class="active" class="nav-link" :class="{ 'bg-success': $route.path === '/admin/customer-care' }">
+              <i class="nav-icon fas fa-headset"></i>
+              <p>Chăm sóc khách hàng</p>
+            </router-link>
+          </li>
           
           <li class="nav-item">
             <a href="#" class="nav-link" @click="() => { MyApp.getInstance().clearState(); $router.push('/admin-login'); }">

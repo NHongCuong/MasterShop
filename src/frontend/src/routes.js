@@ -239,6 +239,12 @@ export default [
                 name: 'adminImages',
                 component: () => import('./pages/admin/AdminImages.vue'),
                 meta: { title: 'Ảnh chung' }
+            },
+            {
+                path: 'customer-care',
+                name: 'adminCustomerCare',
+                component: () => import('./pages/admin/AdminCustomerCare.vue'),
+                meta: { title: 'Chăm sóc khách hàng' }
             }
         ]
     }
