@@ -73,9 +73,10 @@ const selectedUser = computed(() => {
 
 const filteredMessages = computed(() => {
   if (!selectedUserId.value) return [];
+  const selId = selectedUserId.value.toString();
   return allMessages.value.filter(m => 
-    (m.from === 'admin' && m.to === selectedUserId.value) || 
-    (m.from === selectedUserId.value && m.to === 'admin')
+    (m.from.toString() === 'admin' && m.to.toString() === selId) || 
+    (m.from.toString() === selId && m.to.toString() === 'admin')
   );
 });
 
@@ -164,7 +165,10 @@ watch(filteredMessages, () => {
 }, { deep: true });
 
 watch(() => props.initialUserId, (newId) => {
-  if (newId) selectedUserId.value = newId;
+  if (newId) {
+    selectedUserId.value = newId;
+    handleUserChange();
+  }
 });
 </script>
 
@@ -180,7 +184,7 @@ watch(() => props.initialUserId, (newId) => {
   position: fixed;
   bottom: 80px;
   right: 20px;
-  z-index: 1001;
+  z-index: 9999;
 }
 
 .chat-header {

@@ -91,6 +91,7 @@ onMounted(() => {
       name: state.user?.nameUser || 'Admin',
       role: 'admin'
     });
+    socket.value.emit('request_user_list');
   });
 
   socket.value.on('update_user_list', (users) => {

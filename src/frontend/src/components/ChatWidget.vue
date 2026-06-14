@@ -23,7 +23,7 @@
         <div class="welcome-msg">
           👋 Xin chào! Chúng tôi có thể giúp gì cho bạn?
         </div>
-        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.from === currentUser.id ? 'sent' : 'received']">
+        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.from.toString() === (state.user?.id || '').toString() ? 'sent' : 'received']">
           <div class="message-content">
             {{ msg.message }}
           </div>
@@ -77,7 +77,7 @@ const sendMessage = () => {
   if (!newMessage.value.trim()) return;
 
   const msgData = {
-    from: state.user?.id || 'guest-' + Math.random().toString(36).substr(2, 9),
+    from: (state.user?.id || 'guest-' + Math.random().toString(36).substr(2, 9)).toString(),
     to: 'admin',
     message: newMessage.value,
     timestamp: new Date().getTime()
@@ -91,7 +91,7 @@ const sendMessage = () => {
 const loginToSocket = () => {
     if (state.isAuthenticated && state.user && socket.value?.connected) {
         socket.value.emit('login', {
-            id: state.user.id,
+            id: state.user.id.toString(),
             name: state.user.nameUser,
             email: state.user.email,
             phone: state.user.phone,
@@ -134,9 +134,11 @@ onMounted(() => {
   });
 });
 
-watch(() => state.isAuthenticated, (val) => {
-    if (val) loginToSocket();
-});
+watch(() => state.user, (newVal) => {
+    if (newVal && state.isAuthenticated) {
+        loginToSocket();
+    }
+}, { immediate: true });
 
 onUnmounted(() => {
   if (socket.value) {
@@ -154,7 +156,7 @@ watch(messages, () => {
   position: fixed;
   bottom: 100px;
   right: 24px;
-  z-index: 1000;
+  z-index: 9999;
   font-family: 'Inter', sans-serif;
 }
 

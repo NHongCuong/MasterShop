@@ -1,6 +1,5 @@
 package com.sportshop.socket;
 
-import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
@@ -35,6 +34,7 @@ public class SocketIOHandler {
         this.server.addEventListener("login", Map.class, onLogin());
         this.server.addEventListener("send_message", Map.class, onSendMessage());
         this.server.addEventListener("get_history", Map.class, onGetHistory());
+        this.server.addEventListener("request_user_list", Void.class, onRequestUserList());
     }
 
     private ConnectListener onConnected() {
@@ -60,25 +60,42 @@ public class SocketIOHandler {
         };
     }
 
+    @SuppressWarnings("rawtypes")
     private DataListener<Map> onLogin() {
         return (client, data, ackSender) -> {
-            String userId = String.valueOf(data.get("id"));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) data;
+            String userId = String.valueOf(map.get("id"));
             clientUserMap.put(client.getSessionId().toString(), userId);
-            onlineUsers.put(userId, data);
+            onlineUsers.put(userId, map);
             
             // Join a personal room for targeted messaging
             client.joinRoom(userId);
             
             System.out.println("User logged in: " + userId);
+            
+            // Send current list directly to this client immediately
+            client.sendEvent("update_user_list", onlineUsers.values());
+            
+            // Broadcast to everyone else
             broadcastOnlineUsers();
         };
     }
 
+    private DataListener<Void> onRequestUserList() {
+        return (client, data, ackSender) -> {
+            client.sendEvent("update_user_list", onlineUsers.values());
+        };
+    }
+
+    @SuppressWarnings("rawtypes")
     private DataListener<Map> onSendMessage() {
         return (client, data, ackSender) -> {
-            String toUserId = String.valueOf(data.get("to"));
-            String fromUserId = String.valueOf(data.get("from"));
-            String messageString = String.valueOf(data.get("message"));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) data;
+            String toUserId = String.valueOf(map.get("to"));
+            String fromUserId = String.valueOf(map.get("from"));
+            String messageString = String.valueOf(map.get("message"));
             
             // Save to database
             MessageEntity message = MessageEntity.builder()
@@ -101,10 +118,13 @@ public class SocketIOHandler {
         };
     }
 
+    @SuppressWarnings("rawtypes")
     private DataListener<Map> onGetHistory() {
         return (client, data, ackSender) -> {
-            String user1 = String.valueOf(data.get("user1"));
-            String user2 = String.valueOf(data.get("user2"));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) data;
+            String user1 = String.valueOf(map.get("user1"));
+            String user2 = String.valueOf(map.get("user2"));
             
             List<MessageEntity> history = messageRepository.findChatHistory(user1, user2);
             client.sendEvent("history_response", history);
