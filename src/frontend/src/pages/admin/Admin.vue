@@ -2,6 +2,7 @@
 import {MyApp, state} from '../../app/MyApp';
 import {onMounted} from 'vue';
 import BackToTop from '../../components/BackToTop.vue';
+import Helper from '../../helper/helper';
 
 onMounted(() => {
   MyApp.getInstance().authenticate();
@@ -148,7 +149,7 @@ onMounted(() => {
   <aside style="position:fixed; display:flex; flex-direction:column; height:100vh; overflow:hidden;" class="main-sidebar sidebar-dark-primary elevation-4">
 
     <a href="index3.html" class="brand-link text-center">
-      <img src="/images/logotech.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
+      <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
            style="border-radius:100px">
       <span class="brand-text font-weight-light">HC TECH</span>
     </a>
@@ -157,7 +158,7 @@ onMounted(() => {
 
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="/images/logotech.png" class="img-circle elevation-2" alt="User Image">
+          <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
           <a href="#" class="d-block text-uppercase fw-bold">{{ state.user?.nameUser || state.user?.email.split('@')[0] }}</a>
@@ -297,6 +298,14 @@ onMounted(() => {
               <i class="nav-icon fas fa-newspaper"></i>
               <p>
                 Bài viết
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/admin/general-images" active-class="active" class="nav-link" :class="{ 'bg-success': $route.path === '/admin/general-images' }">
+              <i class="nav-icon fas fa-image"></i>
+              <p>
+                Ảnh chung
               </p>
             </router-link>
           </li>

@@ -92,7 +92,7 @@
                     
                     <!-- Decor images/badges if any can go here -->
                     <div class="mt-4 text-center d-none d-lg-block">
-                        <img src="/images/logotech.png" class="img-fluid rounded-circle shadow-sm" style="width: 120px; opacity: 0.8">
+                        <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" class="img-fluid rounded-circle shadow-sm" style="width: 120px; opacity: 0.8">
                     </div>
                 </div>
             </div>
@@ -104,6 +104,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import Helper from '../../helper/helper';
+import { state } from '../../app/MyApp';
 
 const posts = ref([]);
 const categories = ref([]);

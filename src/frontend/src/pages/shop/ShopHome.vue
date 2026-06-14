@@ -156,12 +156,20 @@ onUnmounted(() => {
 <template>
   <!-- Full Width Slider with Manual Controls -->
   <div class="slider-wrapper position-relative w3-animate-opacity">
-    <div class="slides-container">
-      <img class="mySlides w3-animate-right" src="/images/1.png" style="width:100%; object-fit: cover; height: 500px;">
-      <img class="mySlides w3-animate-right" src="/images/2.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
-      <img class="mySlides w3-animate-right" src="/images/3.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
-      <img class="mySlides w3-animate-right" src="/images/4.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
-    </div>
+      <div class="slides-container">
+        <template v-if="state.generalImages?.['Slides 1'] || state.generalImages?.['Slides 2'] || state.generalImages?.['Slides 3'] || state.generalImages?.['Slides 4']">
+          <img v-if="state.generalImages?.['Slides 1']" class="mySlides w3-animate-right" :src="Helper.GetImageUrl(state.generalImages['Slides 1'])" style="width:100%; object-fit: cover; height: 500px;">
+          <img v-if="state.generalImages?.['Slides 2']" class="mySlides w3-animate-right" :src="Helper.GetImageUrl(state.generalImages['Slides 2'])" style="width:100%; display:none; object-fit: cover; height: 500px;">
+          <img v-if="state.generalImages?.['Slides 3']" class="mySlides w3-animate-right" :src="Helper.GetImageUrl(state.generalImages['Slides 3'])" style="width:100%; display:none; object-fit: cover; height: 500px;">
+          <img v-if="state.generalImages?.['Slides 4']" class="mySlides w3-animate-right" :src="Helper.GetImageUrl(state.generalImages['Slides 4'])" style="width:100%; display:none; object-fit: cover; height: 500px;">
+        </template>
+        <template v-else>
+          <img class="mySlides w3-animate-right" src="/images/1.png" style="width:100%; object-fit: cover; height: 500px;">
+          <img class="mySlides w3-animate-right" src="/images/2.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
+          <img class="mySlides w3-animate-right" src="/images/3.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
+          <img class="mySlides w3-animate-right" src="/images/4.png" style="width:100%; display:none; object-fit: cover; height: 500px;">
+        </template>
+      </div>
     
     <!-- Slider Buttons -->
     <button class="slider-btn prev" @click="plusSlides(-1)">

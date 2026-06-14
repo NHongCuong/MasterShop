@@ -544,7 +544,7 @@ const pages = computed(() => {
                     <div class="inv-header">
                         <div class="inv-header-left">
                             <div class="inv-logo">
-                                <img src="/images/logotech.png" alt="Logo" style="height: 40px; margin-bottom: 8px; object-fit: contain; max-width: 150px;">
+                                <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" alt="Logo" style="height: 40px; margin-bottom: 8px; object-fit: contain; max-width: 150px;">
                             </div>
                             <div class="inv-slogan">Chuyên thiết bị và phụ kiện thể thao chính hãng</div>
                             <div class="inv-contact-info">

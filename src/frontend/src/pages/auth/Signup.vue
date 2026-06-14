@@ -2,22 +2,25 @@
 import axios from 'axios';
 import { reactive } from 'vue';
 import Swal from 'sweetalert2';
+import { state } from '../../app/MyApp';
+import Helper from '../../helper/helper';
 interface User {
-        email:string,
-        password:string,
-        password2:string
+        nameUser: string,
+        phone: string,
+        email: string,
+        password: string
     }
-    const form = reactive<User>(
-    {
-        email:'',
-        password:'',
-        password2:''
+    const form = reactive<User>({
+        nameUser: '',
+        phone: '',
+        email: '',
+        password: ''
     });
     const SubmitForm = (event:Event) => {
         event.preventDefault();
-        if(form.password != form.password2)
+        if(form.password.length < 6)
         {
-            Swal.fire({text: 'Mật khẩu nhập lại không khớp', icon: 'error'});
+            Swal.fire({text: 'Mật khẩu phải từ 6 ký tự trở lên', icon: 'error'});
         }
         else
         {
@@ -31,54 +34,57 @@ interface User {
     }
 </script>
 <template>
-    <section class="auth-section py-5" style="background-image: linear-gradient(to right, #f6d9d9 , #e88e9d); min-height: 85vh; display: flex; align-items: center;">
-        <div class="container py-3">
-            <div class="row d-flex justify-content-center align-items-center w-100 mx-auto">
-            <div class="col col-xl-10">
-                <div class="card shadow-lg" style="border-radius: 1rem; border: none;">
-                <div class="row g-0">
-                    <div class="col-md-6 col-lg-5 d-none d-md-block">
-                    <img style="width:100%; height: 100%; border-radius: 1rem 0 0 1rem; object-fit: cover;" src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1920&auto=format&fit=crop"
-                        alt="signup form" class="img-fluid" />
-                    </div>
-                    <div class="col-md-6 col-lg-7 d-flex align-items-center bg-white" style="border-radius: 0 1rem 1rem 0;">
-                    <div class="card-body p-4 p-lg-5 text-black">
-                        <form @submit="SubmitForm">
-                            <div class="text-center mb-4">
-                                <i class="fas fa-user-plus fa-3x mb-3" style="color: #212529;"></i>
-                                <h3 class="fw-bold text-uppercase">Đăng ký</h3>
-                                <p class="text-muted">Tham gia cùng cộng đồng MasterShop</p>
-                            </div>
-
-                            <div class="form-outline mb-3">
-                                <label class="form-label fw-bold" for="email">Địa chỉ Email</label>
-                                <input v-model="form.email" type="email" id="email" class="form-control form-control-lg border-2" placeholder="name@example.com" required/>
-                            </div>
-
-                            <div class="form-outline mb-3">
-                                <label class="form-label fw-bold" for="password">Mật khẩu</label>
-                                <input v-model="form.password" type="password" id="password" class="form-control form-control-lg border-2" placeholder="••••••••" required />
-                            </div>
-
-                            <div class="form-outline mb-4">
-                                <label class="form-label fw-bold" for="password2">Nhập lại mật khẩu</label>
-                                <input v-model="form.password2" type="password" id="password2" class="form-control form-control-lg border-2" placeholder="••••••••" required/>
-                            </div>
-
-                            <div class="pt-1 mb-4">
-                                <button class="btn btn-dark btn-lg w-100 fw-bold" type="submit">Đăng ký</button>
-                            </div>
-
-                            <p class="text-center mb-0" style="color: #393f81;">
-                                Bạn đã có tài khoản? <router-link to="/auth/signin" class="fw-bold text-decoration-none" style="color: #e88e9d;">Đăng nhập tại đây</router-link>
-                            </p>
-                        </form>
-                    </div>
-                    </div>
-                </div>
-                </div>
+    <div class="signup-page d-flex align-items-center justify-content-center vh-100" :style="{ backgroundImage: `url(${state.generalImages?.['Register'] ? Helper.GetImageUrl(state.generalImages['Register']) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1920&auto=format&fit=crop'})`, backgroundPosition: 'center center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }">
+        <div class="signup-box shadow-lg rounded p-4 p-md-5 position-relative" style="width: 400px; z-index: 10;">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold m-0" style="color: #edab28; font-size: 24px;">Đăng Ký</h3>
             </div>
-            </div>
+            
+            <form @submit="SubmitForm">
+                <div class="form-group mb-3">
+                    <input v-model="form.nameUser" type="text" class="form-control bg-white" placeholder="Họ và Tên" required style="border: 1px solid #ced4da; padding: 12px 15px;">
+                </div>
+                
+                <div class="form-group mb-3">
+                    <input v-model="form.phone" type="text" class="form-control bg-white" placeholder="Số điện thoại" required style="border: 1px solid #ced4da; padding: 12px 15px;">
+                </div>
+                
+                <div class="form-group mb-3">
+                    <input v-model="form.email" type="email" class="form-control bg-white" placeholder="Email" required style="border: 1px solid #ced4da; padding: 12px 15px;">
+                </div>
+                
+                <div class="form-group mb-4">
+                    <input v-model="form.password" type="password" class="form-control bg-white" placeholder="Mật khẩu" required style="border: 1px solid #ced4da; padding: 12px 15px;">
+                </div>
+                
+                <button type="submit" class="btn w-100 py-2 fw-bold text-white shadow-sm mb-4" style="background-color: #e5b026; border: none; font-size: 1rem;">
+                    Đăng Ký
+                </button>
+                
+                <div class="text-left mt-3">
+                    <span style="font-size: 13px; color: #333;">Đã có tài khoản? </span>
+                    <router-link to="/auth/signin" class="text-decoration-none" style="color: #007bff; font-size: 13px;">Đăng nhập</router-link>
+                </div>
+            </form>
         </div>
-    </section>
+    </div>
 </template>
+
+<style scoped>
+.signup-page {
+    background-color: #f0f2f5;
+}
+
+.signup-box {
+    background: rgba(245, 245, 245, 0.95);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(229, 176, 38, 0.25);
+    border-color: #e5b026;
+    outline: none;
+}
+</style>

@@ -233,6 +233,12 @@ export default [
                 name: 'adminReviews',
                 component: () => import('./pages/admin/AdminReviews.vue'),
                 meta: { title: 'Đánh giá sản phẩm' }
+            },
+            {
+                path: 'general-images',
+                name: 'adminImages',
+                component: () => import('./pages/admin/AdminImages.vue'),
+                meta: { title: 'Ảnh chung' }
             }
         ]
     }

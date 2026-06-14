@@ -6,8 +6,9 @@ export default class Helper {
     }
     static GetImageUrl(path: string) {
         if (!path) return '';
-        if (path.startsWith('http')) return path;
-        return 'http://localhost:8081' + path;
+        const firstPath = path.split(',')[0].trim();
+        if (firstPath.startsWith('http')) return firstPath;
+        return 'http://localhost:8081' + firstPath;
     }
     static DateFormat(date: string | Date | null) {
         if (!date) return '—';

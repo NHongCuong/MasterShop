@@ -6,12 +6,14 @@ interface GlobalState {
     isAuthenticated: boolean;
     user: User | null;
     cartCount: number;
+    generalImages: Record<string, string>;
 }
 
 export const state = reactive<GlobalState>({
     isAuthenticated: false,
     user: null,
-    cartCount: 0
+    cartCount: 0,
+    generalImages: {}
 });
 
 export class MyApp {
@@ -55,6 +57,19 @@ export class MyApp {
         } catch (err) {
             console.error("Error updating cart count:", err);
             state.cartCount = 0;
+        }
+    }
+
+    async loadGeneralImages() {
+        try {
+            const res = await axios.get("http://localhost:8081/api/general-images");
+            const imagesMap: Record<string, string> = {};
+            res.data.forEach((img: any) => {
+                imagesMap[img.imageName] = img.imageUrl;
+            });
+            state.generalImages = imagesMap;
+        } catch (err) {
+            console.error("Error loading general images:", err);
         }
     }
 

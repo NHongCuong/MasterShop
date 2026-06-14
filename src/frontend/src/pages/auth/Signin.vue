@@ -3,7 +3,8 @@ import axios from 'axios';
 import { reactive } from 'vue';
 import Swal from 'sweetalert2';
 import {useRouter} from 'vue-router';
-import {MyApp} from '../../app/MyApp';
+import {MyApp, state} from '../../app/MyApp';
+import Helper from '../../helper/helper';
 
 const router = useRouter();
 interface User {
@@ -36,49 +37,62 @@ interface User {
     };
 </script>
 <template>
-    <section class="auth-section py-5" style="background-image: linear-gradient(to right, #f6d9d9 , #e88e9d); min-height: 85vh; display: flex; align-items: center;">
-        <div class="container py-3">
-            <div class="row d-flex justify-content-center align-items-center w-100 mx-auto">
-            <div class="col col-xl-10">
-                <div class="card shadow-lg" style="border-radius: 1rem; border: none;">
-                <div class="row g-0">
-                    <div class="col-md-6 col-lg-5 d-none d-md-block">
-                    <img style="width:100%; height: 100%; border-radius: 1rem 0 0 1rem; object-fit: cover;" src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
-                        alt="login form" class="img-fluid" />
-                    </div>
-                    <div class="col-md-6 col-lg-7 d-flex align-items-center bg-white" style="border-radius: 0 1rem 1rem 0;">
-                    <div class="card-body p-4 p-lg-5 text-black">
-                        <form @submit="SubmitForm">
-                            <div class="text-center mb-4">
-                                <i class="fas fa-running fa-3x mb-3" style="color: #212529;"></i>
-                                <h3 class="fw-bold text-uppercase">Đăng nhập</h3>
-                                <p class="text-muted">Chào mừng bạn quay trở lại MasterShop</p>
-                            </div>
-
-                            <div class="form-outline mb-3">
-                                <label class="form-label fw-bold" for="email">Địa chỉ email</label>
-                                <input v-model="form.email" type="email" id="email" class="form-control form-control-lg border-2" placeholder="name@example.com" required/>
-                            </div>
-
-                            <div class="form-outline mb-4">
-                                <label class="form-label fw-bold" for="password">Mật khẩu</label>
-                                <input v-model="form.password" type="password" id="password" class="form-control form-control-lg border-2" placeholder="••••••••" required/>
-                            </div>
-
-                            <div class="pt-1 mb-4">
-                                <button class="btn btn-dark btn-lg w-100 fw-bold" type="submit">Đăng nhập</button>
-                            </div>
-
-                            <p class="text-center mb-0" style="color: #393f81;">
-                                Bạn chưa có tài khoản? <router-link to="/auth/signup" class="fw-bold text-decoration-none" style="color: #e88e9d;">Đăng kí ngay</router-link>
-                            </p>
-                        </form>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            </div>
+  <section class="auth-section d-flex align-items-center justify-content-center" :style="{ backgroundImage: `url(${state.generalImages?.['Login'] ? Helper.GetImageUrl(state.generalImages['Login']) : 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop'})`, backgroundPosition: 'center center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', minHeight: '100vh', position: 'relative' }">
+    <div class="login-card p-4 p-md-5 rounded shadow">
+      <div class="text-center mb-4">
+        <h3 class="fw-bold mb-3" style="color: #edab28; font-size: 26px;">Đăng Nhập</h3>
+      </div>
+      <form @submit="SubmitForm">
+        <div class="form-group mb-3">
+          <input v-model="form.email" type="email" class="form-control rounded" placeholder="Nhập email của bạn" required style="border: 1px solid #ced4da; padding: 12px 15px;" />
         </div>
-    </section>
+        <div class="form-group mb-3">
+          <input v-model="form.password" type="password" class="form-control rounded" placeholder="Nhập mật khẩu" required style="border: 1px solid #ced4da; padding: 12px 15px;" />
+        </div>
+        <div class="d-flex align-items-center mb-4 pl-1">
+          <input type="checkbox" id="remember" class="mr-2" />
+          <label for="remember" class="m-0 cursor-pointer" style="font-size: 14px; font-weight: normal; color: #333; cursor: pointer;">Ghi nhớ mật khẩu</label>
+        </div>
+        <button type="submit" class="btn w-100 fw-bold mb-3 rounded text-white" style="background-color: #e5b026; border: none; padding: 12px; font-size: 1rem;">Đăng Nhập</button>
+        
+        <div class="d-flex align-items-center my-3">
+          <hr class="flex-grow-1" style="border-color: #ccc;">
+          <span class="mx-2 text-muted" style="font-size: 13px;">Hoặc</span>
+          <hr class="flex-grow-1" style="border-color: #ccc;">
+        </div>
+
+        <button type="button" class="btn w-100 bg-white border border-secondary text-dark fw-bold mb-3 rounded d-flex justify-content-center align-items-center" style="padding: 10px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" style="width: 18px; margin-right: 10px;">
+          <span style="font-size: 0.95rem;">Đăng nhập với Google</span>
+        </button>
+
+        <div class="text-center mt-4">
+          <a href="#" class="d-block mb-2 text-decoration-none" style="color: #007bff; font-weight: 500; font-size: 14px;">Quên mật khẩu?</a>
+          <div style="font-size: 14px; color: #333; margin-top: 5px;">
+            Bạn chưa có tài khoản? 
+            <router-link to="/auth/signup" class="text-decoration-none fw-bold" style="color: #007bff;">Đăng ký</router-link>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
 </template>
+
+<style scoped>
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transform: translateY(-5%);
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.form-control:focus {
+  border-color: #e5b026;
+  box-shadow: 0 0 0 0.2rem rgba(229, 176, 38, 0.25);
+}
+</style>

@@ -7,6 +7,7 @@ import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import html2pdf from 'html2pdf.js';
 import Helper from '../../helper/helper';
+import { state } from '../../app/MyApp';
 
 const API = 'http://localhost:8081/bill';
 const ORDER_API = 'http://localhost:8081/order/admin';
@@ -101,9 +102,9 @@ const downloadPDF = async () => {
     const opt = {
         margin: 10,
         filename: `HoaDon_${printBillData.value?.id || 'HD'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
     };
     try {
         await html2pdf().from(invoiceRef.value).set(opt).save();
@@ -402,7 +403,7 @@ onMounted(() => loadData());
                     <div class="inv-header">
                         <div class="inv-header-left">
                             <div class="inv-logo">
-                                <img src="/images/logotech.png" alt="Logo" style="height: 40px; margin-bottom: 8px; object-fit: contain; max-width: 150px;">
+                                <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" alt="Logo" style="height: 40px; margin-bottom: 8px; object-fit: contain; max-width: 150px;">
                             </div>
                             <div class="inv-slogan">Chuyên thiết bị và phụ kiện thể thao chính hãng</div>
                             <div class="inv-contact-info">

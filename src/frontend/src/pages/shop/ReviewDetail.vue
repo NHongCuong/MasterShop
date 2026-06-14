@@ -147,7 +147,7 @@
 
                     <div class="card border-0 shadow-sm rounded text-center promotional-banner overflow-hidden" style="background-color: #92c5ef;">
                         <div class="card-body p-5">
-                            <img src="/images/logotech.png" alt="Logo" class="img-fluid mb-4 rounded-circle bg-white p-2 shadow" style="width: 100px;">
+                            <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" alt="Logo" class="img-fluid mb-4 rounded-circle bg-white p-2 shadow" style="width: 100px;">
                             <h6 class="fw-bold mb-4 px-3" style="line-height: 1.5; color: #1e3a8a;">HC SHOP - Hệ thống cửa hàng cầu lông hàng đầu Việt Nam</h6>
                             <router-link to="/products" class="btn btn-success fw-bold px-4 rounded-pill shadow-sm">Mua sắm ngay</router-link>
                         </div>
@@ -169,6 +169,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import Helper from '../../helper/helper';
+import { state } from '../../app/MyApp';
 
 const route = useRoute();
 const post = ref({});

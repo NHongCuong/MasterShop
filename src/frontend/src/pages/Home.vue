@@ -107,7 +107,7 @@ onMounted(() => {
       <div class="container d-flex align-items-center justify-content-between">
         <!-- Logo -->
         <router-link to="/" class="navbar-brand d-flex align-items-center">
-          <img src="/images/logotech.png" alt="Logo" class="rounded" width="45" height="45">
+          <img :src="state.generalImages?.['Logo'] ? Helper.GetImageUrl(state.generalImages['Logo']) : '/images/logotech.png'" alt="Logo" class="rounded" width="45" height="45">
           <div class="ms-2 lh-1 text-dark">
             <span class="fw-bold d-block" style="font-size: 1.2rem;">HC</span>
             <span class="fw-bold" style="font-size: 0.9rem;">SHOP</span>

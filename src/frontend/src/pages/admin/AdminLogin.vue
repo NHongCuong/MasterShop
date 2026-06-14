@@ -4,6 +4,7 @@ import { reactive } from 'vue';
 import Swal from 'sweetalert2';
 import { useRouter } from 'vue-router';
 import { MyApp, state } from '../../app/MyApp';
+import Helper from '../../helper/helper';
 
 const router = useRouter();
 
@@ -36,7 +37,7 @@ const SubmitForm = async (event: Event) => {
                     text: 'Bạn không có quyền truy cập trang quản trị!',
                     icon: 'error'
                 });
-                MyApp.getIntance().clearState();
+                MyApp.getInstance().clearState();
             }
         }
     } catch (err: any) {
@@ -49,77 +50,70 @@ const SubmitForm = async (event: Event) => {
 </script>
 
 <template>
-    <div class="admin-login-page d-flex align-items-center justify-content-center vh-100 bg-dark">
-        <div class="login-box shadow-lg bg-white rounded-lg overflow-hidden" style="width: 400px;">
-            <div class="login-header p-4 text-center text-white" style="background-color: #343a40;">
-                <img src="/images/logotech.png" alt="Logo" width="60" class="mb-2 rounded-circle border border-white">
-                <h4 class="m-0 fw-bold">HC TECH ADMIN</h4>
-                <p class="small m-0 text-gray-400">Đăng nhập để quản trị hệ thống</p>
+    <div class="admin-login-page d-flex align-items-center justify-content-center vh-100" :style="{ backgroundImage: `url(${(state.generalImages?.['ADMIN HCSHOP'] || state.generalImages?.['Logo']) ? Helper.GetImageUrl(state.generalImages['ADMIN HCSHOP'] || state.generalImages['Logo']) : '/images/admin-bg.jpg'})`, backgroundPosition: 'center center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }">
+        <div class="login-box shadow-lg rounded-lg overflow-hidden position-relative p-4 p-md-5" style="width: 420px; z-index: 10;">
+            <div class="text-center mb-4">
+                <h3 class="font-weight-bold m-0" style="color: #edab28; letter-spacing: 1px; font-size: 24px;">HCSHOP ADMIN</h3>
+                <p class="small m-0 text-white mt-2" style="opacity: 0.8;">Vui lòng đăng nhập để tiếp tục</p>
             </div>
             
-            <div class="login-body p-4 p-md-5">
-                <form @submit="SubmitForm">
-                    <div class="form-group mb-3">
-                        <label class="form-label fw-bold small text-muted text-uppercase">Email Quản Trị</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-muted"></i></span>
-                            <input v-model="form.email" type="email" class="form-control border-start-0 bg-light" placeholder="admin@mastershop.com" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group mb-4">
-                        <label class="form-label fw-bold small text-muted text-uppercase">Mật Khẩu</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
-                            <input v-model="form.password" type="password" class="form-control border-start-0 bg-light" placeholder="••••••••" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold text-uppercase shadow-sm">
-                        Đăng Nhập Ngay
-                    </button>
-                    
-                    <div class="text-center mt-4">
-                        <router-link to="/" class="text-decoration-none small text-muted hover-dark">
-                            <i class="fas fa-arrow-left me-1"></i> Quay lại cửa hàng
-                        </router-link>
-                    </div>
-                </form>
-            </div>
+            <form @submit="SubmitForm">
+                <div class="form-group mb-3">
+                    <input v-model="form.email" type="email" class="form-control glass-input" placeholder="Email quản trị" required>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <input v-model="form.password" type="password" class="form-control glass-input" placeholder="Mật khẩu" required>
+                </div>
+                
+                <button type="submit" class="btn w-100 py-2 fw-bold shadow-sm" style="background-color: #e5b026; border: none; color: #1a1a1a; font-weight: 600;">
+                    Đăng nhập ngay
+                </button>
+                
+                <div class="text-center mt-5">
+                    <span style="font-size: 11px; color: rgba(255,255,255,0.5);">© 2020 SmashShop. All rights reserved.</span>
+                </div>
+            </form>
         </div>
+        <!-- Optional overlay to make background slightly darker for contrast if needed, but we'll stick to CSS in box -->
     </div>
 </template>
 
 <style scoped>
 .admin-login-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #343a40 100%);
+    /* Fallback background color */
+    background-color: #0b1528;
 }
 
 .login-box {
-    transition: transform 0.3s ease;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-radius: 16px;
+    transform: translateY(10%); /* Pushed down slightly to mimic the screenshot center */
 }
 
-.login-box:hover {
-    transform: translateY(-5px);
+.glass-input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border-radius: 8px;
+    padding: 12px 15px;
 }
 
-.form-control:focus {
-    box-shadow: none;
-    border-color: #007bff;
+.glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
 }
 
-.btn-primary {
-    background-color: #007bff;
-    border: none;
-    transition: all 0.2s ease;
+.glass-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    outline: none;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
-    transform: scale(1.02);
-}
-
-.hover-dark:hover {
-    color: #333 !important;
+.btn:hover {
+    filter: brightness(1.1);
 }
 </style>
