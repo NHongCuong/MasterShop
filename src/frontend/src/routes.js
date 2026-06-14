@@ -227,6 +227,12 @@ export default [
                 name: 'adminPostEdit',
                 component: () => import('./pages/admin/AdminPostForm.vue'),
                 meta: { title: 'Sửa bài viết' }
+            },
+            {
+                path: 'reviews',
+                name: 'adminReviews',
+                component: () => import('./pages/admin/AdminReviews.vue'),
+                meta: { title: 'Đánh giá sản phẩm' }
             }
         ]
     }

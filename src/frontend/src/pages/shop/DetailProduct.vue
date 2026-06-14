@@ -36,6 +36,7 @@ onMounted(() => {
   loadColors();
   loadMaterials();
   loadDimensions();
+  loadReviews();
 });
 
 interface FormState {
@@ -60,6 +61,49 @@ const responsiveOptions = ref([
   { breakpoint: '767px', numVisible: 3 },
   { breakpoint: '575px', numVisible: 1 }
 ]);
+
+const reviews = ref<any[]>([]);
+const myRating = ref(0);
+const hoverRating = ref(0);
+const myComment = ref('');
+
+const loadReviews = async () => {
+    try {
+        const res = await axios.get(`http://localhost:8081/api/reviews/product/${idProduct}`);
+        reviews.value = res.data;
+    } catch(err) {}
+};
+
+const submitReview = async () => {
+    if (!state.isAuthenticated) {
+        toast.add({ severity: 'warn', summary: 'Yêu cầu đăng nhập', detail: 'Vui lòng đăng nhập để đánh giá', life: 3000 });
+        return;
+    }
+    if (myRating.value === 0) {
+        toast.add({ severity: 'warn', summary: 'Chưa đánh giá', detail: 'Vui lòng chọn số sao để đánh giá', life: 3000 });
+        return;
+    }
+    try {
+        await axios.post('http://localhost:8081/api/reviews', {
+            userId: state.user?.id,
+            productId: Number(idProduct),
+            rating: myRating.value,
+            comment: myComment.value
+        });
+        toast.add({ severity: 'success', summary: 'Thành công', detail: 'Cảm ơn bạn đã đánh giá!', life: 3000 });
+        myComment.value = '';
+        myRating.value = 0;
+        loadReviews();
+    } catch(err) {
+        toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể gửi đánh giá', life: 3000 });
+    }
+};
+
+const averageRating = computed(() => {
+    if (reviews.value.length === 0) return 5;
+    const sum = reviews.value.reduce((acc, r) => acc + r.rating, 0);
+    return Number((sum / reviews.value.length).toFixed(1));
+});
 
 // ✅ Load thông tin sản phẩm
 function loadProduct() {
@@ -346,13 +390,64 @@ async function buyNow() {
             </div>
             
             <div v-if="myProduct.description" class="product-description mt-4">
-              <h5 class="fw-bold mb-3">Mô tả sản phẩm</h5>
+              <div class="bg-warning text-white text-center py-2 fw-bold text-uppercase mb-3" style="border-radius: 4px;">
+                Thông tin chi tiết
+              </div>
               <p class="text-muted" style="white-space: pre-line; line-height: 1.6;">
                 {{ myProduct.description }}
               </p>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Review Section -->
+    <div class="row w-100 mt-5">
+      <div class="col-12">
+        <div class="bg-warning text-white text-center py-2 fw-bold text-uppercase mb-4" style="border-radius: 4px;">
+          Đánh giá sản phẩm
+        </div>
+        
+        <div class="d-flex align-items-center mb-4">
+          <h2 class="text-warning fw-bold m-0 me-2">{{ averageRating }}<span class="fs-5 text-muted">/5</span></h2>
+          <div class="text-warning fs-5 me-3">
+            <i class="fas fa-star" v-for="n in Math.round(averageRating)" :key="'s-' + n"></i>
+            <i class="far fa-star" v-for="n in (5 - Math.round(averageRating))" :key="'e-' + n"></i>
+          </div>
+          <span class="text-muted">({{ reviews.length }} đánh giá)</span>
+        </div>
+
+        <div class="mb-5">
+          <h5 class="fw-bold mb-3">Viết đánh giá của bạn</h5>
+          <div class="d-flex align-items-center mb-2">
+            <span class="me-2 fw-bold">Đánh giá:</span>
+            <div class="cursor-pointer" style="font-size: 1.2rem;">
+              <i v-for="n in 5" :key="n" 
+                 :class="n <= (hoverRating || myRating) ? 'fas fa-star text-warning' : 'far fa-star text-muted'" 
+                 @click="myRating = n" 
+                 @mouseover="hoverRating = n"
+                 @mouseleave="hoverRating = 0"
+                 style="cursor: pointer; transition: color 0.2s;"></i>
+            </div>
+          </div>
+          <textarea v-model="myComment" class="form-control mb-3" rows="3" placeholder="Nhập nhận xét của bạn (không bắt buộc)..."></textarea>
+          <button class="btn btn-warning text-white fw-bold px-4" @click="submitReview">Gửi đánh giá</button>
+        </div>
+
+        <div>
+           <div v-for="rev in reviews" :key="rev.id" class="border-bottom py-3">
+              <div class="d-flex justify-content-between">
+                <strong>{{ rev.userName }}</strong>
+                <span class="text-muted small">{{ new Date(rev.createdAt).toLocaleString('vi-VN') }}</span>
+              </div>
+              <div class="text-warning my-1" style="font-size: 0.9rem;">
+                <i class="fas fa-star" v-for="n in rev.rating" :key="'sr-'+n"></i>
+              </div>
+              <p class="m-0 text-secondary">{{ rev.comment }}</p>
+           </div>
+        </div>
+
       </div>
     </div>
   </div>

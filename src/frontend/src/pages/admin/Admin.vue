@@ -277,6 +277,14 @@ onMounted(() => {
             </router-link>
           </li>
           <li class="nav-item">
+            <router-link to="/admin/reviews" active-class="active" class="nav-link" :class="{ 'bg-success': $route.path === '/admin/reviews' }">
+              <i class="nav-icon fas fa-thumbs-up"></i>
+              <p>
+                Đánh giá sản phẩm
+              </p>
+            </router-link>
+          </li>
+          <li class="nav-item">
             <router-link to="/admin/wishlists" active-class="active" class="nav-link" :class="{ 'bg-success': $route.path === '/admin/wishlists' }">
               <i class="nav-icon fas fa-heart"></i>
               <p>
