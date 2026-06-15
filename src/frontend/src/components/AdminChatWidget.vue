@@ -35,14 +35,64 @@
         <div v-if="!selectedUserId" class="no-chat">
           Vui lòng chọn khách hàng để bắt đầu
         </div>
-        <div v-else v-for="(msg, index) in filteredMessages" :key="index" :class="['message', msg.from.toString() === 'admin' ? 'sent' : 'received']">
-          <div class="message-content">
-            {{ msg.message }}
+        <div v-else v-for="(msg, index) in filteredMessages" :key="index" :class="['message-wrapper', msg.from.toString() === 'admin' ? 'sent-wrapper' : 'received-wrapper']">
+          <!-- Avatar for received messages (User) -->
+          <img v-if="msg.from.toString() !== 'admin'" :src="selectedUser?.avatar || 'https://www.w3schools.com/howto/img_avatar.png'" class="msg-avatar" :title="selectedUser?.name" />
+
+          <div class="message-container-inner" @mouseenter="hoveredMsg = msg.id" @mouseleave="hoveredMsg = null">
+            <!-- Replied context -->
+            <div v-if="msg.replyToId" class="reply-context">
+               <i class="pi pi-reply"></i> {{ msg.replyContent || 'Đang trả lời...' }}
+            </div>
+            
+            <div :class="['message', msg.from.toString() === 'admin' ? 'sent' : 'received', msg.isDeleted ? 'deleted' : '']">
+              <div class="message-content">
+                {{ msg.message }}
+              </div>
+
+              <!-- Action Menu -->
+              <div v-if="hoveredMsg === msg.id && !msg.isDeleted" class="message-actions">
+                <i class="pi pi-reply" title="Trả lời" @click="startReply(msg)"></i>
+                <i class="pi pi-face-smile" title="Thả cảm xúc" @click="toggleReactions(msg.id)"></i>
+                <i v-if="msg.from.toString() === 'admin'" class="pi pi-trash" title="Thu hồi" @click="recallMessage(msg.id)"></i>
+
+                <div v-if="reactionTargetId === msg.id" class="mini-reaction-picker shadow">
+                  <span v-for="e in commonEmojis" :key="e" @click="reactToMessage(msg.id, e)">{{ e }}</span>
+                </div>
+              </div>
+
+              <!-- Reactions List -->
+              <div v-if="msg.reactions" class="reactions-list">
+                {{ msg.reactions }}
+              </div>
+            </div>
           </div>
+
+          <!-- Avatar for sent messages (Admin) -->
+          <img v-if="msg.from.toString() === 'admin'" src="https://www.w3schools.com/howto/img_avatar.png" class="msg-avatar" title="Admin" />
         </div>
       </div>
+
+      <!-- Typing indicator (Đưa ra ngoài vùng cuộn) -->
+      <div v-if="isTypingRemote" :class="['typing-indicator-absolute', replyingTo ? 'with-reply' : '']">
+           <span class="typing-dots">Đang soạn tin nhắn</span>
+      </div>
       
+      <!-- Reply Preview -->
+      <div v-if="replyingTo" class="reply-preview-bar">
+        <div class="reply-info">
+          <i class="pi pi-reply"></i> <span>Đang trả lời: {{ replyingTo.message }}</span>
+        </div>
+        <i class="pi pi-times" @click="replyingTo = null"></i>
+      </div>
+
       <div class="chat-input-area">
+        <div class="emoji-picker-container">
+           <i class="pi pi-face-smile" @click="showEmojiPicker = !showEmojiPicker"></i>
+           <div v-if="showEmojiPicker" class="emoji-picker-panel shadow">
+             <span v-for="e in chatEmojis" :key="e" @click="addEmoji(e)">{{ e }}</span>
+           </div>
+        </div>
         <input 
           v-model="newMessage" 
           type="text" 
@@ -51,7 +101,6 @@
           :disabled="!selectedUserId"
         />
         <div class="input-actions">
-          <i class="pi pi-face-smile"></i>
           <button @click="sendMessage" :disabled="!newMessage.trim() || !selectedUserId">
             <i class="pi pi-send"></i>
           </button>
@@ -81,6 +130,17 @@ const allMessages = ref([]);
 const onlineUsers = ref([]);
 const messageContainer = ref(null);
 const socket = ref(null);
+const isTypingRemote = ref(false);
+const hoveredMsg = ref(null);
+const replyingTo = ref(null);
+const showEmojiPicker = ref(false);
+const reactionTargetId = ref(null);
+
+const commonEmojis = ['❤️', '👍', '😂', '😮', '😢', '😡'];
+const chatEmojis = ['😊', '😂', '😍', '😭', '😡', '👍', '🙏', '❤️', '😇', '😘', '😥', '🎉', '🔥', '✨', '👌', '👏'];
+
+let typingTimeout = null;
+let remoteTypingTimeout = null;
 
 const toggleChat = () => {
     isOpen.value = !isOpen.value;
@@ -131,12 +191,38 @@ const sendMessage = () => {
     from: 'admin',
     to: selectedUserId.value.toString(),
     message: newMessage.value,
+    replyToId: replyingTo.value ? replyingTo.value.id : null,
     timestamp: new Date().getTime()
   };
 
   socket.value.emit('send_message', msgData);
   newMessage.value = '';
+  replyingTo.value = null;
+  showEmojiPicker.value = false;
   scrollToBottom();
+};
+
+const startReply = (msg) => {
+  replyingTo.value = msg;
+};
+
+const toggleReactions = (msgId) => {
+  reactionTargetId.value = reactionTargetId.value === msgId ? null : msgId;
+};
+
+const reactToMessage = (messageId, emoji) => {
+  socket.value.emit('react_message', { messageId, reactions: emoji });
+  reactionTargetId.value = null;
+};
+
+const recallMessage = (messageId) => {
+  if (confirm('Bạn muốn thu hồi tin nhắn này?')) {
+    socket.value.emit('recall_message', { messageId });
+  }
+};
+
+const addEmoji = (emoji) => {
+  newMessage.value += emoji;
 };
 
 onMounted(() => {
@@ -174,19 +260,44 @@ onMounted(() => {
   });
 
   socket.value.on('history_response', (history) => {
-    // Merge history into allMessages (avoid duplicates if possible, or just replace for simplicity)
     const formattedHistory = history.map(m => ({
-        from: m.fromUser,
-        to: m.toUser,
-        message: m.content,
-        timestamp: m.createdAt
+        id: m.id,
+        from: m.from,
+        to: m.to,
+        message: m.message,
+        replyToId: m.replyToId,
+        replyContent: m.replyContent,
+        reactions: m.reactions,
+        isDeleted: m.isDeleted,
+        timestamp: m.timestamp
     }));
-    
-    // Replace messages for current selected user in allMessages
-    // Actually, it's easier to just store current view messages if we only care about the active chat
-    // But for now, let's just use it to populate the current view
     allMessages.value = formattedHistory; 
     scrollToBottom();
+  });
+
+  socket.value.on('message_updated', (updatedMsg) => {
+    const idx = allMessages.value.findIndex(m => m.id === updatedMsg.id);
+    if (idx !== -1) {
+        allMessages.value[idx].reactions = updatedMsg.reactions;
+        allMessages.value[idx].isDeleted = updatedMsg.isDeleted;
+        if (updatedMsg.isDeleted) {
+            allMessages.value[idx].message = "Tin nhắn đã được thu hồi";
+        }
+    }
+  });
+
+  socket.value.on('typing', (data) => {
+    if (selectedUserId.value && data.from.toString() === selectedUserId.value.toString()) {
+        isTypingRemote.value = data.isTyping;
+        scrollToBottom();
+        
+        if (remoteTypingTimeout) clearTimeout(remoteTypingTimeout);
+        if (data.isTyping) {
+            remoteTypingTimeout = setTimeout(() => {
+                isTypingRemote.value = false;
+            }, 5000);
+        }
+    }
   });
 });
 
@@ -206,6 +317,27 @@ watch(() => props.initialUserId, (newId) => {
     isOpen.value = true;
     handleUserChange();
   }
+});
+
+watch(newMessage, (val) => {
+    if (socket.value && socket.value.connected && selectedUserId.value) {
+        socket.value.emit('typing', {
+            from: 'admin',
+            to: selectedUserId.value.toString(),
+            isTyping: val.length > 0
+        });
+
+        if (typingTimeout) clearTimeout(typingTimeout);
+        if (val.length > 0) {
+            typingTimeout = setTimeout(() => {
+                socket.value.emit('typing', {
+                    from: 'admin',
+                    to: selectedUserId.value.toString(),
+                    isTyping: false
+                });
+            }, 3000);
+        }
+    }
 });
 </script>
 
@@ -337,11 +469,13 @@ watch(() => props.initialUserId, (newId) => {
 }
 
 .message {
-  max-width: 80%;
+  width: fit-content;
+  max-width: 100%;
   padding: 10px 15px;
   border-radius: 15px;
   font-size: 14px;
   line-height: 1.4;
+  word-break: break-word;
 }
 
 .sent {
@@ -359,6 +493,212 @@ watch(() => props.initialUserId, (newId) => {
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+.typing-indicator-absolute {
+    position: absolute;
+    bottom: 65px;
+    left: 20px;
+    font-style: italic;
+    color: #888;
+    font-size: 11px;
+    z-index: 10;
+    pointer-events: none;
+    transition: bottom 0.3s;
+}
+
+.typing-indicator-absolute.with-reply {
+    bottom: 100px; /* Nhích lên khi có thanh Reply */
+}
+
+.typing-dots::after {
+  content: '...';
+  display: inline-block;
+  width: 12px;
+  animation: typing-animation 1.5s infinite;
+}
+
+@keyframes typing-animation {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
+.message-wrapper {
+  margin-bottom: 15px;
+}
+
+.sent-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.received-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+
+.message-container-inner {
+  position: relative;
+  max-width: 80%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sent-wrapper .message-container-inner {
+  align-items: flex-end;
+}
+
+.received-wrapper .message-container-inner {
+  align-items: flex-start;
+}
+
+.reply-context {
+  font-size: 11px;
+  color: #888;
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+  margin-bottom: 2px;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-actions {
+  position: absolute;
+  top: -25px;
+  right: 0;
+  background: white;
+  border-radius: 15px;
+  padding: 2px 8px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.message-actions i {
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+}
+
+.message-actions i:hover {
+  color: #f1b42f;
+}
+
+.mini-reaction-picker {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: white;
+  border-radius: 20px;
+  padding: 5px;
+  display: flex;
+  gap: 5px;
+  z-index: 11;
+  font-size: 16px;
+}
+
+.mini-reaction-picker span {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.mini-reaction-picker span:hover {
+  transform: scale(1.3);
+}
+
+.reactions-list {
+  position: absolute;
+  bottom: -15px;
+  right: 5px;
+  background: white;
+  border-radius: 10px;
+  padding: 1px 4px;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.reply-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 8px 15px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #666;
+}
+
+.reply-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emoji-picker-container {
+  position: relative;
+}
+
+.emoji-picker-container i {
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
+
+.emoji-picker-panel {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 150px;
+  font-size: 18px;
+  z-index: 20;
+}
+
+.emoji-picker-panel span {
+  cursor: pointer;
+  text-align: center;
+}
+
+.emoji-picker-panel span:hover {
+  transform: scale(1.2);
+}
+
+.deleted {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+@keyframes typing-animation {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
 .chat-input-area {
   padding: 15px;
   border-top: 1px solid #eee;
@@ -374,18 +714,6 @@ watch(() => props.initialUserId, (newId) => {
   padding: 8px 15px;
   outline: none;
   font-size: 14px;
-}
-
-.input-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.input-actions i {
-  color: #888;
-  font-size: 20px;
-  cursor: pointer;
 }
 
 .input-actions button {

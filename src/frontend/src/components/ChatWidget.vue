@@ -21,17 +21,67 @@
       </div>
       
       <div class="chat-messages" ref="messageContainer">
-        <div class="welcome-msg">
+        <div v-if="messages.length === 0" class="welcome-msg">
           👋 Xin chào! Chúng tôi có thể giúp gì cho bạn?
         </div>
-        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.from.toString() === (state.user?.id || '').toString() ? 'sent' : 'received']">
-          <div class="message-content">
-            {{ msg.message }}
+        <div v-for="(msg, index) in messages" :key="index" :class="['message-wrapper', msg.from.toString() === (state.user?.id || '').toString() ? 'sent-wrapper' : 'received-wrapper']">
+          <!-- Avatar for received messages (Admin) -->
+          <img v-if="msg.from.toString() !== (state.user?.id || '').toString()" src="https://www.w3schools.com/howto/img_avatar.png" class="msg-avatar" title="Admin" />
+          
+          <div class="message-container-inner" @mouseenter="hoveredMsg = msg.id" @mouseleave="hoveredMsg = null">
+            <!-- Replied context -->
+            <div v-if="msg.replyToId" class="reply-context">
+               <i class="pi pi-reply"></i> {{ msg.replyContent || 'Đang trả lời...' }}
+            </div>
+            
+            <div :class="['message', msg.from.toString() === (state.user?.id || '').toString() ? 'sent' : 'received', msg.isDeleted ? 'deleted' : '']">
+              <div class="message-content">
+                {{ msg.message }}
+              </div>
+              
+              <!-- Action Menu ... -->
+              <div v-if="hoveredMsg === msg.id && !msg.isDeleted" class="message-actions">
+                <i class="pi pi-reply" title="Trả lời" @click="startReply(msg)"></i>
+                <i class="pi pi-face-smile" title="Thả cảm xúc" @click="toggleReactions(msg.id)"></i>
+                <i v-if="msg.from.toString() === (state.user?.id || '').toString()" class="pi pi-trash" title="Thu hồi" @click="recallMessage(msg.id)"></i>
+
+                <div v-if="reactionTargetId === msg.id" class="mini-reaction-picker shadow">
+                  <span v-for="e in commonEmojis" :key="e" @click="reactToMessage(msg.id, e)">{{ e }}</span>
+                </div>
+              </div>
+
+              <!-- Reactions ... -->
+              <div v-if="msg.reactions" class="reactions-list">
+                {{ msg.reactions }}
+              </div>
+            </div>
           </div>
+
+          <!-- Avatar for sent messages (User) -->
+          <img v-if="msg.from.toString() === (state.user?.id || '').toString()" :src="state.user?.avatar || 'https://www.w3schools.com/howto/img_avatar.png'" class="msg-avatar" title="Bạn" />
         </div>
       </div>
+
+      <!-- Typing indicator (đưa ra ngoài vùng cuộn) -->
+      <div v-if="isTypingRemote" :class="['typing-indicator-absolute', replyingTo ? 'with-reply' : '']">
+         <span class="typing-dots">Đang soạn tin nhắn</span>
+      </div>
       
+      <!-- Reply Preview Bar -->
+      <div v-if="replyingTo" class="reply-preview-bar">
+        <div class="reply-info">
+          <i class="pi pi-reply"></i> <span>Đang trả lời: {{ replyingTo.message }}</span>
+        </div>
+        <i class="pi pi-times" @click="replyingTo = null"></i>
+      </div>
+
       <div class="chat-input-area">
+        <div class="emoji-picker-container">
+           <i class="pi pi-face-smile" @click="showEmojiPicker = !showEmojiPicker"></i>
+           <div v-if="showEmojiPicker" class="emoji-picker-panel shadow">
+             <span v-for="e in chatEmojis" :key="e" @click="addEmoji(e)">{{ e }}</span>
+           </div>
+        </div>
         <input 
           v-model="newMessage" 
           type="text" 
@@ -39,7 +89,6 @@
           @keyup.enter="sendMessage"
         />
         <div class="input-actions">
-          <i class="pi pi-face-smile"></i>
           <button @click="sendMessage" :disabled="!newMessage.trim()">
             <i class="pi pi-send"></i>
           </button>
@@ -60,6 +109,17 @@ const newMessage = ref('');
 const messages = ref([]);
 const messageContainer = ref(null);
 const socket = ref(null);
+const isTypingRemote = ref(false);
+const hoveredMsg = ref(null);
+const replyingTo = ref(null);
+const showEmojiPicker = ref(false);
+const reactionTargetId = ref(null);
+
+const commonEmojis = ['❤️', '👍', '😂', '😮', '😢', '😡'];
+const chatEmojis = ['😊', '😂', '😍', '😭', '😡', '👍', '🙏', '❤️', '😇', '😘', '😥', '🎉', '🔥', '✨', '👌', '👏'];
+
+let typingTimeout = null;
+let remoteTypingTimeout = null;
 const loginToSocket = () => {
     if (state.isAuthenticated && state.user && socket.value && socket.value.connected) {
         socket.value.emit('login', {
@@ -103,12 +163,38 @@ const sendMessage = () => {
     from: (state.user?.id || 'guest-' + Math.random().toString(36).substr(2, 9)).toString(),
     to: 'admin',
     message: newMessage.value,
+    replyToId: replyingTo.value ? replyingTo.value.id : null,
     timestamp: new Date().getTime()
   };
 
   socket.value.emit('send_message', msgData);
   newMessage.value = '';
+  replyingTo.value = null;
+  showEmojiPicker.value = false;
   scrollToBottom();
+};
+
+const startReply = (msg) => {
+  replyingTo.value = msg;
+};
+
+const toggleReactions = (msgId) => {
+  reactionTargetId.value = reactionTargetId.value === msgId ? null : msgId;
+};
+
+const reactToMessage = (messageId, emoji) => {
+  socket.value.emit('react_message', { messageId, reactions: emoji });
+  reactionTargetId.value = null;
+};
+
+const recallMessage = (messageId) => {
+  if (confirm('Bạn muốn thu hồi tin nhắn này?')) {
+    socket.value.emit('recall_message', { messageId });
+  }
+};
+
+const addEmoji = (emoji) => {
+  newMessage.value += emoji;
 };
 
 const initSocket = () => {
@@ -129,12 +215,43 @@ const initSocket = () => {
 
         socket.value.on('history_response', (history) => {
             messages.value = history.map(m => ({
-                from: m.fromUser,
-                to: m.toUser,
-                message: m.content,
-                timestamp: m.createdAt
+                id: m.id,
+                from: m.from,
+                to: m.to,
+                message: m.message,
+                replyToId: m.replyToId,
+                replyContent: m.replyContent,
+                reactions: m.reactions,
+                isDeleted: m.isDeleted,
+                timestamp: m.timestamp
             }));
             scrollToBottom();
+        });
+
+        socket.value.on('message_updated', (updatedMsg) => {
+            const idx = messages.value.findIndex(m => m.id === updatedMsg.id);
+            if (idx !== -1) {
+                messages.value[idx].reactions = updatedMsg.reactions;
+                messages.value[idx].isDeleted = updatedMsg.isDeleted;
+                if (updatedMsg.isDeleted) {
+                    messages.value[idx].message = "Tin nhắn đã được thu hồi";
+                }
+            }
+        });
+
+        socket.value.on('typing', (data) => {
+            if (data.from.toString() === 'admin') {
+                isTypingRemote.value = data.isTyping;
+                scrollToBottom();
+                
+                // Safety timeout to hide indicator if stop event is missed
+                if (remoteTypingTimeout) clearTimeout(remoteTypingTimeout);
+                if (data.isTyping) {
+                    remoteTypingTimeout = setTimeout(() => {
+                        isTypingRemote.value = false;
+                    }, 5000);
+                }
+            }
         });
     } else if (!socket.value.connected) {
         socket.value.connect();
@@ -167,6 +284,29 @@ onUnmounted(() => {
 watch(messages, () => {
   scrollToBottom();
 }, { deep: true });
+
+watch(newMessage, (val) => {
+    if (socket.value && socket.value.connected && state.user) {
+        // Emit typing: true
+        socket.value.emit('typing', {
+            from: state.user.id.toString(),
+            to: 'admin',
+            isTyping: val.length > 0
+        });
+
+        // Debounce typing: false
+        if (typingTimeout) clearTimeout(typingTimeout);
+        if (val.length > 0) {
+            typingTimeout = setTimeout(() => {
+                socket.value.emit('typing', {
+                    from: state.user.id.toString(),
+                    to: 'admin',
+                    isTyping: false
+                });
+            }, 3000);
+        }
+    }
+});
 </script>
 
 <style scoped>
@@ -293,12 +433,29 @@ watch(messages, () => {
   margin-bottom: 20px;
 }
 
-.message {
+.message-container-inner {
+  position: relative;
   max-width: 80%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sent-wrapper .message-container-inner {
+  align-items: flex-end; /* Ép tin nhắn sent sát lề phải (gần avatar) */
+}
+
+.received-wrapper .message-container-inner {
+  align-items: flex-start; /* Ép tin nhắn received sát lề trái (gần avatar) */
+}
+
+.message {
+  width: fit-content; /* Quan trọng: để bong bóng co lại theo nội dung */
+  max-width: 100%;
   padding: 10px 15px;
   border-radius: 15px;
   font-size: 14px;
   line-height: 1.4;
+  word-break: break-word;
 }
 
 .sent {
@@ -316,6 +473,194 @@ watch(messages, () => {
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+.typing-indicator-absolute {
+    position: absolute;
+    bottom: 65px; /* Ngay trên ô nhập liệu */
+    left: 20px;
+    font-style: italic;
+    color: #888;
+    font-size: 11px;
+    z-index: 10;
+    pointer-events: none;
+    transition: bottom 0.3s;
+}
+
+.typing-indicator-absolute.with-reply {
+    bottom: 100px;
+}
+
+/* Đảm bảo khung chat có position relative */
+.chat-window {
+  position: relative;
+}
+
+.typing-dots::after {
+  content: '...';
+  display: inline-block;
+  width: 12px;
+  animation: typing-animation 1.5s infinite;
+}
+
+.message-wrapper {
+  margin-bottom: 15px;
+}
+
+.sent-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.received-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+.message-container-inner {
+  position: relative;
+  max-width: 85%;
+}
+
+.reply-context {
+  font-size: 11px;
+  color: #888;
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+  margin-bottom: 2px;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-actions {
+  position: absolute;
+  top: -25px;
+  right: 0;
+  background: white;
+  border-radius: 15px;
+  padding: 2px 8px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.message-actions i {
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+}
+
+.message-actions i:hover {
+  color: #f1b42f;
+}
+
+.mini-reaction-picker {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: white;
+  border-radius: 20px;
+  padding: 5px;
+  display: flex;
+  gap: 5px;
+  z-index: 11;
+  font-size: 16px;
+}
+
+.mini-reaction-picker span {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.mini-reaction-picker span:hover {
+  transform: scale(1.3);
+}
+
+.reactions-list {
+  position: absolute;
+  bottom: -15px;
+  right: 5px;
+  background: white;
+  border-radius: 10px;
+  padding: 1px 4px;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.reply-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 8px 15px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #666;
+}
+
+.reply-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emoji-picker-container {
+  position: relative;
+}
+
+.emoji-picker-container i {
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
+
+.emoji-picker-panel {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 150px;
+  font-size: 18px;
+  z-index: 20;
+}
+
+.emoji-picker-panel span {
+  cursor: pointer;
+  text-align: center;
+}
+
+.emoji-picker-panel span:hover {
+  transform: scale(1.2);
+}
+
+@keyframes typing-animation {
+  0% { content: ''; }
+  33% { content: '.'; }
+  66% { content: '..'; }
+  100% { content: '...'; }
+}
+
 .chat-input-area {
   padding: 15px;
   border-top: 1px solid #eee;
@@ -331,18 +676,6 @@ watch(messages, () => {
   padding: 8px 15px;
   outline: none;
   font-size: 14px;
-}
-
-.input-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.input-actions i {
-  color: #888;
-  font-size: 20px;
-  cursor: pointer;
 }
 
 .input-actions button {

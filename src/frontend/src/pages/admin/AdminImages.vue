@@ -68,7 +68,7 @@
               <tr v-for="(item, index) in paginatedImages" :key="item.id" v-else>
                 <td>{{ index + 1 + page * size }}</td>
                 <td>
-                  <img v-if="getFirstImage(item.imageUrl)" :src="getFirstImage(item.imageUrl)" alt="img" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <img v-if="getFirstImage(item.imageUrl)" :src="getFirstImage(item.imageUrl)" alt="img" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" loading="lazy">
                 </td>
                 <td class="text-left">
                   <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -138,7 +138,7 @@
             <div v-if="currentImages.length > 0" class="image-preview-grid d-flex flex-wrap border rounded p-3 bg-light" style="gap: 20px;">
                <div v-for="(imgUrl, idx) in currentImages" :key="idx" class="position-relative preview-item shadow-sm rounded overflow-hidden" style="background: #fff; width: fit-content; padding: 4px; border: 1px solid #dee2e6;">
                  <span v-if="isOldImage(imgUrl)" class="badge badge-secondary position-absolute" style="top: 8px; left: 8px; z-index: 2; border: 1px border-white;">Cũ</span>
-                 <img :src="imgUrl" style="width: 140px; height: 140px; object-fit: cover; border-radius: 4px;" />
+                 <img :src="Helper.GetImageUrl(imgUrl)" style="width: 140px; height: 140px; object-fit: cover; border-radius: 4px;" loading="lazy" />
                  <button class="btn btn-danger btn-sm position-absolute" style="top: 8px; right: 8px; z-index: 2; border-radius: 4px;" @click="removeImage(idx)">
                    <i class="fas fa-trash-alt"></i>
                  </button>
@@ -159,6 +159,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import Helper from '../../helper/helper';
 
 const imagesList = ref([]);
 const loading = ref(false);
@@ -316,7 +317,7 @@ const formatDate = (dateString) => {
 
 const getFirstImage = (urls) => {
   if (!urls) return '';
-  return urls.split(',')[0].trim();
+  return Helper.GetImageUrl(urls.split(',')[0].trim(), { w: 100, h: 100, c: 'fit' });
 };
 
 onMounted(() => {
